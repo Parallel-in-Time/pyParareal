@@ -9,12 +9,17 @@ import scipy as sp
 
 class TestSolution(unittest.TestCase):
 
+  def setUp(self):
+    self.ndof = np.random.randint(255)
+    self.M = np.random.rand(self.ndof, self.ndof)
+    self.y = np.random.rand(self.ndof)
+    self.x = np.random.rand(self.ndof)
+    self.a = np.random.rand(1)
+
   # Make sure solution can be instantiated and that default M is identity
   def test_caninstantiate(self):
-    ndof = np.random.randint(255)
-    y = np.random.rand(ndof)
-    sol = solution(y)
-    assert np.array_equal(sol.M, sp.eye(ndof))
+    sol = solution(self.y)
+    assert np.array_equal(sol.M, sp.eye(self.ndof))
 
   # Make sure exception is raised if y is not 1D array
   @raises(Exception)
@@ -23,57 +28,38 @@ class TestSolution(unittest.TestCase):
 
   # Make sure if matrix M is given as argument to constructor, it is used
   def test_fistused(self):
-    ndof = np.random.randint(255)
-    M = np.random.rand(ndof, ndof)
-    y = np.random.rand(ndof)
-    sol = solution(y, M)
-    assert np.array_equal(sol.M, M)
+    sol = solution(self.y, self.M)
+    assert np.array_equal(sol.M, self.M)
 
   # Make sure exception is raised if size of y and M does not match
   @raises(Exception)
   def test_mismatchym(self):
-    ndof = np.random.randint(255)
-    M = np.random.rand(ndof, ndof)
-    y = np.random.rand(ndof-1)
-    sol = solution(y, M)
+    y = np.random.rand(self.ndof-1)
+    sol = solution(y, self.M)
 
   # Make sure exception is raised if M has more than two dimensions
   @raises(Exception)
   def test_mtoomanydim(self):
-    ndof = np.random.randint(255)
     M = np.random.rand(ndof, ndof, ndof)
-    y = np.random.rand(ndof)
-    sol = solution(y, M)
+    sol = solution(self.y, M)
 
   # Make sure axpy performs expected operation
   def test_mtoomanydim(self):
-    # perform ten tests with random size and values
-    for i in range(0,10):
-      ndof = np.random.randint(255)
-      y = np.random.rand(ndof)
-      x = np.random.rand(ndof)
-      a = np.random.rand(1)
-      sol = solution(y)
-      axpy = a*x+y
-      sol.axpy(a, x)
-      assert np.array_equal(sol.y, axpy)
+    sol = solution(self.y)
+    axpy = self.a*self.x+self.y
+    sol.axpy(self.a, self.x)
+    assert np.array_equal(sol.y, axpy)
 
   # Make sure axpy throws exception if size of does not match y
   @raises(Exception)
   def test_yxmismatch(self):
-      ndof = np.random.randint(255)
-      y = np.random.rand(ndof)
-      x = np.random.rand(ndof-2)
-      a = np.random.rand(1)
-      sol = solution(y)
-      sol.axpy(a, x)
+      x = np.random.rand(self.ndof-2)
+      sol = solution(self.y)
+      sol.axpy(self.a, x)
 
   # Make sure axpy throws exception if a is not a scalar
   @raises(Exception)
   def test_alphanotscalar(self):
-      ndof = np.random.randint(255)
-      y = np.random.rand(ndof)
-      x = np.random.rand(ndof)
       a = np.random.rand(3)
-      sol = solution(y)
-      sol.axpy(a, x)  
+      sol = solution(self.y)
+      sol.axpy(a, self.x)  
