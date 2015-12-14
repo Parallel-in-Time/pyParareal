@@ -10,7 +10,7 @@ class TestIntegrator(unittest.TestCase):
   
   def setUp(self):
     self.t = np.sort( np.random.rand(2) )
-    self.nsteps = np.random.randint(25)
+    self.nsteps = 1 + np.random.randint(25)
 
   # Make sure integrator can be instantiated
   def test_caninstantiate(self):
@@ -30,3 +30,9 @@ class TestIntegrator(unittest.TestCase):
   def test_nstepfloatfail(self):
     with self.assertRaises(Exception):
       integ = integrator(0.0, 1.0, 1.15)
+
+  # run function of generic integrator should raise exception
+  def test_failgenericrun(self):
+    integ = integrator(self.t[0], self.t[1], self.nsteps)
+    with self.assertRaises(Exception):
+      integ.run()

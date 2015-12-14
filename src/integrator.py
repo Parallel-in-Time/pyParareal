@@ -10,4 +10,4 @@ class integrator:
 
   # Run integrator from tstart to tend using nstep many steps
   def run(self):
-    raise valueError("run function in generic integrator not implemented")
+    raise NotImplementedError("Function run in generic integrator not implemented: needs to be overloaded in derived class")
