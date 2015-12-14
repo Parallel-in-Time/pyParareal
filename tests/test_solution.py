@@ -3,10 +3,11 @@ sys.path.append('../src')
 
 from solution import solution
 from nose.tools import *
+import unittest
 import numpy as np
 import scipy as sp
 
-class TestSolution:
+class TestSolution(unittest.TestCase):
 
   # Make sure solution can be instantiated and that default M is identity
   def test_caninstantiate(self):

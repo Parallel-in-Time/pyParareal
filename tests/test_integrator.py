@@ -3,9 +3,10 @@ sys.path.append('../src')
 
 from integrator import integrator
 from nose.tools import *
+import unittest
 import numpy as np
 
-class TestIntegrator:
+class TestIntegrator(unittest.TestCase):
   
   # Make sure integrator can be instantiated
   def test_caninstantiate(self):
