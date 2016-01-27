@@ -1,6 +1,6 @@
 from solution import solution
 
-class integrator:
+class integrator(object):
 
   def __init__(self, tstart, tend, nsteps):
     assert tstart<tend, "tstart must be smaller than tend"

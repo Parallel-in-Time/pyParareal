@@ -2,7 +2,7 @@ from integrator import integrator
 from solution import solution
 import numpy as np
 
-class timeslice:
+class timeslice(object):
 
   def __init__(self, int_fine, int_coarse, tolerance, iter_max):
     assert (isinstance(tolerance, float) and tolerance>=0), "Parameter tolerance must be positive or zero"

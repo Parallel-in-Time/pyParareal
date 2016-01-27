@@ -32,7 +32,7 @@ class TestSolution(unittest.TestCase):
       sol = solution(1.0, np.array([[1, 1], [1, 1]]))
 
   # Make sure if matrix M is given as argument to constructor, it is used
-  def test_fistused(self):
+  def test_fisused(self):
     sol = solution(self.y, self.M)
     assert np.array_equal(sol.M, self.M)
 
@@ -52,15 +52,25 @@ class TestSolution(unittest.TestCase):
   def test_mtoomanydim(self):
     sol = solution(self.y)
     axpy = self.a*self.x+self.y
-    sol.axpy(self.a, self.x)
+    sol_x = solution(self.x)
+    sol.axpy(self.a, sol_x)
     assert np.array_equal(sol.y, axpy)
 
   # Make sure axpy throws exception if size of does not match y
   def test_yxmismatch(self):
-      x = np.random.rand(self.ndof-2)
+      x = solution(np.random.rand(self.ndof-2))
       sol = solution(self.y)
       with self.assertRaises(AssertionError):
         sol.axpy(self.a, x)
+
+  # Axpy correctly interprets a float as 1 entry numpy array
+  def test_axpyfloat(self):
+    a = 0.1
+    sol = solution(self.y)
+    print (np.ones(self.ndof)).ndim
+    sol2 = solution(np.ones(self.ndof))
+    sol.axpy(0.1, sol2)
+    assert np.array_equal(sol.y, a*np.ones(self.ndof) + self.y)
 
   # Make sure axpy throws exception if a is not a scalar
   def test_alphanotscalar(self):

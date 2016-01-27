@@ -89,6 +89,13 @@ class TestTimeslice(unittest.TestCase):
   # get_sol_fine returns correct value
   @unittest.skip("Needs implemented integrator")
   def test_solfine(self):
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 3)
     sol = solution(np.random.rand(25))
-    ts.set_sol_start(sol)
+    self.ts_default.set_sol_start(sol)
+    self.ts_default.update_fine()
+    sol_ts = self.ts_default.get_sol_fine()
+
+  # get_sol_coarse returns correct value
+  @unittest.skip("Needs implemented integrator")
+  def test_solcoarse(self):
+    sol = solution(np.random.rand(25))
+    self.ts_default.set_sol_start(sol)

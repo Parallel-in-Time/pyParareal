@@ -5,7 +5,7 @@ import scipy as sp
 # M*y' = f(y)
 # with y being an array.
 
-class solution:
+class solution(object):
 
   def __init__(self, y, M=0): 
     assert isinstance(y, np.ndarray)
@@ -20,17 +20,24 @@ class solution:
 
   # Overwrite y with a*x+y
   def axpy(self, a, x):
+    if isinstance(a, float):
+      a = np.array([a])
     assert a.ndim==1 and np.size(a)==1, "Input a must be a scalar"
-    assert x.ndim==1 and np.size(x)==self.ndof, "Input x must be a vector of same length as y"
-    self.y = a*x + self.y
+    assert isinstance(x, solution), "Input x must be an object of type solution"
+    assert x.ndof==self.ndof, "Number of degrees of freedom is different in x than in this solution object"
+    self.y = a*x.y + self.y
 
   # Overwrite y with f(y)
   def f(self):
-    return 0.0
+    raise NotImplementedError("Function f in generic solution not implemented: needs to be overloaded in derived class")
 
-  # Overwrite y with solution of M*y-alpha*f(y) = b
-  def solve(self, alpha, b):
-    return 0.0
+  # Overwrite y with My
+  def applyM(self):
+    self.y = np.ravel(np.dot(self.M,self.y))
+
+  # Overwrite y with solution of M*y-alpha*f(y) = y
+  def solve(self, alpha):
+    raise NotImplementedError("Function solve in generic solution not implemented: needs to be overloaded in derived class")
 
   # Return inf norm of y
   def norm(self):
