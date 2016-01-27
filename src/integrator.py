@@ -1,3 +1,5 @@
+from solution import solution
+
 class integrator:
 
   def __init__(self, tstart, tend, nsteps):
@@ -9,5 +11,6 @@ class integrator:
     self.dt     = (tend - tstart)/float(nsteps)
 
   # Run integrator from tstart to tend using nstep many steps
-  def run(self):
+  def run(self, u0):
+    assert isinstance(u0, solution), "Initial value u0 must be an object of type solution"
     raise NotImplementedError("Function run in generic integrator not implemented: needs to be overloaded in derived class")

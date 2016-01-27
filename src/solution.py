@@ -7,7 +7,8 @@ import scipy as sp
 
 class solution:
 
-  def __init__(self, y, M=0):
+  def __init__(self, y, M=0): 
+    assert isinstance(y, np.ndarray)
     assert y.ndim==1, "Input y must be a one dimensional array"
     self.y    = y
     self.ndof = np.size(y)
