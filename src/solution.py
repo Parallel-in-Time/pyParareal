@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+from scipy import sparse
 
 # Class representing the solution of an IVP
 # M*y' = f(y)
@@ -8,15 +9,15 @@ import scipy as sp
 class solution(object):
 
   def __init__(self, y, M=0): 
-    assert isinstance(y, np.ndarray)
-    assert y.ndim==1, "Input y must be a one dimensional array"
+    assert isinstance(y, np.ndarray), "Argument y must be of type numpy.ndarray"
+    assert np.shape(y)[0]==np.size(y), "Argument y must be a linear array"
     self.y    = y
     self.ndof = np.size(y)
     if isinstance(M,int):
       self.M = sp.eye(self.ndof)
     else:
       self.M = M
-      assert np.array_equal( np.shape(M), [self.ndof, self.ndof]), ".."
+      assert np.array_equal( np.shape(M), [self.ndof, self.ndof]), "Matrix M does not match size of argument y"
 
   # Overwrite y with a*x+y
   def axpy(self, a, x):
@@ -33,7 +34,7 @@ class solution(object):
 
   # Overwrite y with My
   def applyM(self):
-    self.y = np.ravel(np.dot(self.M,self.y))
+    self.y = self.M.dot(self.y)
 
   # Overwrite y with solution of M*y-alpha*f(y) = y
   def solve(self, alpha):

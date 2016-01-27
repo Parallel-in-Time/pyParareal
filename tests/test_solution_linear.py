@@ -27,12 +27,10 @@ class test_solution_linear(TestSolution):
 
   # Solve works correctly
   def test_solve(self):
+    self.M = sparse.spdiags([ np.random.rand(self.ndof) ], [0], self.ndof, self.ndof)*sparse.identity(self.ndof)
+    self.A = sparse.csc_matrix(self.A)
     u = np.random.rand(self.ndof)
-    print np.shape(u)
-    print np.shape(self.M)
-    print np.shape(self.A)
-    b = np.ravel( np.dot( self.M - 0.1*self.A, u) )
+    b = ( self.M - 0.1*self.A ).dot(u).T
     sol_lin = solution_linear(b, self.A, self.M)
     sol_lin.solve(0.1)
-    print np.linalg.norm(sol_lin.y - u, np.infty)
-    assert np.allclose(sol_lin.y, u, rtol=1e-12, atol=1e-12)
+    assert np.allclose(sol_lin.y, u, rtol=1e-12, atol=1e-12), "Solution provided by solve seems wrong"
