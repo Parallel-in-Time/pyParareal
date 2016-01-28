@@ -44,11 +44,7 @@ class TestImpeuler(unittest.TestCase):
     Rmat = Rmat.dot(self.M)
     Rmat = np.linalg.matrix_power(Rmat.todense(), nsteps)
     yend = Rmat.dot(np.ones(self.ndof)).T
- #   print u0.y   
     sol_end = solution_linear( yend, self.A, self.M )
-#    print sol_end.y
-    print np.shape(sol_end.y)
-    sol_end.axpy(np.array([-1.0]), u0)
-    print np.shape(sol_end.y)
+    sol_end.axpy(-1.0, u0)
 #    print -1.0*u0.y + sol_end.y
 #    print sol_end.norm()

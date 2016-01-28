@@ -11,7 +11,7 @@ class solution_linear(solution):
     assert np.array_equal( np.shape(A), [self.ndof, self.ndof]), "A must be a matrix of size ndof x ndof where ndof is the number of entries in argument y"
 
   def f(self):
-    self.y = np.ravel(np.dot(self.A, self.y))
+    self.y = self.A.dot(self.y)
 
   def solve(self, alpha):
     self.y = linalg.spsolve( self.M - alpha*self.A, self.y)

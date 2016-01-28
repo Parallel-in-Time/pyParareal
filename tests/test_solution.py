@@ -11,6 +11,7 @@ class TestSolution(unittest.TestCase):
 
   def setUp(self):
     self.ndof = np.random.randint(255)
+    self.ndof = 5
     self.M = np.random.rand(self.ndof, self.ndof)
     self.y = np.random.rand(self.ndof)
     self.x = np.random.rand(self.ndof)
@@ -44,36 +45,37 @@ class TestSolution(unittest.TestCase):
 
   # Make sure exception is raised if M has more than two dimensions
   def test_mtoomanydim(self):
-    M = np.random.rand(ndof, ndof, ndof)
+    M = np.random.rand(self.ndof, self.ndof, self.ndof)
     with self.assertRaises(AssertionError):
       sol = solution(self.y, M)
 
   # Make sure axpy performs expected operation
-  def test_mtoomanydim(self):
-    sol = solution(self.y)
-    axpy = self.a*self.x+self.y
+  def test_axpy(self):
+    sol_y = solution(self.y)
     sol_x = solution(self.x)
-    sol.axpy(self.a, sol_x)
-    assert np.array_equal(sol.y, axpy)
+    sol_y.axpy(self.a, sol_x)
+    axpy = np.reshape(self.a*self.x+self.y, (self.ndof,1))
+    assert np.array_equal(sol_y.y, np.reshape(axpy,(self.ndof,1))), "axpy did not produce expected result"
 
   # Make sure axpy throws exception if size of does not match y
   def test_yxmismatch(self):
-      x = solution(np.random.rand(self.ndof+2))
-      sol = solution(self.y)
-      with self.assertRaises(AssertionError):
-        sol.axpy(self.a, x)
+    x = solution(np.random.rand(self.ndof+2))
+    sol = solution(self.y)
+    with self.assertRaises(AssertionError):
+      sol.axpy(self.a, x)
 
   # Axpy correctly interprets a float as 1 entry numpy array
   def test_axpyfloat(self):
     a = 0.1
-    sol = solution(self.y)
+    sol  = solution(self.y)
     sol2 = solution(np.ones(self.ndof))
-    sol.axpy(0.1, sol2)
-    assert np.array_equal(sol.y, a*np.ones(self.ndof) + self.y)
+    sol.axpy(a, sol2)
+    assert np.array_equal(sol.y, a*np.ones((self.ndof,1)) + np.reshape(self.y, (self.ndof,1))), "axpy did not produce expected result"
 
   # Make sure axpy throws exception if a is not a scalar
   def test_alphanotscalar(self):
-      a = np.random.rand(3)
-      sol = solution(self.y)
-      with self.assertRaises(AssertionError):
-        sol.axpy(a, self.x)  
+    a = np.random.rand(3)
+    sol_y = solution(self.y)
+    sol_x = solution(self.x)
+    with self.assertRaises(AssertionError):
+      sol_y.axpy(a, sol_x)  

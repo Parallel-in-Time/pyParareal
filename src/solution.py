@@ -11,7 +11,8 @@ class solution(object):
   def __init__(self, y, M=0): 
     assert isinstance(y, np.ndarray), "Argument y must be of type numpy.ndarray"
     assert np.shape(y)[0]==np.size(y), "Argument y must be a linear array"
-    self.y    = y
+    # If y is a purely 1D array, reshape it into a Nx1 2D array... if both types are mixed, horrible inconsistencies arise
+    self.y    = np.reshape(y, (np.shape(y)[0], 1))
     self.ndof = np.size(y)
     if isinstance(M,int):
       self.M = sp.eye(self.ndof)
@@ -21,12 +22,14 @@ class solution(object):
 
   # Overwrite y with a*x+y
   def axpy(self, a, x):
-    if isinstance(a, float):
-      a = np.array([a])
-    assert a.ndim==1 and np.size(a)==1, "Input a must be a scalar"
-    assert isinstance(x, solution), "Input x must be an object of type solution"
-    assert x.ndof==self.ndof, "Number of degrees of freedom is different in x than in this solution object"
-    self.y = a*x.y + self.y
+    assert (np.size(a)==1 or isinstance(a, float)), "Input a must be a scalar"
+    # Ask for foregiveness instead of permission...
+    try:
+      self.y = a*x.y + self.y
+    except:
+      assert isinstance(x, solution), "Input x must be an object of type solution"
+      assert x.ndof==self.ndof, "Number of degrees of freedom is different in x than in this solution object"
+      raise Exception('Unknown error in solution.axpy')
 
   # Overwrite y with f(y)
   def f(self):
