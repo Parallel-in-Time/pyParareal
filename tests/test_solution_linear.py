@@ -29,8 +29,8 @@ class test_solution_linear(TestSolution):
   def test_solve(self):
     self.M = sparse.spdiags([ np.random.rand(self.ndof) ], [0], self.ndof, self.ndof)*sparse.identity(self.ndof)
     self.A = sparse.csc_matrix(self.A)
-    u = np.random.rand(self.ndof)
-    b = ( self.M - 0.1*self.A ).dot(u).T
+    u = np.reshape(np.random.rand(self.ndof), (self.ndof,1))
+    b = ( self.M - 0.1*self.A ).dot(u)
     sol_lin = solution_linear(b, self.A, self.M)
     sol_lin.solve(0.1)
     assert np.allclose(sol_lin.y, u, rtol=1e-12, atol=1e-12), "Solution provided by solve seems wrong"
