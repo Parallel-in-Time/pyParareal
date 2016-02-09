@@ -3,7 +3,8 @@ sys.path.append('../src')
 
 from timeslice import timeslice
 from integrator import integrator
-from solution import solution
+from impeuler import impeuler
+from solution_linear import solution_linear
 import unittest
 import numpy as np
 
@@ -13,8 +14,8 @@ class TestTimeslice(unittest.TestCase):
     t = np.sort( np.random.rand(2) )
     nsteps_c        = 1+np.random.randint(25)
     nsteps_f        = 1+np.random.randint(125)
-    self.int_coarse = integrator(t[0], t[1], nsteps_c)
-    self.int_fine   = integrator(t[0], t[1], nsteps_f)
+    self.int_coarse = impeuler(t[0], t[1], nsteps_c)
+    self.int_fine   = impeuler(t[0], t[1], nsteps_f)
     self.ts_default = timeslice(self.int_fine, self.int_coarse, 1e-10, 3)
 
   # Timeslice can be instantiated
@@ -86,16 +87,20 @@ class TestTimeslice(unittest.TestCase):
     with self.assertRaises(AssertionError):
       self.ts_default.set_sol_start(-1)
 
-  # get_sol_fine returns correct value
-  @unittest.skip("Needs implemented integrator")
-  def test_solfine(self):
-    sol = solution(np.random.rand(25))
+  # get_sol_fine runs
+  def test_canrunfine(self):
+    ndof = np.random.randint(25)
+    A = (-2.0)*np.eye(ndof)
+    sol = solution_linear(np.ones(ndof), A)
     self.ts_default.set_sol_start(sol)
     self.ts_default.update_fine()
     sol_ts = self.ts_default.get_sol_fine()
 
-  # get_sol_coarse returns correct value
-  @unittest.skip("Needs implemented integrator")
-  def test_solcoarse(self):
-    sol = solution(np.random.rand(25))
+  # get_sol_coarse runs
+  def test_canruncoarse(self):
+    ndof = np.random.randint(25)
+    A = (-2.0)*np.eye(ndof)
+    sol = solution_linear(np.ones(ndof), A)
     self.ts_default.set_sol_start(sol)
+    self.ts_default.update_coarse()
+    sol_ts = self.ts_default.get_sol_coarse()

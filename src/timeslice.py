@@ -40,11 +40,11 @@ class timeslice(object):
     return self.int_fine.tend
 
   def get_sol_fine(self):
-    assert hasattr(self, 'fine'), "Timeslice object does not have attribute sol_fine - may be function update_fine was never executed"
+    assert hasattr(self, 'sol_fine'), "Timeslice object does not have attribute sol_fine - may be function update_fine was never executed"
     return self.sol_fine
 
   def get_sol_coarse(self):
-    assert hasattr(self, 'coarse'), "Timeslice object does not have attribute sol_coarse - may be function update_coarse was never executed"
+    assert hasattr(self, 'sol_coarse'), "Timeslice object does not have attribute sol_coarse - may be function update_coarse was never executed"
     return self.sol_coarse
 
   def is_converged(self):

@@ -1,6 +1,11 @@
 from integrator import integrator
 from solution import solution
 
+# Used to compute update matrices
+from solution_linear import solution_linear
+from scipy import sparse
+from scipy import linalg
+
 class impeuler(integrator):
 
   def __init__(self, tstart, tend, nsteps):
@@ -12,3 +17,16 @@ class impeuler(integrator):
     for i in range(0,self.nsteps):
       u0.applyM()
       u0.solve(self.dt)
+
+  #
+  # For linear problems My' = A', a backward Euler update corresponds
+  # to 
+  # u_n+1 = (M - dt*A)^(-1)*M*u_n
+  #
+  def get_update_matrix(self, sol):
+    assert isinstance(sol, solution_linear), "Update function can only be computed for solutions of type solution_linear"
+    # Fetch matrices from solution and make sure they are sparse
+    M = sparse.csc_matrix(sol.M)
+    A = sparse.csc_matrix(sol.A)
+    Rmat = sparse.linalg.inv(M - self.dt*A)
+    return Rmat.dot(M)
