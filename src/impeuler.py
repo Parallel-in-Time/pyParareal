@@ -30,6 +30,8 @@ class impeuler(integrator):
     M = sparse.csc_matrix(sol.M)
     A = sparse.csc_matrix(sol.A)
     Rmat = sparse.linalg.inv(M - self.dt*A)
+    # this is call is necessary because if Rmat has only 1 entry, it gets converted to a dense array here
+    Rmat = sparse.csc_matrix(Rmat)
     Rmat = Rmat.dot(M)
     Rmat = Rmat**self.nsteps
     return Rmat

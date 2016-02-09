@@ -28,7 +28,15 @@ class timeslice(object):
     self.int_coarse.run(self.sol_coarse)
 
   #
-  # GET, SET and IS functions
+  # SET functions
+  #
+
+  def set_sol_start(self, sol):
+    assert isinstance(sol, solution), "Parameter sol has to be of type solution"
+    self.sol_start = sol
+
+  #
+  # GET functions
   #
 
   # For linear problems, returns a matrix that corresponds to running the fine method
@@ -38,10 +46,6 @@ class timeslice(object):
   # For linear problems, returns a matrix that corresponds to running the coarse method
   def get_coarse_update_matrix(self, sol):
     return self.int_coarse.get_update_matrix(sol)
-
-  def set_sol_start(self, sol):
-    assert isinstance(sol, solution), "Parameter sol has to be of type solution"
-    self.sol_start = sol
 
   def get_tstart(self):
     return self.int_fine.tstart
@@ -56,6 +60,10 @@ class timeslice(object):
   def get_sol_coarse(self):
     assert hasattr(self, 'sol_coarse'), "Timeslice object does not have attribute sol_coarse - may be function update_coarse was never executed"
     return self.sol_coarse
+
+  #
+  # IS functions
+  #
 
   def is_converged(self):
     if ( (self.residual<self.tolerance) or (self.iteration>=self.iter_max) ):
