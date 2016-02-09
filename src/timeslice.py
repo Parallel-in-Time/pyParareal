@@ -31,6 +31,14 @@ class timeslice(object):
   # GET, SET and IS functions
   #
 
+  # For linear problems, returns a matrix that corresponds to running the fine method
+  def get_fine_update_matrix(self, sol):
+    return self.int_fine.get_update_matrix(sol)
+
+  # For linear problems, returns a matrix that corresponds to running the coarse method
+  def get_coarse_update_matrix(self, sol):
+    return self.int_coarse.get_update_matrix(sol)
+
   def set_sol_start(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
     self.sol_start = sol

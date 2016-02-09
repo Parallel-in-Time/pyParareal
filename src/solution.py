@@ -15,7 +15,7 @@ class solution(object):
     self.y    = np.reshape(y, (np.shape(y)[0], 1))
     self.ndof = np.size(y)
     if isinstance(M,int):
-      self.M = sp.eye(self.ndof)
+      self.M = sparse.eye(self.ndof, format="csc")
     else:
       self.M = M
       assert np.array_equal( np.shape(M), [self.ndof, self.ndof]), "Matrix M does not match size of argument y"

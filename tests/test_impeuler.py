@@ -43,5 +43,5 @@ class TestImpeuler(unittest.TestCase):
     yend = Rmat.dot(np.ones((self.ndof,1)))
     sol_end = solution_linear( yend, self.A, self.M )
     sol_end.axpy(-1.0, u0)
-    assert sol_end.norm()<1e-11, ("Output from implicit Euler integrator differs from result computed with power of update matrix -- norm of difference: %5.3e" % sol_end.norm())
+    assert sol_end.norm()<2e-12, ("Output from implicit Euler integrator differs from result computed with power of update matrix -- norm of difference: %5.3e" % sol_end.norm())
 

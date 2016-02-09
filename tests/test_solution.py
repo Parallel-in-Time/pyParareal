@@ -20,7 +20,7 @@ class TestSolution(unittest.TestCase):
   # Make sure solution can be instantiated and that default M is identity
   def test_caninstantiate(self):
     sol = solution(self.y)
-    assert np.array_equal(sol.M, sp.eye(self.ndof)), "Default M matrix is not identity"
+    assert np.array_equal(sol.M.todense(), sp.eye(self.ndof)), "Default M matrix is not identity"
 
   # Make sure exception is raised if y is not of type numpy.ndarray
   def test_failnoarray(self):
