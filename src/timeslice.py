@@ -20,10 +20,12 @@ class timeslice(object):
     self.residual   = tolerance + 1.0
 
   def update_fine(self):
-    self.sol_fine = self.int_fine.run(self.sol_start)
+    self.sol_fine = self.sol_start
+    self.int_fine.run(self.sol_fine)
 
   def update_coarse(self):
-    self.sol_coarse = self.int_coarse.run(self.sol_start)
+    self.sol_coarse = self.sol_start
+    self.int_coarse.run(self.sol_coarse)
 
   #
   # GET, SET and IS functions

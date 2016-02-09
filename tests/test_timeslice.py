@@ -95,6 +95,7 @@ class TestTimeslice(unittest.TestCase):
     self.ts_default.set_sol_start(sol)
     self.ts_default.update_fine()
     sol_ts = self.ts_default.get_sol_fine()
+    assert isinstance(sol_ts, solution_linear), "After running update_fine, object returned by get_sol_fine is of wrong type"
 
   # get_sol_coarse runs
   def test_canruncoarse(self):
@@ -104,3 +105,5 @@ class TestTimeslice(unittest.TestCase):
     self.ts_default.set_sol_start(sol)
     self.ts_default.update_coarse()
     sol_ts = self.ts_default.get_sol_coarse()
+    assert isinstance(sol_ts, solution_linear), "After running update_coarse, object returned by get_sol_coarse is of wrong type"
+
