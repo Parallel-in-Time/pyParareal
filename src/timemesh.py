@@ -2,6 +2,7 @@ from timeslice import timeslice
 import numpy as np
 from scipy.sparse import linalg
 from scipy import sparse
+import copy
 
 class timemesh(object):
 
@@ -29,7 +30,7 @@ class timemesh(object):
       self.slices[i].update_coarse()
       # Fetch coarse value and set initial value of next slice
       if i<self.nslices-1:
-        self.set_initial_value( self.get_coarse_value(i), i+1 )
+        self.set_initial_value( copy.deepcopy(self.get_coarse_value(i)), i+1 )
 
   # Run the fine method serially over all slices
   def run_fine(self, u0):
@@ -39,7 +40,25 @@ class timemesh(object):
       self.slices[i].update_fine()
       # Fetch fine value and set initial value of next slice
       if i<self.nslices-1:
-        self.set_initial_value( self.get_fine_value(i), i+1 )
+        self.set_initial_value( copy.deepcopy(self.get_fine_value(i)), i+1 )
+
+  # Update fine values for all slices
+  # @NOTE: This is not equivalent to run_fine, since no updated initial values are copied forward
+  def update_fine_all(self):
+    for i in range(0,self.nslices):
+      self.slices[i].update_fine()
+
+  # Update coarse values for all slices
+  # @NOTE: This is not equivalent to run_fine, since no updated initial values are copied forward
+  def update_coarse_all(self):
+    for i in range(0,self.nslices):
+      self.slices[i].update_coarse()
+
+  def update_coarse(self, i):
+    self.slices[i].update_coarse()
+
+  def update_fine(self, i):
+    self.slices[i].update_fine()
 
   #
   # SET functions
@@ -72,6 +91,10 @@ class timemesh(object):
   def get_fine_value(self, slice_nr):
     assert slice_nr<self.nslices, ("There are only %2i slices in this timemesh" % slice_nr)
     return self.slices[slice_nr].get_sol_fine()
+
+  def get_end_value(self, slice_nr):
+    assert slice_nr<self.nslices, ("There are only %2i slices in this timemesh" % slice_nr)
+    return self.slices[slice_nr].get_sol_end()
 
   def get_max_residual(self):
     maxres = self.slices[0].get_residual()

@@ -1,6 +1,7 @@
 from integrator import integrator
 from solution import solution
 import numpy as np
+import copy
 
 class timeslice(object):
 
@@ -18,11 +19,11 @@ class timeslice(object):
     self.iteration  = 0
 
   def update_fine(self):
-    self.sol_fine = self.sol_start
+    self.sol_fine = copy.deepcopy(self.sol_start)
     self.int_fine.run(self.sol_fine)
 
   def update_coarse(self):
-    self.sol_coarse = self.sol_start
+    self.sol_coarse = copy.deepcopy(self.sol_start)
     self.int_coarse.run(self.sol_coarse)
 
   #
@@ -74,6 +75,10 @@ class timeslice(object):
   def get_sol_coarse(self):
     assert hasattr(self, 'sol_coarse'), "Timeslice object does not have attribute sol_coarse - may be function update_coarse was never executed"
     return self.sol_coarse
+
+  def get_sol_end(self):
+    assert hasattr(self, 'sol_end'), "Timeslice object does not have attribute sol_end - may be function set_sol_end was never executed"
+    return self.sol_end
 
   def get_residual(self):
     self.set_residual()

@@ -2,6 +2,7 @@ from timemesh import timemesh
 from solution import solution
 from scipy.sparse import linalg
 from scipy import sparse
+import copy
 
 class parareal(object):
 
@@ -11,11 +12,42 @@ class parareal(object):
       self.u0 = u0
 
     def run(self):
+      
+      # Coarse predictor; need deepcopy to keep self.u0 unaltered
+      self.timemesh.run_coarse(copy.deepcopy(self.u0))
 
-      # Coarse predictor
-      self.timemesh.run_coarse(self.u0)
-      while not self.timemesh.all_converged():
+      while True:
+        
+        # Run fine method
+        self.timemesh.update_fine_all()
+
+        for i in range(0,self.timemesh.nslices):
+
+          # Compute difference F-G
+          fine = copy.deepcopy( self.timemesh.get_fine_value(i) )
+          fine.axpy(-1.0, self.timemesh.get_coarse_value(i))
+
+          # Fetch update value from previous time slice
+          if i==0:
+            self.timemesh.set_initial_value(self.u0)
+          else:
+            self.timemesh.set_initial_value(copy.deepcopy(self.timemesh.get_end_value(i-1)), i)
+
+          # Update coarse value
+          self.timemesh.update_coarse(i)
+
+          # Perform correction G_new + F_old - G_old
+          fine.axpy(1.0, self.timemesh.get_coarse_value(i))
+
+          # Set corrected value as new end value
+          self.timemesh.set_end_value(fine, i)
+
+        # increase iteration counter
         self.timemesh.increase_iter_all() 
+
+        # stop loop if all slices have converged
+        if self.timemesh.all_converged():
+          break
 
     #
     # GET functions
@@ -33,6 +65,6 @@ class parareal(object):
       Pmat = Bmat.dot(Gmat-Fmat)
       return Pmat, Bmat
 
-    # Return fine value of last time slices
-    def get_final_value(self):
-      return self.timemesh.get_fine_value(self.timemesh.nslices-1)
+    # return end value of time slice i
+    def get_end_value(self, i):
+      return self.timemesh.get_end_value(i)
