@@ -16,8 +16,6 @@ class timeslice(object):
     self.tolerance  = tolerance
     self.iter_max   = iter_max
     self.iteration  = 0
-    # Initialize residual such that first check for res < tol always fails
-    self.residual   = tolerance + 1.0
 
   def update_fine(self):
     self.sol_fine = self.sol_start
@@ -34,6 +32,22 @@ class timeslice(object):
   def set_sol_start(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
     self.sol_start = sol
+
+  def set_sol_end(self, sol):
+    assert isinstance(sol, solution), "Parameter sol has to be of type solution"
+    self.sol_end = sol
+
+  def increase_iter(self):
+    self.iteration += 1
+
+  def set_residual(self):
+    assert hasattr(self, 'sol_fine'), "Timeslice object does not have attribute sol_fine - may be function update_fine was never executed"
+    assert hasattr(self, 'sol_end'), "Timeslice object does not have attribute sol_end - it has to be assigned using set_sol_end"
+    # compute || F(y_n-1) - y_n ||
+    res = self.sol_fine
+    res.axpy(-1.0, self.sol_end)
+    self.residual = res.norm()
+    return self.residual
 
   #
   # GET functions
@@ -61,12 +75,18 @@ class timeslice(object):
     assert hasattr(self, 'sol_coarse'), "Timeslice object does not have attribute sol_coarse - may be function update_coarse was never executed"
     return self.sol_coarse
 
+  def get_residual(self):
+    self.set_residual()
+    return self.residual
+
   #
   # IS functions
   #
 
   def is_converged(self):
-    if ( (self.residual<self.tolerance) or (self.iteration>=self.iter_max) ):
+    # update residual
+    self.set_residual()
+    if ( (self.get_residual()<self.tolerance) or (self.iteration>=self.iter_max) ):
       return True
     else:
       return False

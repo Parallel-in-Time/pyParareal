@@ -43,15 +43,45 @@ class TestTimemesh(unittest.TestCase):
     with self.assertRaises(AssertionError):
       tm.set_initial_value(self.u0, self.nslices+1)
 
-  # all_converged return True if all timelsices have max_iter = 0
+  # all_converged throws if called directly after initialisation
+  def test_allconvergedthrows(self):
+    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 0)
+    with self.assertRaises(AssertionError):
+      tm.all_converged()
+
   def test_allconvergedzeromaxiter(self):
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 0)
-    assert tm.all_converged(), "For iter_max=0, all timeslices should initially be converged and all_converged should return True"
+    # to allow computing residuals, set initial value, run fine and set end value
+    sol_end     = solution_linear( np.ones(1), np.array([[-1.0]]) )
+    sol_start   = solution_linear(np.zeros(1), np.array([[-1.0]]) )
+    for i in range(0,self.nslices):
+      tm.set_initial_value(sol_start, i)
+      tm.set_end_value(sol_end, i)
+      tm.slices[i].update_fine()
+    # Since iter_max=0, all_converged should return True even though the residual is larger than 1e-10
+    assert tm.get_max_residual()>1e-10, "Maximum residual is smaller than tolerance, even though set up not to be"    
+    assert tm.all_converged, "For iter_max=0, all time slices should be considered converged"
 
-  # all_converged return True if all timelsices have max_iter = 0
-  def test_allconvergedinitiallyfalse(self):
-    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5)
-    assert not tm.all_converged(), "For iter_max>0, all timeslices should initially not be converged and all_converged should return False"
+  # raising iteration counter leads to convergence
+  def test_raiseiterconvergence(self):
+    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 2)
+    sol_end     = solution_linear( np.ones(1), np.array([[-1.0]]) )
+    sol_start   = solution_linear(np.zeros(1), np.array([[-1.0]]) )
+    for i in range(0,self.nslices):
+      tm.set_initial_value(sol_start, i)
+      tm.set_end_value(sol_end, i)
+      tm.slices[i].update_fine()
+    # since iter_max=2, time slices should not yet have converged
+    assert not tm.all_converged(), "All time slices have converged even though initialised not to be"
+    # increase iteration counter 
+    for i in range(0,self.nslices):
+      tm.increase_iter(i)
+    # For max_iter=2, timeslices should not yet have converged
+    assert not tm.all_converged(), "Raising iteration counter once with iter_max should not lead to convergence"
+    # increase iteration counter again
+    for i in range(0,self.nslices):
+      tm.increase_iter(i)
+    assert tm.all_converged(), "Raising iteration counter through increase_iter did not lead to convergence"
 
   # get_fine_matrix is callable
   def test_finematrixcallable(self):

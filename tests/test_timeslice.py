@@ -54,16 +54,21 @@ class TestTimeslice(unittest.TestCase):
     with self.assertRaises(AssertionError):
       ts = timeslice(self.int_fine, int_c, 1e-10, 5)   
 
-  # Directly after initialisation, is_converged returns false unless max_iter = 0
-  def test_initiallynotconverged(self):
+  # Directly after initialisation, is_converged throws an exception because no residual is available
+  def test_isconvergedthrows(self):
     ts = timeslice(self.int_fine, self.int_coarse, 1e-14+np.random.rand(), 1+np.random.randint(1))
-    assert (not ts.is_converged()), "Directly after initialisation, a is_converged should return False"
+    with self.assertRaises(AssertionError):
+      ts.is_converged()
 
-  # Directly after initialisation, is_converged returns True if max_iter=0
-  def test_initiallyconvergedifmaxiterzero(self):
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-14+np.random.rand(), 0)
-    assert ts.is_converged(), "If max_iter=0, is_converged should return True"
-  
+  # After running fine integrator and setting sol_end to the same value, is_converged returns True
+  def test_isconverged(self):
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-14+np.random.rand(), 1+np.random.randint(1))
+    sol = solution_linear(np.ones(1), np.array([[-1.0]]))
+    ts.set_sol_start(sol)
+    ts.update_fine()
+    ts.set_sol_end(ts.get_sol_fine())
+    assert ts.is_converged(), "After running F and setting sol_end to the result, the residual should be zero and the time slice converged"  
+
   # get_tstart returns correct value
   def test_get_tstart(self):
     assert abs(self.ts_default.get_tstart() - self.int_fine.tstart)==0, "get_start returned wrong value"

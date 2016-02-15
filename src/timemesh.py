@@ -14,6 +14,8 @@ class timemesh(object):
     self.nslices  = nslices
     self.slices   = []
 
+    # @NOTE: this setup would allow to set different values for tolerance and iter_max for different slices...
+    # ... however, this has not yet been tested!!
     for i in range(0,nslices):
       ts_fine   =   fine(self.timemesh[i], self.timemesh[i+1], nsteps_fine)
       ts_coarse = coarse(self.timemesh[i], self.timemesh[i+1], nsteps_coarse)
@@ -46,6 +48,20 @@ class timemesh(object):
     assert slice_nr<self.nslices, ("There are only %2i slices in this timemesh" % slice_nr)
     self.slices[slice_nr].set_sol_start(u0)
 
+  def set_end_value(self, u0, slice_nr=0):
+    assert slice_nr<self.nslices, ("There are only %2i slices in this timemesh" % slice_nr)
+    self.slices[slice_nr].set_sol_end(u0)
+
+  # increase iteration counter of a single time slice
+  def increase_iter(self, slice_nr):
+    assert slice_nr<self.nslices, ("There are only %2i slices in this timemesh" % slice_nr)
+    self.slices[slice_nr].increase_iter()
+
+  # increase iteration counters of ALL time slices
+  def increase_iter_all(self):
+    for i in range(0,self.nslices):
+      self.increase_iter(i)
+
   #
   # GET functions
   #
@@ -57,6 +73,19 @@ class timemesh(object):
     assert slice_nr<self.nslices, ("There are only %2i slices in this timemesh" % slice_nr)
     return self.slices[slice_nr].get_sol_fine()
 
+  def get_max_residual(self):
+    maxres = self.slices[0].get_residual()
+    for i in range(1,self.nslices-1):
+      maxres = max( maxres, self.slices[i].get_residual() )
+    return maxres
+
+  # Returns a matrix such that inversion by block elimination corresponds to 
+  # running the fine method in serial:
+  # | Id              | | u_0 |   | u_0 |
+  # | -F Id           | | u_1 |   |   0 |
+  # |    -F Id        | | u_2 | = | ... | 
+  # |       ... ...   | | ... |   |     |
+  # |            -F Id| | u_N |   |   0 |
   def get_fine_matrix(self, u0):
     Id = sparse.eye( u0.ndof, format="csc" )
     Fmat = Id
@@ -69,6 +98,7 @@ class timemesh(object):
       Fmat = sparse.bmat([[Fmat, None],[lower, Id]], format="csc")
     return Fmat
 
+  # Returns a matrix such that inversion by block elimination corresponds to running the coarse method in serial
   def get_coarse_matrix(self, u0):
     Id = sparse.eye( u0.ndof, format="csc" )
     Cmat = Id
@@ -80,6 +110,7 @@ class timemesh(object):
         lower = sparse.hstack([lower, -self.slices[i].get_coarse_update_matrix(u0)])
       Cmat = sparse.bmat([[Cmat, None],[lower, Id]], format="csc")
     return Cmat
+
   #
   # IS functions
   #   
