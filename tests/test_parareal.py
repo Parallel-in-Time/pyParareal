@@ -14,7 +14,7 @@ class TestParareal(unittest.TestCase):
     times        = np.sort( np.random.rand(2) )
     self.tstart  = times[0]
     self.tend    = times[1]
-    self.nslices = np.random.randint(1,128) 
+    self.nslices = np.random.randint(1,64) 
     steps        = np.sort( np.random.randint(low=1, high=128, size=2) )
     self.ncoarse = steps[0]
     self.nfine   = steps[1]
@@ -45,4 +45,24 @@ class TestParareal(unittest.TestCase):
     for i in range(0,self.nslices):
       y_para[i+1] = para.get_end_value(i).y
     err = np.linalg.norm(y_para - y_mat, np.inf)
-    assert err<1e-12, ("Parareal run and matrix form do not yield identical results. Error: %5.3e" % err)
+    assert err<1e-12, ("Parareal run and matrix form do not yield identical results for a single iteration. Error: %5.3e" % err)
+
+  # Test matrix Parareal
+  def test_pararealmatrixmultiple(self):
+    niter = np.random.randint(2,8) 
+    para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0)
+    Pmat, Bmat = para.get_parareal_matrix()
+    bvec = np.zeros(self.nslices+1)
+    bvec[0] = self.u0.y
+    # Perform one coarse step by matrix multiplication
+    y_mat = Bmat.dot(bvec)
+    # Perform niter Parareal step in matrix form
+    for i in range(0,niter):
+      y_mat = Pmat.dot(y_mat) + Bmat.dot(bvec)
+    para.run()
+    y_para = np.zeros(self.nslices+1)
+    y_para[0] = self.u0.y
+    for i in range(0,self.nslices):
+      y_para[i+1] = para.get_end_value(i).y
+    err = np.linalg.norm(y_para - y_mat, np.inf)
+    assert err<1e-12, ("Parareal run and matrix form do not yield identical results for multiple iterations. Error: %5.3e" % err)
