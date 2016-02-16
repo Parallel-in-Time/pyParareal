@@ -74,6 +74,23 @@ class TestParareal(unittest.TestCase):
     err = np.linalg.norm(y_para - y_mat, np.inf)
     assert err<1e-12, ("Parareal run and matrix form do not yield identical results for multiple iterations. Error: %5.3e" % err)
 
+  # Parareal reproduces fine solution after niter=nslice many iterations
+  def test_reproducesfine(self):
+    # Smaller number of slices to keep runtime short
+    nslices = np.random.randint(2,12) 
+    para = parareal(self.tstart, self.tend, nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, nslices, self.u0)
+    Fmat = para.timemesh.get_fine_matrix(self.u0)
+    b = np.zeros((self.ndof*(nslices+1),1))
+    b[0:self.ndof,:] = self.u0.y
+    # Solve system
+    u = linalg.spsolve(Fmat, b)
+    u = u.reshape((self.ndof*(nslices+1),1))
+    # Run Parareal
+    para.run()
+    u_para = para.get_parareal_vector()
+    diff = np.linalg.norm(u_para - u, np.inf)
+    assert diff<1e-12, ("Parareal does not reproduce fine solution after nslice=niter many iterations. Error: %5.3e" % diff)
+
   # Fine solution is fixed point of Parareal iteration
   def test_fineisfixedpoint(self):
     niter = np.random.randint(2,8) 

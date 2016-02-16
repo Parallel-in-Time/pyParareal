@@ -3,6 +3,7 @@ from solution import solution
 from scipy.sparse import linalg
 from scipy import sparse
 import copy
+import numpy as np
 
 class parareal(object):
 
@@ -64,6 +65,14 @@ class parareal(object):
       Bmat = sparse.csc_matrix(Bmat)
       Pmat = Bmat.dot(Gmat-Fmat)
       return Pmat, Bmat
+
+    # Returns array containing all intermediate solutions
+    def get_parareal_vector(self):
+      b = np.zeros((self.u0.ndof*(self.timemesh.nslices+1),1))
+      b[0:self.u0.ndof,:] = self.u0.y
+      for i in range(0,self.timemesh.nslices):
+        b[(i+1)*self.u0.ndof:(i+2)*self.u0.ndof,:] = self.timemesh.get_end_value(i).y
+      return b
 
     # return end value of time slice i
     def get_end_value(self, i):
