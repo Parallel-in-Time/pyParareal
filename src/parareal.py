@@ -70,7 +70,7 @@ class parareal(object):
     def get_parareal_stab_function(self, k):
       e0 = np.zeros((self.timemesh.nslices+1,1))
       e0[0,:] = 1.0
-      Mat = np.zeros((self.u0.ndof,self.u0.ndof))
+      Mat = np.zeros((self.u0.ndof,self.u0.ndof), dtype='complex')
       Pmat, Bmat = self.get_parareal_matrix()
       Id = sparse.eye(self.u0.ndof*(self.timemesh.nslices+1), format="csc")
 
