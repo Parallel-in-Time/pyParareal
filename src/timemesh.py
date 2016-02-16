@@ -14,6 +14,8 @@ class timemesh(object):
     self.timemesh = np.linspace(tstart, tend, nslices+1)
     self.nslices  = nslices
     self.slices   = []
+    self.tstart   = tstart
+    self.tend     = tend    
 
     # @NOTE: this setup would allow to set different values for tolerance and iter_max for different slices...
     # ... however, this has not yet been tested!!

@@ -17,15 +17,15 @@ if __name__ == "__main__":
 
     N_re = 10
     N_im = 10
-    lam_im_max =  5.0
-    lam_re_max = 10.0
+    lam_im_max = 50.0
+    lam_re_max =  1.0
     lambda_im = 1j*np.linspace(0.0, lam_im_max, N_im)
     lambda_re = np.linspace(-lam_re_max, 1.0, N_re)
 
-    nfine   = 5
+    nfine   = 10
     ncoarse = 1
     niter   = 3
-    nslices = 4
+    nslices = 100
     stab    = np.zeros((N_im, N_re), dtype='complex')
     for i in range(0,N_re):
       for j in range(0,N_im):
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         Mat = para.get_parareal_stab_function(niter)
         stab[j,i] = abs(Mat)
     ###
-    rcParams['figure.figsize'] = 2.5, 2.5
+    #rcParams['figure.figsize'] = 2.5, 2.5
     fs = 8
     fig  = plt.figure()
     #pcol = plt.pcolor(lambda_s.imag, lambda_f.imag, np.absolute(stab), vmin=0.99, vmax=2.01)
