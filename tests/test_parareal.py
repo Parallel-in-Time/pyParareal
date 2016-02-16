@@ -8,6 +8,7 @@ from solution_linear import solution_linear
 import unittest
 import numpy as np
 from scipy import sparse
+from scipy.sparse import linalg
 
 class TestParareal(unittest.TestCase):
 
@@ -20,10 +21,10 @@ class TestParareal(unittest.TestCase):
     self.ncoarse = steps[0]
     self.nfine   = steps[1]
     self.ndof    = np.random.randint(1,16)
-    #self.ndof  = 2
+    #self.ndof    = 2
     #self.nslices = 2
     self.A       = sparse.spdiags([ np.ones(self.ndof), -2.0*np.ones(self.ndof), np.ones(self.ndof)], [-1,0,1], self.ndof, self.ndof, format="csc")
-    self.M       = sparse.spdiags([ np.random.rand(self.ndof) ], [0], self.ndof, self.ndof, format="csc")
+    self.M       = sparse.spdiags([ 10.0+np.random.rand(self.ndof) ], [0], self.ndof, self.ndof, format="csc")
     self.u0      = solution_linear(np.ones(self.ndof), self.A, self.M)
 
   # Can instantiate object of type parareal
@@ -72,3 +73,20 @@ class TestParareal(unittest.TestCase):
       y_para[(i+1)*self.ndof:(i+2)*self.ndof,:] = para.get_end_value(i).y
     err = np.linalg.norm(y_para - y_mat, np.inf)
     assert err<1e-12, ("Parareal run and matrix form do not yield identical results for multiple iterations. Error: %5.3e" % err)
+
+  # Fine solution is fixed point of Parareal iteration
+  def test_fineisfixedpoint(self):
+    niter = np.random.randint(2,8) 
+    para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0)
+    Fmat = para.timemesh.get_fine_matrix(self.u0)
+    b = np.zeros((self.ndof*(self.nslices+1),1))
+    b[0:self.ndof,:] = self.u0.y
+    # Solve system
+    u = linalg.spsolve(Fmat, b)
+    u = u.reshape((self.ndof*(self.nslices+1),1))
+    # Get Parareal iteration matrices
+    Pmat, Bmat = para.get_parareal_matrix()
+    u_para = Bmat.dot(b)
+    u_para = Pmat.dot(u_para) + Bmat.dot(b)
+    diff = np.linalg.norm( u_para - u, np.inf)
+    assert diff<1e-10, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)
