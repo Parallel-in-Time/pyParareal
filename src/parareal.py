@@ -66,6 +66,33 @@ class parareal(object):
       Pmat = Bmat.dot(Gmat-Fmat)
       return Pmat, Bmat
 
+    # Returns the stability matrix for Parareal with fixed number of iterations
+    def get_parareal_stab_function(self, k):
+      e0 = np.zeros((self.timemesh.nslices+1,1))
+      e0[0,:] = 1.0
+      Mat = np.zeros((self.u0.ndof,self.u0.ndof))
+      Pmat, Bmat = self.get_parareal_matrix()
+      Id = sparse.eye(self.u0.ndof*(self.timemesh.nslices+1), format="csc")
+
+      # Selection matrix
+      Zeros = np.zeros((self.u0.ndof,self.u0.ndof*self.timemesh.nslices))
+      Idd   = sparse.eye(self.u0.ndof, format="csc")
+      R = sparse.hstack((Zeros,Idd), format="csc")
+
+      # Construct stability matrix from unit vectors
+      for i in range(0,self.u0.ndof):
+        y0 = np.zeros((self.u0.ndof,1))
+        y0[i,0] = 1.0
+        ee0 = np.kron(e0, y0)
+        M = copy.deepcopy(Id)
+        # Compute (sum(j=1,..n) Pmat^j) *Bmat
+        for j in range(1,k+1):
+          M += Pmat**j
+        M = M.dot(Bmat)
+        M = M.dot(ee0)
+        Mat[:,i] = R.dot(M).flatten()
+      return Mat
+
     # Returns array containing all intermediate solutions
     def get_parareal_vector(self):
       b = np.zeros((self.u0.ndof*(self.timemesh.nslices+1),1))
@@ -77,3 +104,7 @@ class parareal(object):
     # return end value of time slice i
     def get_end_value(self, i):
       return self.timemesh.get_end_value(i)
+
+    # return end value of last time slice
+    def get_last_end_value(self):
+      return self.get_end_value(self.timemesh.nslices-1)

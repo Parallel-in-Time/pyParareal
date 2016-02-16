@@ -16,7 +16,7 @@ class TestTimemesh(unittest.TestCase):
     times        = np.sort( np.random.rand(2) )
     self.tstart  = times[0]
     self.tend    = times[1]
-    self.nslices = np.random.randint(1,128)
+    self.nslices = np.random.randint(2,128)
     steps        = np.sort( np.random.randint(low=1, high=128, size=2) )
     self.ncoarse = steps[0]
     self.nfine   = steps[1]

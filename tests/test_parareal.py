@@ -16,16 +16,16 @@ class TestParareal(unittest.TestCase):
     times        = np.sort( np.random.rand(2) )
     self.tstart  = times[0]
     self.tend    = times[1]
-    self.nslices = np.random.randint(2,64) 
-    steps        = np.sort( np.random.randint(low=1, high=128, size=2) )
+    self.nslices = np.random.randint(2,32) 
+    steps        = np.sort( np.random.randint(low=1, high=64, size=2) )
     self.ncoarse = steps[0]
     self.nfine   = steps[1]
     self.ndof    = np.random.randint(1,16)
     #self.ndof    = 2
-    #self.nslices = 2
+    #self.nslices = 3
     self.A       = sparse.spdiags([ np.ones(self.ndof), -2.0*np.ones(self.ndof), np.ones(self.ndof)], [-1,0,1], self.ndof, self.ndof, format="csc")
     self.M       = sparse.spdiags([ 10.0+np.random.rand(self.ndof) ], [0], self.ndof, self.ndof, format="csc")
-    self.u0      = solution_linear(np.ones(self.ndof), self.A, self.M)
+    self.u0      = solution_linear(np.ones((self.ndof,1)), self.A, self.M)
 
   # Can instantiate object of type parareal
   def test_caninstantiate(self):
@@ -103,7 +103,18 @@ class TestParareal(unittest.TestCase):
     u = u.reshape((self.ndof*(self.nslices+1),1))
     # Get Parareal iteration matrices
     Pmat, Bmat = para.get_parareal_matrix()
-    u_para = Bmat.dot(b)
-    u_para = Pmat.dot(u_para) + Bmat.dot(b)
+    # Apply matrix to fine solution
+    u_para = Pmat.dot(u) + Bmat.dot(b)
     diff = np.linalg.norm( u_para - u, np.inf)
-    assert diff<1e-10, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)
+    assert diff<1e-14, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)
+
+  # Stability function is equivalent to full run of Parareal
+  def test_stabfunction(self):
+    niter = np.random.randint(2,8)
+    para  = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0)
+    Smat  = para.get_parareal_stab_function(niter)
+    y_mat =  Smat.dot(self.u0.y)
+    para.run()
+    y_par = para.get_last_end_value().y
+    diff  = np.linalg.norm(y_mat - y_par, np.inf)
+    assert diff<1e-12, ("Generated Parareal stability matrix does not match result from run(). Error: %5.3e" % diff)
