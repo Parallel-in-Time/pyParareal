@@ -12,8 +12,8 @@ import unittest
 class TestIntexact(unittest.TestCase):
 
   def setUp(self):
-    self.ndof = np.random.randint(255)
-    self.ndof = 4
+    #self.ndof = np.random.randint(255)
+    self.ndof = 1
     self.A    = sparse.spdiags([ np.ones(self.ndof), -2.0*np.ones(self.ndof), np.ones(self.ndof)], [-1,0,1], self.ndof, self.ndof, format="csc")
     self.M    = sparse.spdiags([ np.random.rand(self.ndof) ], [0], self.ndof, self.ndof, format="csc")
     self.sol  = solution_linear(np.ones((self.ndof,1)), self.A, self.M)
@@ -26,10 +26,12 @@ class TestIntexact(unittest.TestCase):
     tend = tend[0]
     ex = intexact(0.0, tend, 10)
     ex.run(self.sol)
-    Minv = sparse.linalg.inv(self.M)
-    Mex  = sparse.linalg.expm(Minv.dot(self.A)*tend)
-    yex = Mex.dot(np.ones((self.ndof,1)))
-    uex = solution_linear(yex, self.A, self.M )
+
+    #Minv = sparse.csc_matrix(sparse.linalg.inv(self.M))
+    #Mex  = sparse.linalg.expm(Minv.dot(self.A)*tend)
+    #yex = Mex.dot(np.ones((self.ndof,1)))
+    yex = np.exp(tend*self.A[0,0]/self.M[0,0])*1.0
+    uex = solution_linear(np.array([[yex]],dtype='complex'), self.A, self.M )
     uex.axpy(-1.0, self.sol)
     diff = uex.norm()
     assert diff<1e-14, ("intexact does not provide exact solution. Error: %5.3e" % diff)

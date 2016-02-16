@@ -23,4 +23,13 @@ class intexact(integrator):
     M = sparse.csc_matrix(sol.M)
     A = sparse.csc_matrix(sol.A)
     Minv = sparse.linalg.inv(M)
-    return sparse.linalg.expm(Minv.dot(A)*self.dt)
+    # this is call is necessary because if Rmat has only 1 entry, it gets converted to a dense array here
+    Minv = sparse.csc_matrix(Minv)
+    # WEIRD BUG IN sparse.linalg.expm ... FOR NOW, USE SCALAR VERSION INSTEAD
+  #    Mat = sparse.linalg.expm(Minv.dot(A)*self.dt)
+    if sol.ndof>1:
+      raise NotImplementedError("Because of a weird bug in scipys expm function, intexact is for the moment restricted to scalar problems")
+    Mat = Minv.dot(A)*self.dt
+    Mat = Mat[0,0]
+    Mat = np.exp(Mat)
+    return sparse.csc_matrix(np.array([[Mat]], dtype='complex'))
