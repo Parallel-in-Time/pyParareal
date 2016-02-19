@@ -55,7 +55,7 @@ if __name__ == "__main__":
     for i in range(0,np.size(k_vec)):            
       symb = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
       u0   = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
-      para = parareal(0.0, Tend, nslices, intexact, impeuler, ncoarse, nfine, 0.0, niter, u0)
+      para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter, u0)
       dt = para.timemesh.tend - para.timemesh.tstart
 
       stab_para = para.get_parareal_stab_function(niter)
