@@ -135,10 +135,10 @@ class TestParareal(unittest.TestCase):
     ucoarse = solution_linear(np.ones((self.ndof,1)), sparse.eye(self.ndof, format="csc"))
 
     # Get Parareal iteration matrices with ucoarse provided
-    Pmat, Bmat = para.get_parareal_matrix(ufine=self.u0, ucoarse=ucoarse)
+    Pmat, Bmat = para.get_parareal_matrix(ucoarse=ucoarse)
 
     # For comparison also without ucoarse provided and check that both are different
-    Pmat_ref, Bmat_ref = para.get_parareal_matrix(ufine=self.u0)
+    Pmat_ref, Bmat_ref = para.get_parareal_matrix()
     assert sparse.linalg.norm(Bmat_ref - Bmat)>1e-4, "Parareal iteration matrix Bmat provided with and without ucoarse as argument do not seem to be different." 
     assert sparse.linalg.norm(Pmat_ref - Pmat)>1e-4, "Parareal iteration matrix Pmat provided with and without ucoarse as argument do not seem to be different." 
 
