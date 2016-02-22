@@ -19,7 +19,7 @@ if __name__ == "__main__":
     k_vec = np.linspace(0, np.pi, Nk+1, endpoint=False)
     k_vec = k_vec[1:]
     # Select a wave number
-    k     = k_vec[1]
+    k     = k_vec[0]
 
     Tend    = 16.0    
     nslices = 16
@@ -54,25 +54,21 @@ if __name__ == "__main__":
     y_coarse= stab_coarse[0,0]*y_start
     y_fine  = stab_fine[0,0]*y_start
 
-    ind_show = 0
-    for n in range(1,nslices+1):
-      stab_para = para.get_parareal_stab_function(n)
-      y_para  = stab_para[0,0]*y_start
-      err[n-1] = np.linalg.norm(y_para - y_fine, np.inf)/np.linalg.norm(y_fine, np.inf)
-      if n in niter_show:
-        para_show[ind_show,:] = y_para.real
-        ind_show += 1
+    for n in range(0,np.size(niter_show)):
+      stab_para = para.get_parareal_stab_function(niter_show[n])
+      para_show[n,:] = (stab_para[0,0]*y_start).real
+
+    fs = 14
 
     fig = plt.figure()
     plt.plot(x, y_coarse.real,  'b--', label='Coarse')
-    plt.plot(x, para_show[0,:], 'r-+', label='Parareal k='+str(niter_show[0]), markevery=(5, 20))
-    plt.plot(x, para_show[1,:], 'r-s', label='Parareal k='+str(niter_show[1]), markevery=(10,20))
-    plt.plot(x, para_show[2,:], 'r-o', label='Parareal k='+str(niter_show[2]), markevery=(15,20))
+    plt.plot(x, para_show[0,:], 'r-+', label='Parareal k='+str(niter_show[0]), markevery=(5, 20), markersize=fs/2)
+    plt.plot(x, para_show[1,:], 'r-s', label='Parareal k='+str(niter_show[1]), markevery=(10,20), markersize=fs/2)
+    plt.plot(x, para_show[2,:], 'r-o', label='Parareal k='+str(niter_show[2]), markevery=(15,20), markersize=fs/2)
     plt.plot(x, y_ex.real,      'g--', label='Exact')
-    plt.legend()
+    plt.legend(loc='lower left', fontsize=fs, prop={'size':fs}, handlelength=3)
+    plt.title((r'$\kappa$ = %4.2f' % k), fontsize=fs)
     plt.ylim([-2, 2])
     plt.xlim([x[0], x[-1]])
 
-#    fig = plt.figure()
-#    plt.semilogy(range(1,nslices+1), err, 'b-o')
     plt.show()
