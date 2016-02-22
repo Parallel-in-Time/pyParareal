@@ -137,7 +137,7 @@ class TestTimemesh(unittest.TestCase):
     u = np.array([1.0])
     Mat = tm.slices[0].int_fine.get_update_matrix(self.u0)
     b = self.u0.y
-    for i in range(0,3):
+    for i in range(0,self.nslices):
       # matrix update to end of slice
       b = Mat.dot(b)
       err = np.linalg.norm( tm.get_fine_value(i).y - b, np.inf )
