@@ -7,32 +7,12 @@ from intexact import intexact
 from solution_linear import solution_linear
 import numpy as np
 
-# Assume that the wave is RIGHTWARD travelling
-def findspeed(y0, y1, x, T):
-  max_y0 = findmax(y0)
-  max_y1 = findmax(y1)
-  dist = np.zeros(np.size(max_y0)-1) 
-  for i in range(0,np.size(max_y0)-1):
-    i0 = max_y0[i]    
-    i1 = max_y1[i]
-    if x[i0]>x[i1]:
-      i1 = max_y1[i+1]
-    dist[i] = x[i1] - x[i0]
-  return np.average(dist)/T
-
-def findmax(y):
-  max_ind = []
-  for i in range(1,np.size(y)-1):
-    if (y[i-1] < y[i] and y[i] > y[i+1]):
-      max_ind.append(i)
-  return max_ind
-
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-    Nx = 1e5
-    x = np.linspace(0,500,Nx+1,endpoint=False)
+    Nx = 200
+    x = np.linspace(0,20,Nx+1,endpoint=False)
     x = x[0:Nx]
 
     Nk    = 4
@@ -41,16 +21,17 @@ if __name__ == "__main__":
     # Select a wave number
     k     = k_vec[1]
 
-    Tend    = 8.0    
-    nslices = 8
+    Tend    = 16.0    
+    nslices = 16
     U_speed = 1.0
     nu      = 0.0
     ncoarse = 1
     nfine   = 1
 
-    err_amp   = np.zeros(nslices)
-    err_speed = np.zeros(nslices)
-    
+    err = np.zeros(nslices)
+    para_show = np.zeros((3,Nx))
+    niter_show = [5, 10, 15]
+
     symb      = -(1j*U_speed*k + nu*k**2)
     u0_val    = np.array([[1.0]], dtype='complex')
     u0        = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
@@ -72,25 +53,26 @@ if __name__ == "__main__":
 
     y_coarse= stab_coarse[0,0]*y_start
     y_fine  = stab_fine[0,0]*y_start
-    s_fine = findspeed(y_start, y_fine, x, Tend)
 
+    ind_show = 0
     for n in range(1,nslices+1):
       stab_para = para.get_parareal_stab_function(n)
       y_para  = stab_para[0,0]*y_start
-      err_amp[n-1] = abs(np.max(abs(y_para))-np.max(abs(y_fine)))/np.max(abs(y_fine))
-      s = findspeed(y_start.real, y_para.real, x, Tend)
-      err_speed[n-1] = abs(s_fine - s)/abs(s_fine)
+      err[n-1] = np.linalg.norm(y_para - y_fine, np.inf)/np.linalg.norm(y_fine, np.inf)
+      if n in niter_show:
+        para_show[ind_show,:] = y_para.real
+        ind_show += 1
 
     fig = plt.figure()
-    plt.semilogy(range(1,nslices+1), err_amp, 'bo', markersize=12, label="Amplitude")
-    plt.semilogy(range(1,nslices+1), err_speed, 'rs', markersize=12, label="Speed")
-    print err_speed
+    plt.plot(x, y_coarse.real,  'b--', label='Coarse')
+    plt.plot(x, para_show[0,:], 'r-+', label='Parareal k='+str(niter_show[0]), markevery=(5, 20))
+    plt.plot(x, para_show[1,:], 'r-s', label='Parareal k='+str(niter_show[1]), markevery=(10,20))
+    plt.plot(x, para_show[2,:], 'r-o', label='Parareal k='+str(niter_show[2]), markevery=(15,20))
+    plt.plot(x, y_ex.real,      'g--', label='Exact')
+    plt.legend()
+    plt.ylim([-2, 2])
+    plt.xlim([x[0], x[-1]])
 
 #    fig = plt.figure()
-#    plt.plot(x, y_coarse.real, 'b', label='Coarse')
-#    plt.plot(x, y_para.real, 'r', label='Parareal k='+str(niter))
-#    plt.plot(x, y_ex.real,   'g', label='Exact')
-#    plt.legend()
-#    plt.ylim([-2, 2])
-#    plt.xlim([x[0], x[-1]])
+#    plt.semilogy(range(1,nslices+1), err, 'b-o')
     plt.show()
