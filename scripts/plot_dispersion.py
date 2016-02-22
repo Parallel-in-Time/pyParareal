@@ -41,7 +41,7 @@ if __name__ == "__main__":
     U_speed  = 1.0
     nu       = 0.0
     ncoarse  = 1
-    nfine    = 10
+    nfine    = 1
     niter_v  = [5, 10, 15]
     dx       = 1.0
     Nsamples = 30
@@ -57,9 +57,11 @@ if __name__ == "__main__":
     for i in range(0,np.size(k_vec)):
       
       symb = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
-      
-      u0   = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
-      para = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
+      symb_coarse = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
+
+      u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
+      ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
+      para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
       
       
       # get update matrix for imp Euler over one slice
@@ -87,7 +89,7 @@ if __name__ == "__main__":
       # Compute Parareal phase velocity and amplification factor
       
       for jj in range(0,3):
-        stab_para = para.get_parareal_stab_function(niter_v[jj])
+        stab_para = para.get_parareal_stab_function(k=niter_v[jj], ucoarse=ucoarse)
 
         if i==0:
           targets[jj,0] = np.angle(stab_ex)
@@ -114,11 +116,11 @@ if __name__ == "__main__":
     fs = 14
     fig  = plt.figure()
     plt.plot(k_vec, phase[0,:], '--', color='k', linewidth=1.5, label='Exact')
-    plt.plot(k_vec, phase[1,:], '-',  color='g', linewidth=1.5, label='Fine')
-    plt.plot(k_vec, phase[2,:], '-o', color='b', linewidth=1.5, label='Coarse', markevery=5, markersize=fs/2)
-    plt.plot(k_vec, phase[3,:], '-s', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[0]), markevery=5, mew=1.0, markersize=fs/2)
-    plt.plot(k_vec, phase[4,:], '-d', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[1]), markevery=5, mew=1.0, markersize=fs/2)
-    plt.plot(k_vec, phase[5,:], '-x', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[2]), markevery=5, mew=1.0, markersize=fs/2)
+    plt.plot(k_vec, phase[1,:], '-o', color='g', linewidth=1.5, label='Fine',   markevery=(1,5), markersize=fs/2)
+    plt.plot(k_vec, phase[2,:], '-o', color='b', linewidth=1.5, label='Coarse', markevery=(3,5), markersize=fs/2)
+    plt.plot(k_vec, phase[3,:], '-s', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[0]), markevery=(1,6), mew=1.0, markersize=fs/2)
+    plt.plot(k_vec, phase[4,:], '-d', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[1]), markevery=(3,6), mew=1.0, markersize=fs/2)
+    plt.plot(k_vec, phase[5,:], '-x', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[2]), markevery=(5,6), mew=1.0, markersize=fs/2)
     plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
     plt.ylabel('Phase speed', fontsize=fs, labelpad=0.5)
     plt.xlim([k_vec[0], k_vec[-1:]])
@@ -133,11 +135,11 @@ if __name__ == "__main__":
 
     fig  = plt.figure()
     plt.plot(k_vec, amp_factor[0,:], '--', color='k', linewidth=1.5, label='Exact')
-    plt.plot(k_vec, amp_factor[1,:], '-',  color='g', linewidth=1.5, label='Fine')
-    plt.plot(k_vec, amp_factor[2,:], '-o', color='b', linewidth=1.5, label='Coarse', markevery=5, markersize=fs/2)
-    plt.plot(k_vec, amp_factor[3,:], '-s', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[0]), markevery=5, mew=1.0, markersize=fs/2)
-    plt.plot(k_vec, amp_factor[4,:], '-d', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[1]), markevery=5, mew=1.0, markersize=fs/2)
-    plt.plot(k_vec, amp_factor[5,:], '-x', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[2]), markevery=5, mew=1.0, markersize=fs/2)
+    plt.plot(k_vec, amp_factor[1,:], '-o', color='g', linewidth=1.5, label='Fine',   markevery=(1,5), markersize=fs/2) 
+    plt.plot(k_vec, amp_factor[2,:], '-o', color='b', linewidth=1.5, label='Coarse', markevery=(3,5), markersize=fs/2)
+    plt.plot(k_vec, amp_factor[3,:], '-s', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[0]), markevery=(1,6), mew=1.0, markersize=fs/2)
+    plt.plot(k_vec, amp_factor[4,:], '-d', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[1]), markevery=(3,6), mew=1.0, markersize=fs/2)
+    plt.plot(k_vec, amp_factor[5,:], '-x', color='r', linewidth=1.5, label='Parareal k='+str(niter_v[2]), markevery=(5,6), mew=1.0, markersize=fs/2)
     plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
     plt.ylabel('Amplification factor', fontsize=fs, labelpad=0.5)
     fig.gca().tick_params(axis='both', labelsize=fs)
