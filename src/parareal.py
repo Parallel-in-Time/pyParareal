@@ -57,9 +57,15 @@ class parareal(object):
     # Returns matrices Pmat, Bmat such that a Parareal iteration is equivalent to
     # y_(k+1) = Pmat*y_k + Bmat*b
     # with b = (u0, 0, ..., 0) and u0 the initial value at the first time slice.
-    def get_parareal_matrix(self):
-      Gmat = self.timemesh.get_coarse_matrix(self.u0)
-      Fmat = self.timemesh.get_fine_matrix(self.u0)      
+    def get_parareal_matrix(self, ufine=None, ucoarse=None):
+      if ucoarse is None:
+        Gmat = self.timemesh.get_coarse_matrix(self.u0)
+      else:
+        Gmat = self.timemesh.get_coarse_matrix(ucoarse)
+      if ufine is None:
+        Fmat = self.timemesh.get_fine_matrix(self.u0)
+      else:
+        Fmat = self.timemesh.get_fine_matrix(ufine)   
       Bmat = sparse.linalg.inv(Gmat)
       # this is call is necessary because if Bmat has only 1 entry, it gets converted to a dense array here 
       Bmat = sparse.csc_matrix(Bmat)
@@ -67,11 +73,11 @@ class parareal(object):
       return Pmat, Bmat
 
     # Returns the stability matrix for Parareal with fixed number of iterations
-    def get_parareal_stab_function(self, k):
+    def get_parareal_stab_function(self, k, ufine=None, ucoarse=None):
       e0 = np.zeros((self.timemesh.nslices+1,1))
       e0[0,:] = 1.0
       Mat = np.zeros((self.u0.ndof,self.u0.ndof), dtype='complex')
-      Pmat, Bmat = self.get_parareal_matrix()
+      Pmat, Bmat = self.get_parareal_matrix(ufine, ucoarse)
       Id = sparse.eye(self.u0.ndof*(self.timemesh.nslices+1), format="csc")
 
       # Selection matrix

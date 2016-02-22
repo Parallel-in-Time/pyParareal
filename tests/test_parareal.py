@@ -118,3 +118,31 @@ class TestParareal(unittest.TestCase):
     y_par = para.get_last_end_value().y
     diff  = np.linalg.norm(y_mat - y_par, np.inf)
     assert diff<1e-12, ("Generated Parareal stability matrix does not match result from run(). Error: %5.3e" % diff)
+
+  # Fine solution is fixed point of Parareal iteration if Gmat is provided
+  def test_fineisfixedpointGmatprovided(self):
+    niter = np.random.randint(2,8) 
+    para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0)
+
+    Fmat = para.timemesh.get_fine_matrix(self.u0)
+    b = np.zeros((self.ndof*(self.nslices+1),1))
+    b[0:self.ndof,:] = self.u0.y
+    # Solve system
+    u = linalg.spsolve(Fmat, b)
+    u = u.reshape((self.ndof*(self.nslices+1),1))
+
+    # Build coarse solution with matrix different from fine
+    ucoarse = solution_linear(np.ones((self.ndof,1)), sparse.eye(self.ndof, format="csc"))
+
+    # Get Parareal iteration matrices with ucoarse provided
+    Pmat, Bmat = para.get_parareal_matrix(ufine=self.u0, ucoarse=ucoarse)
+
+    # For comparison also without ucoarse provided and check that both are different
+    Pmat_ref, Bmat_ref = para.get_parareal_matrix(ufine=self.u0)
+    assert sparse.linalg.norm(Bmat_ref - Bmat)>1e-4, "Parareal iteration matrix Bmat provided with and without ucoarse as argument do not seem to be different." 
+    assert sparse.linalg.norm(Pmat_ref - Pmat)>1e-4, "Parareal iteration matrix Pmat provided with and without ucoarse as argument do not seem to be different." 
+
+    # Apply matrix to fine solution
+    u_para = Pmat.dot(u) + Bmat.dot(b)
+    diff = np.linalg.norm( u_para - u, np.inf)
+    assert diff<1e-14, ("Fine solution is not a fixed point of Parareal iteration with provided Gmat matrix - difference %5.3e" % diff)
