@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from subprocess import call
 import sympy
+from pylab import rcParams
 
 def solve_omega(R):
   return 1j*( np.log(abs(R)) + 1j*np.angle(R) )
@@ -28,7 +29,7 @@ def findroots(R, n):
 def normalise(R, T, target):
   roots = findroots(R, T)
   for x in roots:
-    assert abs(x**T-R)<1e-11, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
+    assert abs(x**T-R)<1e-10, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
   minind = np.argmin(abs(np.angle(roots) - target))
   return roots[minind]
 
@@ -41,9 +42,9 @@ if __name__ == "__main__":
     U_speed  = 1.0
     nu       = 0.0
     ncoarse  = 1
-    nfine    = 1
+    nfine    = 10
     niter_v  = [5, 10, 15]
-    dx       = 1.0
+    dx       = 0.1
     Nsamples = 30
 
     k_vec = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
@@ -57,7 +58,8 @@ if __name__ == "__main__":
     for i in range(0,np.size(k_vec)):
       
       symb = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
-      symb_coarse = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
+#      symb_coarse = symb
+      symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
 
       u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
       ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
@@ -112,8 +114,8 @@ if __name__ == "__main__":
 
 
     ###
-    #rcParams['figure.figsize'] = 1.5, 1.5
-    fs = 14
+    rcParams['figure.figsize'] = 2.5, 2.5
+    fs = 8
     fig  = plt.figure()
     plt.plot(k_vec, phase[0,:], '--', color='k', linewidth=1.5, label='Exact')
     plt.plot(k_vec, phase[1,:], '-o', color='g', linewidth=1.5, label='Fine',   markevery=(1,5), markersize=fs/2)
@@ -127,11 +129,11 @@ if __name__ == "__main__":
     plt.ylim([0.0, 1.1*U_speed])
     fig.gca().tick_params(axis='both', labelsize=fs)
     plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2})
-    #plt.xticks([0, 1, 2, 3], fontsize=fs)
+    plt.xticks([0, 1, 2, 3], fontsize=fs)
     #plt.show()
-    #filename = 'sdc-fwsw-disprel-phase-K'+str(K)+'-M'+str(swparams['num_nodes'])+'.pdf'
-    #plt.gcf().savefig(filename, bbox_inches='tight')
-    #call(["pdfcrop", filename, filename])
+    filename = 'parareal-dispersion-phase.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])
 
     fig  = plt.figure()
     plt.plot(k_vec, amp_factor[0,:], '--', color='k', linewidth=1.5, label='Exact')
@@ -144,12 +146,12 @@ if __name__ == "__main__":
     plt.ylabel('Amplification factor', fontsize=fs, labelpad=0.5)
     fig.gca().tick_params(axis='both', labelsize=fs)
     plt.xlim([k_vec[0], k_vec[-1:]])
-  #  plt.ylim([k_vec[0], k_vec[-1:]])
+    plt.ylim([0, 1.1*U_speed])
     plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2})
     plt.gca().set_ylim([0.0, 1.1])
-    #plt.xticks([0, 1, 2, 3], fontsize=fs)
-    plt.show()
-    #filename = 'sdc-fwsw-disprel-ampfac-K'+str(K)+'-M'+str(swparams['num_nodes'])+'.pdf'
-    #plt.gcf().savefig(filename, bbox_inches='tight')
-    #call(["pdfcrop", filename, filename])
+    plt.xticks([0, 1, 2, 3], fontsize=fs)
+    #plt.show()
+    filename = 'parareal-dispersion-ampf.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])
 

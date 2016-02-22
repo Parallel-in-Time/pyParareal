@@ -6,9 +6,9 @@ from impeuler import impeuler
 from intexact import intexact
 from solution_linear import solution_linear
 import numpy as np
-
+from pylab import rcParams
 import matplotlib.pyplot as plt
-
+from subprocess import call
 def solve_omega(R):
   return 1j*( np.log(abs(R)) + 1j*np.angle(R) )
 
@@ -71,8 +71,8 @@ if __name__ == "__main__":
         err_phase[kk,n-1] = abs(phase_para - phase_fine)/abs(phase_fine)
         err_amp[kk,n-1]   = abs(amp_para - amp_fine)/abs(amp_fine)
 
-    fs = 14
-
+    fs = 8
+    rcParams['figure.figsize'] = 2.5, 2.5
     fig = plt.figure()
     iter_v = range(1,nslices)
     assert np.max(err[:,-1])<1e-14, "For at least one wavenumber, Parareal did not fully converge for niter=nslices"
@@ -80,20 +80,27 @@ if __name__ == "__main__":
     plt.semilogy(iter_v, err[1,0:-1], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
     plt.semilogy(iter_v, err[2,0:-1], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
     plt.semilogy(iter_v, err[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
-    plt.legend(loc='lower left', fontsize=fs, prop={'size':fs}, handlelength=3)
+    plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+    plt.xlabel('Parareal Iteration $k$', fontsize=fs)
+    plt.ylabel('Parareal defect', fontsize=fs)    
+    plt.xticks(np.arange(iter_v[0], iter_v[-1], 2), fontsize=fs)
+    plt.yticks([1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e0, 1e2], fontsize=fs)
+    filename = 'parareal-conv-waveno.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])
 
-    fig = plt.figure()
-    plt.semilogy(iter_v, err_phase[0,0:-1], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
-    plt.semilogy(iter_v, err_phase[1,0:-1], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
-    plt.semilogy(iter_v, err_phase[2,0:-1], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
-    plt.semilogy(iter_v, err_phase[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
-    plt.legend(loc='lower left', fontsize=fs, prop={'size':fs}, handlelength=3)
+    #fig = plt.figure()
+    #plt.semilogy(iter_v, err_phase[0,0:-1], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
+    #plt.semilogy(iter_v, err_phase[1,0:-1], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
+    #plt.semilogy(iter_v, err_phase[2,0:-1], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
+    #plt.semilogy(iter_v, err_phase[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
+    #plt.legend(loc='lower left', fontsize=fs, prop={'size':fs}, handlelength=3)
 
-    fig = plt.figure()
-    plt.semilogy(iter_v, err_amp[0,0:-1], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
-    plt.semilogy(iter_v, err_amp[1,0:-1], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
-    plt.semilogy(iter_v, err_amp[2,0:-1], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
-    plt.semilogy(iter_v, err_amp[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
-    plt.legend(loc='lower left', fontsize=fs, prop={'size':fs}, handlelength=3)
+    #fig = plt.figure()
+    #plt.semilogy(iter_v, err_amp[0,0:-1], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
+    #plt.semilogy(iter_v, err_amp[1,0:-1], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
+    #plt.semilogy(iter_v, err_amp[2,0:-1], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
+    #plt.semilogy(iter_v, err_amp[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
+    #plt.legend(loc='lower left', fontsize=fs, prop={'size':fs}, handlelength=3)
 
-    plt.show()
+    #plt.show()
