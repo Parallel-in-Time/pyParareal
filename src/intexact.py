@@ -14,8 +14,7 @@ class intexact(integrator):
   def run(self, u0):
     assert isinstance(u0, solution_linear), "Exact integrator intexact can only be used for solution_linear type initial values"
     M = self.get_update_matrix(u0)
-    for i in range(0,self.nsteps):
-      u0.y = M.dot(u0.y)
+    u0.y = M.dot(u0.y)
 
   def get_update_matrix(self, sol):
     assert isinstance(sol, solution_linear), "Update function can only be computed for solutions of type solution_linear"
@@ -31,5 +30,5 @@ class intexact(integrator):
       raise NotImplementedError("Because of a weird bug in scipys expm function, intexact is for the moment restricted to scalar problems")
     Mat = Minv.dot(A)*self.dt
     Mat = Mat[0,0]
-    Mat = np.exp(Mat)
+    Mat = np.exp(Mat)**self.nsteps
     return sparse.csc_matrix(np.array([[Mat]], dtype='complex'))
