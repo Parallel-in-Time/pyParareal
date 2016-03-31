@@ -27,7 +27,7 @@ def normalise(R, T, target):
   minind = np.argmin(abs(np.angle(roots) - target))
   return roots[minind]
 
-Tend     = 4.0
+Tend     = 64.0
 nslices  = int(Tend)
 Nsamples = 30
 k_vec    = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
@@ -44,7 +44,7 @@ for i in range(0, Nsamples):
   stab_ex      = np.exp(symb*Tend)
   stab_ex_unit = np.exp(symb)
   # First make sure that stab_ex_unit**nslices = stab_ex
-  assert abs(stab_ex_unit**nslices - stab_ex)<1e-14, "stab_ex_unit**nslices does not match stab_ex"
+  assert abs(stab_ex_unit**nslices - stab_ex)<1e-10, "stab_ex_unit**nslices does not match stab_ex"
 
   if i==0:
     target[0] = np.angle(stab_ex_unit)
@@ -53,10 +53,11 @@ for i in range(0, Nsamples):
   stab_norm = normalise(stab_ex, Tend, target[i])
 
   # nslices many applications of stab_norm give stab_ex
-  assert abs(stab_norm**nslices - stab_ex)<1e-14, "stab_norm**nslices does not match stab_ex"
+  assert abs(stab_norm**nslices - stab_ex)<1e-10, "stab_norm**nslices does not match stab_ex"
 
   # stab_norm is equal to stab_ex_unit
-  assert abs(stab_norm - stab_ex_unit)<1e-14, "stab_norm does not match stab_unit"
+  err_norm_ex_unit = abs(stab_norm - stab_ex_unit)
+  assert err_norm_ex_unit<1e-10, ("stab_norm does not match stab_unit: error %.3E" % err_
 
   if i<Nsamples-1:
     target[i+1] = np.angle(stab_norm)
