@@ -16,8 +16,6 @@ def findomega(Z):
          - Z[0,1]*Z[1,0]*(sympy.exp(-1j*omega) - Z[2,2])                                             \
          - Z[1,2]*Z[2,1]*(sympy.exp(-1j*omega) - Z[0,0])
   solsym = sympy.solve(func, omega)
-#  np.set_printoptions(precision=4)
-  print solsym
   sols = np.array([complex(solsym[0]), complex(solsym[1]), complex(solsym[2])], dtype='complex')
   return sols[2]
 
@@ -30,10 +28,8 @@ def findroots(R, n):
 
 def normalise(R, T, target):
   roots = findroots(R, T)
-  #print "roots:"
-  #print np.angle(roots)
-  #print target
-  #print ""
+  print "roots:"
+  print np.angle(roots)
   for x in roots:
     assert abs(x**T-R)<1e-10, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
   minind = np.argmin(abs(np.angle(roots) - target))
@@ -63,11 +59,11 @@ for i in range(0,4):
   
   # if i==0, compute targets from contiuous stability function
   stab_ex_unit = linalg.expm(Lmat)
+  D_unit, V_unit = np.linalg.eig(stab_ex_unit)
   if i==0:
-    D, V = np.linalg.eig(stab_ex_unit)
     for j in range(0,3):
-      targets[j,0] = np.angle(D[j])
-    
+      targets[j,0] = np.angle(D_unit[j])
+
   # normalize for Tend = 1.0
   D, V = np.linalg.eig(stab_ex)
   Vinv = np.linalg.inv(V)
@@ -76,7 +72,10 @@ for i in range(0,4):
 
   S    = np.zeros(3, dtype = 'complex')
   for j in range(0,3):
-    S[j] = normalise(D[j], Tend, targets[j,i])
+    print ("correct value: %s" % np.angle(D_unit[j]))
+    S[j] = normalise(D[j], Tend, np.angle(D_unit[j]))
+    print ("selected value: %s" % np.angle(S[j]))
+    print ("\n")
     # Set targets for next step of loop
     if i<Nsamples-1:
       targets[j,i+1] = np.angle(S[j])
