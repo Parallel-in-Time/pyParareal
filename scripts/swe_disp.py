@@ -53,7 +53,8 @@ phase      = np.zeros((2,Nsamples))
 amp_factor = np.zeros((2,Nsamples))
 targets    = np.zeros((3,Nsamples))
 
-for i in range(0,Nsamples):
+#for i in range(0,Nsamples):
+for i in range(0,4):
   Lmat = -1.0*np.array([[0.0, -f, g*1j*k_vec[i] ],
                    [f, 0.0, 0.0],
                    [H*1j*k_vec[i], 0, 0]], dtype = 'complex')
@@ -86,14 +87,22 @@ for i in range(0,Nsamples):
 
   assert np.linalg.norm( np.linalg.matrix_power(stab_normalise,nslices) - stab_ex, np.inf)<1e-10, "Power of normalised stability function not equal to non-normalised stability function"
   assert np.linalg.norm( np.linalg.matrix_power(stab_ex_unit,nslices) - stab_ex, np.inf)<1e-10, "Power of unit interval stability function ot equal to non-normalised stability function"
+
+  #
+  # IN THIS TESTCASE, THE NORMALISATION PROCEDURE SHOULD RELIABLY PRODUCE THE STABILITY FUNCTION OVER THE UNIT INTERVAL
+  #
   err_norm_unit = np.linalg.norm( stab_normalise - stab_ex_unit, np.inf)
   if err_norm_unit>1e-14:
     warnings.warn("Normalised stability function not equal to stability function over unit interval -- error: %.3E" % err_norm_unit)
 
-  omega           = findomega(stab_ex_unit)
+  omega_unit      = findomega(stab_ex_unit)
   omega_nondiag   = findomega(stab_normalise)
   omega           = findomega(np.diag(S))
-  print ("diag to nondiag omega: %.3E" % abs(omega - omega_nondiag))
+  omega_diag_nodiag_err = abs(omega - omega_nondiag)
+  if omega_diag_nodiag_err>1e-12:
+    warnings.warn("Difference between omega from diagonalised and original system: %.3E" % omega_diag_nodiag_err)
+  print "\n"
+
   phase[1,i]      = omega.real/k_vec[i]
   amp_factor[1,i] = np.exp(omega.imag)
 
