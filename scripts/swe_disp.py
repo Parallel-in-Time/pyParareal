@@ -30,10 +30,10 @@ def findroots(R, n):
 
 def normalise(R, T, target):
   roots = findroots(R, T)
-  print "roots:"
-  print np.angle(roots)
-  print target
-  print ""
+  #print "roots:"
+  #print np.angle(roots)
+  #print target
+  #print ""
   for x in roots:
     assert abs(x**T-R)<1e-10, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
   minind = np.argmin(abs(np.angle(roots) - target))
@@ -53,7 +53,7 @@ phase      = np.zeros((2,Nsamples))
 amp_factor = np.zeros((2,Nsamples))
 targets    = np.zeros((3,Nsamples))
 
-for i in range(0,3):
+for i in range(0,Nsamples):
   Lmat = -1.0*np.array([[0.0, -f, g*1j*k_vec[i] ],
                    [f, 0.0, 0.0],
                    [H*1j*k_vec[i], 0, 0]], dtype = 'complex')
@@ -90,13 +90,10 @@ for i in range(0,3):
   if err_norm_unit>1e-14:
     warnings.warn("Normalised stability function not equal to stability function over unit interval -- error: %.3E" % err_norm_unit)
 
-  #np.set_printoptions(precision=4)
-  #print np.around(stab_ex_unit, decimals = 8)
-  #print np.around(stab_normalise, decimals = 8)
-  #print ""
   omega           = findomega(stab_ex_unit)
-  omega           = findomega(stab_normalise)
-  print "\n"
+  omega_nondiag   = findomega(stab_normalise)
+  omega           = findomega(np.diag(S))
+  print ("diag to nondiag omega: %.3E" % abs(omega - omega_nondiag))
   phase[1,i]      = omega.real/k_vec[i]
   amp_factor[1,i] = np.exp(omega.imag)
 
