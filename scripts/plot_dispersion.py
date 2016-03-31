@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
 
     Tend     = 16.0
-    nslices  = 16
+    nslices  = int(Tend) # Make sure each time slice has length 1
     U_speed  = 1.0
     nu       = 0.0
     ncoarse  = 1
