@@ -8,13 +8,10 @@ import sympy
 import warnings
 
 def findomega(Z):
-  assert np.array_equal(np.shape(Z),[3,3]), 'Not a 3x3 matrix...'
+  assert np.size(Z)==3, 'Not a 3 vector of length 3...'
   omega = sympy.Symbol('omega')
-  func = (sympy.exp(-1j*omega)-Z[0,0])*(sympy.exp(-1j*omega) - Z[1,1])*(sympy.exp(-1j*omega)-Z[2,2]) \
-         - Z[0,1]*Z[1,2]*Z[2,0] - Z[0,2]*Z[1,0]*Z[2,1]                                               \
-         - Z[0,2]*(sympy.exp(-1j*omega) - Z[1,1])*Z[2,0]                                             \
-         - Z[0,1]*Z[1,0]*(sympy.exp(-1j*omega) - Z[2,2])                                             \
-         - Z[1,2]*Z[2,1]*(sympy.exp(-1j*omega) - Z[0,0])
+  expf   = sympy.exp(-1j*omega)
+  func   = (expf - Z[0])*(expf - Z[1])*(expf - Z[2])
   solsym = sympy.solve(func, omega)
   sols = np.array([complex(solsym[0]), complex(solsym[1]), complex(solsym[2])], dtype='complex')
   return sols[2]
@@ -29,25 +26,27 @@ def findroots(R, n):
 def normalise(R, T, target):
   roots = findroots(R, T)
   print "roots:"
-  print np.angle(roots)
+  print roots
   for x in roots:
     assert abs(x**T-R)<1e-10, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
-  minind = np.argmin(abs(np.angle(roots) - target))
+#  minind = np.argmin(abs(np.angle(roots) - target))
+#  minind = np.argmin(abs( abs(np.angle(roots)) - abs(target)))
+  minind = np.argmin( abs(roots.real - target.real) + abs(roots.imag - target.imag) )
   return roots[minind]
 
 Tend     = 4.0
 nslices  = int(Tend)
-Nsamples = 10
+Nsamples = 25
 k_vec    = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
 k_vec    = k_vec[1:]
 
 g = 1.0
 H = 1.0
-f = 0.0
+f = 1.0
 
 phase      = np.zeros((2,Nsamples))
 amp_factor = np.zeros((2,Nsamples))
-targets    = np.zeros((3,Nsamples))
+targets    = np.zeros((3,Nsamples), dtype = 'complex')
 
 #for i in range(0,Nsamples):
 for i in range(0,4):
@@ -62,45 +61,39 @@ for i in range(0,4):
   D_unit, V_unit = np.linalg.eig(stab_ex_unit)
   if i==0:
     for j in range(0,3):
-      targets[j,0] = np.angle(D_unit[j])
+      targets[j,0] = D_unit[j]
 
   # normalize for Tend = 1.0
   D, V = np.linalg.eig(stab_ex)
   Vinv = np.linalg.inv(V)
-  stab_test = V.dot(np.diag(D).dot(Vinv))
-  assert np.linalg.norm(stab_test - stab_ex, np.inf)<1e-14, "Matrix reconstructed from EV decomposition does not match original matrix"
-
+  err_commute = np.linalg.norm( D.dot(Vinv) - Vinv.dot(D) , np.inf )
+  if err_commute>1e-14:
+    warnings.warn("matrices D and Vinv do not commute: %.3E" % err_commute)
   S    = np.zeros(3, dtype = 'complex')
   for j in range(0,3):
-    print ("correct value: %s" % np.angle(D_unit[j]))
-    S[j] = normalise(D[j], Tend, np.angle(D_unit[j]))
-    print ("selected value: %s" % np.angle(S[j]))
+    print ("correct value: %s" % D_unit[j])
+    print ("target value: %s"  % targets[j,i])
+    S[j] = normalise(D[j], Tend, targets[j,i])
+    print ("selected value: %s" % S[j])
     print ("\n")
     # Set targets for next step of loop
     if i<Nsamples-1:
-      targets[j,i+1] = np.angle(S[j])
+      targets[j,i+1] = S[j]
 
-  assert np.linalg.norm(S**nslices - D, np.inf)<1e-14, "Entries in S to the power of P dont reproduce D"
-
-  stab_normalise  = V.dot((np.diag(S)).dot(Vinv))
-
-  assert np.linalg.norm( np.linalg.matrix_power(stab_normalise,nslices) - stab_ex, np.inf)<1e-10, "Power of normalised stability function not equal to non-normalised stability function"
-  assert np.linalg.norm( np.linalg.matrix_power(stab_ex_unit,nslices) - stab_ex, np.inf)<1e-10, "Power of unit interval stability function ot equal to non-normalised stability function"
+  assert np.linalg.norm(S**nslices - D, np.inf)<1e-10, "Entries in S to the power of P dont reproduce D"
 
   #
   # IN THIS TESTCASE, THE NORMALISATION PROCEDURE SHOULD RELIABLY PRODUCE THE STABILITY FUNCTION OVER THE UNIT INTERVAL
   #
-  err_norm_unit = np.linalg.norm( stab_normalise - stab_ex_unit, np.inf)
-  if err_norm_unit>1e-14:
+  err_norm_unit = np.linalg.norm( V.dot(np.diag(S).dot(Vinv)) - stab_ex_unit, np.inf)
+  if err_norm_unit>1e-10:
     warnings.warn("Normalised stability function not equal to stability function over unit interval -- error: %.3E" % err_norm_unit)
 
-  omega_unit      = findomega(stab_ex_unit)
-  omega_nondiag   = findomega(stab_normalise)
-  omega           = findomega(np.diag(S))
-  omega_diag_nodiag_err = abs(omega - omega_nondiag)
-  if omega_diag_nodiag_err>1e-12:
-    warnings.warn("Difference between omega from diagonalised and original system: %.3E" % omega_diag_nodiag_err)
-  print "\n"
+  omega_unit      = findomega(D_unit)
+  omega           = findomega(S)
+  omega_err = abs(omega - omega_unit)
+  if omega_err>1e-10:
+    warnings.warn("difference between omega and omega_unit: %.3E" % omega_err)
 
   phase[1,i]      = omega.real/k_vec[i]
   amp_factor[1,i] = np.exp(omega.imag)
