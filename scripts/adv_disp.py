@@ -27,9 +27,9 @@ def normalise(R, T, target):
   minind = np.argmin(abs(np.angle(roots) - target))
   return roots[minind]
 
-Tend     = 64.0
+Tend     = 32.0
 nslices  = int(Tend)
-Nsamples = 30
+Nsamples = 60
 k_vec    = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
 k_vec    = k_vec[1:]
 U_speed  = 1.0
@@ -40,9 +40,12 @@ amp_factor = np.zeros((3,Nsamples))
 target     = np.zeros(Nsamples)
 
 for i in range(0, Nsamples):
+
   symb         = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
+  
   stab_ex      = np.exp(symb*Tend)
   stab_ex_unit = np.exp(symb)
+  
   # First make sure that stab_ex_unit**nslices = stab_ex
   assert abs(stab_ex_unit**nslices - stab_ex)<1e-10, "stab_ex_unit**nslices does not match stab_ex"
 
@@ -57,9 +60,9 @@ for i in range(0, Nsamples):
 
   # stab_norm is equal to stab_ex_unit
   err_norm_ex_unit = abs(stab_norm - stab_ex_unit)
-  assert err_norm_ex_unit<1e-10, ("stab_norm does not match stab_unit: error %.3E" % err_
+  assert err_norm_ex_unit<1e-10, ("stab_norm does not match stab_unit: error %.3E" % err_norm_ex_unit)
 
-  if i<Nsamples-1:
+  if (i<Nsamples-1):
     target[i+1] = np.angle(stab_norm)
 
   omega_norm = findomega(stab_norm)
