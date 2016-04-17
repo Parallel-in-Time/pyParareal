@@ -78,7 +78,7 @@ targets    = np.zeros((2,Nsamples), dtype = 'complex')
 
 imax = 21
 #imax = Nsamples
-for i in range(17,imax):
+for i in range(0,imax):
   print ("---- i = %2i ---- " % i)
   Lmat = -1j*k_vec[i]*np.array([ [Uadv, cspeed], [cspeed, Uadv] ], dtype = 'complex')
 
@@ -136,6 +136,7 @@ for i in range(17,imax):
   omegas_diag_normalised = findomega(Dtilde)
   err_omega = np.linalg.norm(omegas_diag_unit - omegas_diag_normalised, np.inf)
   print ("Defect between frequencies from diagonalised normalised system and diagonalised unit intervall: %5.3E" % err_omega)
+  assert err_omega<1e-12, "Mismatch in frequencies..."
   # end of loop body over k_vec
 
   print "------"
