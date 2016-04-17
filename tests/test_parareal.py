@@ -139,8 +139,8 @@ class TestParareal(unittest.TestCase):
 
     # For comparison also without ucoarse provided and check that both are different
     Pmat_ref, Bmat_ref = para.get_parareal_matrix()
-    assert sparse.linalg.norm(Bmat_ref - Bmat)>1e-4, "Parareal iteration matrix Bmat provided with and without ucoarse as argument do not seem to be different." 
-    assert sparse.linalg.norm(Pmat_ref - Pmat)>1e-4, "Parareal iteration matrix Pmat provided with and without ucoarse as argument do not seem to be different." 
+    assert np.linalg.norm(Bmat_ref.todense() - Bmat.todense(), np.inf)>1e-4, "Parareal iteration matrix Bmat provided with and without ucoarse as argument do not seem to be different."
+    assert np.linalg.norm(Pmat_ref.todense() - Pmat.todense(), np.inf)>1e-4, "Parareal iteration matrix Pmat provided with and without ucoarse as argument do not seem to be different."
 
     # Apply matrix to fine solution
     u_para = Pmat.dot(u) + Bmat.dot(b)
