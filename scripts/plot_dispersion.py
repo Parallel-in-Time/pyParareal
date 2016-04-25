@@ -7,7 +7,7 @@ from intexact import intexact
 from special_integrator import special_integrator
 from solution_linear import solution_linear
 import numpy as np
-#from scipy.sparse import linalg
+import scipy.sparse as sparse
 import math
 
 from pylab import rcParams
@@ -30,7 +30,7 @@ def findroots(R, n):
 def normalise(R, T, target):
   roots = findroots(R, T)
   for x in roots:
-    assert abs(x**T-R)<1e-10, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
+    assert abs(x**T-R)<1e-5, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
   minind = np.argmin(abs(np.angle(roots) - target))
   return roots[minind]
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     nfine    = 10
     niter_v  = [5, 10, 15]
     dx       = 0.1
-    Nsamples = 30
+    Nsamples = 60
 
     k_vec = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
     k_vec = k_vec[1:]
@@ -60,19 +60,19 @@ if __name__ == "__main__":
     for i in range(0,np.size(k_vec)):
       
       symb = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
-#      symb_coarse = symb
-      symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
+      symb_coarse = symb
+#      symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
 
       # Solution objects define the problem
       u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
       ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
+      
+      # create Parareal object
+      para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
            
       # get update matrix for imp Euler over one slice
-      stab_fine   = para.timemesh.slices[0].get_fine_update_matrix(u0)
-      stab_fine   = stab_fine
-      
-      stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(u0)
-      stab_coarse = stab_coarse
+      stab_fine   = para.timemesh.slices[0].get_fine_update_matrix(u0)    
+      stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(ucoarse)
       
       stab_ex     = np.exp(symb)
 
@@ -89,12 +89,29 @@ if __name__ == "__main__":
       phase[2,i]      = sol_coarse.real/k_vec[i]
       amp_factor[2,i] = np.exp(sol_coarse.imag)
 
-      # Create the parareal object to be used in the remainder
-      para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
+      #
+      # TESTS FOR SPECIALLY TAILORED COARSE METHOD
+      #
 
-      
+      # for stab = r*exp(i*theta), r defines the amplitude factor and theta the phase speed
+      stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
+      # stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
+
+      # coarse method with exact phase but amplification factor corresponding to a single large backward Euler step
+      stab_coarse_limit = 1.0/(1.0 - Tend*symb_coarse)
+      stab_tailor = abs(stab_coarse_limit)*np.exp(1j*np.angle(stab_ex)) # exact phase speed, massively diffusive amplification factor
+
+      # stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_ex)) ## for testing
+      # stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_coarse[0,0])) ## for testing
+
+      # Re-Create the parareal object to be used in the remainder
+      stab_tailor = sparse.csc_matrix(np.array([stab_tailor], dtype='complex'))
+      para = parareal(0.0, Tend, nslices, intexact, stab_tailor, nfine, ncoarse, 0.0, niter_v[0], u0)
+
+      #################################################
+
       # Compute Parareal phase velocity and amplification factor
-      svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)        
+      #svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)        
       for jj in range(0,3):
         stab_para = para.get_parareal_stab_function(k=niter_v[jj], ucoarse=ucoarse)
 
