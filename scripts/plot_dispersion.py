@@ -52,6 +52,7 @@ if __name__ == "__main__":
 
     phase      = np.zeros((6,Nsamples))
     amp_factor = np.zeros((6,Nsamples))
+    svds       = np.zeros((3,Nsamples))
     u0_val     = np.array([[1.0]], dtype='complex')
     targets    = np.zeros((3,Nsamples))
 
@@ -89,13 +90,13 @@ if __name__ == "__main__":
       amp_factor[2,i] = np.exp(sol_coarse.imag)
       
       # Compute Parareal phase velocity and amplification factor
-      
+      svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)        
       for jj in range(0,3):
         stab_para = para.get_parareal_stab_function(k=niter_v[jj], ucoarse=ucoarse)
 
         if i==0:
           targets[jj,0] = np.angle(stab_ex)
-        
+
         stab_para_norm = normalise(stab_para[0,0], Tend, targets[jj,i])
         # Make sure that stab_norm*dt = stab
         err = abs(stab_para_norm**Tend - stab_para)
@@ -111,7 +112,6 @@ if __name__ == "__main__":
         # Now solve for discrete phase 
         phase[3+jj,i]      = sol_para.real/k_vec[i]
         amp_factor[3+jj,i] = np.exp(sol_para.imag)
-
 
     ###
     rcParams['figure.figsize'] = 2.5, 2.5
@@ -155,3 +155,17 @@ if __name__ == "__main__":
     plt.gcf().savefig(filename, bbox_inches='tight')
     call(["pdfcrop", filename, filename])
 
+    fig  = plt.figure()
+    plt.plot(k_vec, svds[0,:], '-s', color='r', linewidth=1.5, markevery=(1,6), mew=1.0, markersize=fs/2)
+    plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
+    plt.ylabel('Maximal singular value', fontsize=fs, labelpad=0.5)
+    fig.gca().tick_params(axis='both', labelsize=fs)
+    plt.xlim([k_vec[0], k_vec[-1:]])
+    plt.ylim([0, 2.0])
+ #   plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2})
+    plt.gca().set_ylim([0.0, 2.0])
+    plt.xticks([0, 1, 2, 3], fontsize=fs)
+    #plt.show()
+    filename = 'parareal-dispersion-svd.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])
