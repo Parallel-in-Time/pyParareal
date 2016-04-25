@@ -1,4 +1,5 @@
 from timeslice import timeslice
+from special_integrator import special_integrator
 import numpy as np
 from scipy.sparse import linalg
 from scipy import sparse
@@ -21,7 +22,10 @@ class timemesh(object):
     # ... however, this has not yet been tested!!
     for i in range(0,nslices):
       ts_fine   =   fine(self.timemesh[i], self.timemesh[i+1], nsteps_fine)
-      ts_coarse = coarse(self.timemesh[i], self.timemesh[i+1], nsteps_coarse)
+      if sparse.issparse(coarse):
+        ts_coarse = special_integrator(self.timemesh[i], self.timemesh[i+1], nsteps_coarse, coarse)      
+      else:
+        ts_coarse = coarse(self.timemesh[i], self.timemesh[i+1], nsteps_coarse)
       self.slices.append( timeslice(ts_fine, ts_coarse, tolerance, iter_max) )
 
   # Run the coarse method serially over all slices

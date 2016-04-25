@@ -13,5 +13,5 @@ class special_integrator(integrator):
     for i in range(0,self.nsteps):
       u0.y = self.stab_function.dot(u0.y)
 
-  def get_update_matrix(self):
-    return self.stab_function
+  def get_update_matrix(self, sol):
+    return self.stab_function**self.nsteps

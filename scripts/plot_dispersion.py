@@ -4,6 +4,7 @@ sys.path.append('../src')
 from parareal import parareal
 from impeuler import impeuler
 from intexact import intexact
+from special_integrator import special_integrator
 from solution_linear import solution_linear
 import numpy as np
 #from scipy.sparse import linalg
@@ -62,10 +63,10 @@ if __name__ == "__main__":
 #      symb_coarse = symb
       symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
 
+      # Solution objects define the problem
       u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
       ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
-      para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
-            
+           
       # get update matrix for imp Euler over one slice
       stab_fine   = para.timemesh.slices[0].get_fine_update_matrix(u0)
       stab_fine   = stab_fine
@@ -87,6 +88,10 @@ if __name__ == "__main__":
       
       phase[2,i]      = sol_coarse.real/k_vec[i]
       amp_factor[2,i] = np.exp(sol_coarse.imag)
+
+      # Create the parareal object to be used in the remainder
+      para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
+
       
       # Compute Parareal phase velocity and amplification factor
       svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)        
