@@ -1,11 +1,11 @@
 import numpy as np
-from scipy.sparse import linalg
 from pylab import rcParams
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from subprocess import call
 import sympy
 import warnings
+from scipy.sparse import linalg
 
 def findomega(Z):
   omega = sympy.Symbol('omega')

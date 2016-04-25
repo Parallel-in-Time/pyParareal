@@ -65,8 +65,7 @@ if __name__ == "__main__":
       u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
       ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
       para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
-      
-      
+            
       # get update matrix for imp Euler over one slice
       stab_fine   = para.timemesh.slices[0].get_fine_update_matrix(u0)
       stab_fine   = stab_fine
