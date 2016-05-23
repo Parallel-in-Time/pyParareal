@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     err = np.zeros(nslices)
     para_show = np.zeros((3,Nx))
-    niter_show = [5, 10, 15]
+    niter_show = [2, 4, 6]
 
     symb      = -(1j*U_speed*k + nu*k**2)
     u0_val    = np.array([[1.0]], dtype='complex')
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     stab_ex   = np.exp(-1j*U_speed*k*Tend)*np.exp(-nu*k**2*Tend)
 
-    stab_coarse   = para.timemesh.slices[0].get_coarse_update_matrix(u0)
+    stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(u0)
     stab_coarse = stab_coarse**nslices
 
     stab_fine = para.timemesh.slices[0].get_fine_update_matrix(u0)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     plt.plot(x, para_show[0,:], 'r--+', label='Parareal k='+str(niter_show[0]), markevery=(5, 20), markersize=fs/2, mew=1)
     plt.plot(x, para_show[1,:], 'r:s', label='Parareal k='+str(niter_show[1]), markevery=(10,20),  markersize=fs/2, mew=1)
     plt.plot(x, para_show[2,:], 'r-o', label='Parareal k='+str(niter_show[2]), markevery=(15,20),  markersize=fs/2, mew=1)
-    plt.plot(x, y_ex.real,      'g--', label='Fine')
+    #plt.plot(x, y_ex.real,      'g--', label='Fine')
     plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
     plt.title((r'$\kappa$ = %4.2f' % k), fontsize=fs)
     plt.ylim([-2.5, 1.5])
