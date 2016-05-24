@@ -99,7 +99,7 @@ class parareal(object):
     # Returns the largest singular value of the error propagation matrix
     def get_max_svd(self, ucoarse=None):
       Pmat, Bmat = self.get_parareal_matrix(ucoarse)
-      svds = linalg.svds(Pmat, k=1, return_singular_vectors=False)
+      svds = linalg.svds(Pmat, k=1, tol=1e-6, return_singular_vectors=False)
       return svds[0]
 
     # Returns array containing all intermediate solutions
