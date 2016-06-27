@@ -18,10 +18,10 @@ if __name__ == "__main__":
     x = np.linspace(0,20,Nx+1,endpoint=False)
     x = x[0:Nx]
 
-    Nk    = 4
+    Nk    = 6
     k_vec = np.linspace(0, np.pi, Nk+1, endpoint=False)
     k_vec = k_vec[1:]
-
+    k_vec = [k_vec[0], k_vec[1], k_vec[-1]]
     Tend    = 16.0    
     nslices = 16
     U_speed = 1.0
@@ -32,6 +32,7 @@ if __name__ == "__main__":
     err       = np.zeros((np.size(k_vec),nslices))
     err_phase = np.zeros((np.size(k_vec),nslices))
     err_amp   = np.zeros((np.size(k_vec),nslices))
+    svds      = np.zeros((np.size(k_vec),1))
 
     for kk in range(0,np.size(k_vec)):
     
@@ -47,6 +48,8 @@ if __name__ == "__main__":
 
       stab_fine = para.timemesh.slices[0].get_fine_update_matrix(u0)
       stab_fine = stab_fine**nslices
+
+      svds[kk,0] = para.get_max_svd()
 
       if abs(stab_fine[0,0]-stab_ex)>1e-14:
         print "WARNING: Fine method is not the exact integrator..."    
@@ -77,9 +80,17 @@ if __name__ == "__main__":
     iter_v = range(1,nslices)
     assert np.max(err[:,-1])<1e-14, "For at least one wavenumber, Parareal did not fully converge for niter=nslices"
     plt.semilogy(iter_v, err[0,0:-1], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
+    plt.semilogy(iter_v, err[0,0]*np.power(svds[0], iter_v), 'b--')
+
     plt.semilogy(iter_v, err[1,0:-1], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
+    plt.semilogy(iter_v, err[1,0]*np.power(svds[1], iter_v), 'r--')
+
     plt.semilogy(iter_v, err[2,0:-1], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
-    plt.semilogy(iter_v, err[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
+    plt.semilogy(iter_v, err[2,0]*np.power(svds[2], iter_v), 'g--')
+
+    #plt.semilogy(iter_v, err[3,0:-1], 'k-d', label=(r"$\kappa$=%4.2f" % k_vec[3]), markersize=fs/2)
+    #plt.semilogy(iter_v, err[3,0]*np.power(svds[3], iter_v), 'k--')
+
     plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
     plt.xlabel('Parareal Iteration $k$', fontsize=fs)
     plt.ylabel('Parareal defect', fontsize=fs)    
