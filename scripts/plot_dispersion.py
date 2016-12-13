@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # 0 = normal backward Euler method
     # 1 = artificially constructed method with phase error from backward Euler and exact amplification factor
     # 2 = artificially constructed method with exact phase and amplification factor from backward Euler
-    artifical_coarse = 2
+    artifical_coarse = 0
     
     ncoarse  = 1
     nfine    = 10

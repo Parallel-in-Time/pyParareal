@@ -54,6 +54,12 @@ nu = 0.0
 m = 64  # Number of grid points in space
 L = 4.0  # Width of spatial domain
 
+# select coarse integrator:
+# 0 = normal backward Euler method
+# 1 = artificially constructed method with phase error from backward Euler and exact amplification factor
+# 2 = artificially constructed method with exact phase and amplification factor from backward Euler
+artifical_coarse = 1
+
 # Grid points
 x = np.linspace(0, L, m, endpoint=False)
 # Grid spacing
@@ -85,7 +91,17 @@ yend = np.zeros((3,m), dtype='complex')
 ### ...we use the JobLib module to speed up the computational
 def run_parareal(uhat, D, k):
   sol = solution_linear(np.asarray([[uhat]]), np.asarray([[D]]))
-  para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=impeuler, nsteps_fine=10, nsteps_coarse=2, tolerance=0.0, iter_max=k, u0 = sol)
+  para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=impeuler, nsteps_fine=10, nsteps_coarse=1, tolerance=0.0, iter_max=k, u0 = sol)
+  stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(sol)
+  stab_ex     = np.exp(D)
+  if artifical_coarse==2:
+    stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
+  elif artifical_coarse==1:
+    stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
+
+  if not artifical_coarse == 0:
+    stab_tailor = sp.csc_matrix(np.array([stab_tailor], dtype='complex'))
+    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=stab_tailor, nsteps_fine=10, nsteps_coarse=1, tolerance=0.0, iter_max=k, u0 = sol)
   para.run()
   temp = para.get_last_end_value()
   return temp.y[0,0]
