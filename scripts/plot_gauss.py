@@ -16,21 +16,13 @@ if __name__ == "__main__":
     x = np.linspace(0,20,Nx+1,endpoint=False)
     x = x[0:Nx]
 
-    Nk    = 4
-    k_vec = np.linspace(0, np.pi, Nk+1, endpoint=False)
-    k_vec = k_vec[1:]
-    # Select a wave number
-    k_ind = 3
-    k     = k_vec[k_ind]
-
-    Tend    = 16.0    
+    Tend    = 16.0
     nslices = 16
     U_speed = 1.0
     nu      = 0.0
     ncoarse = 1
     nfine   = 1
 
-    err = np.zeros(nslices)
     para_show = np.zeros((3,Nx))
     niter_show = [5, 10, 15]
 

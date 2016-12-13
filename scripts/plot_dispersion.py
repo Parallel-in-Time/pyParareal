@@ -18,9 +18,11 @@ from subprocess import call
 import sympy
 from pylab import rcParams
 
+# computes the frequency omega = 1j*log(R)
 def solve_omega(R):
   return 1j*( np.log(abs(R)) + 1j*np.angle(R) )
 
+# finds all roots of the stability function
 def findroots(R, n):
   assert abs(n - float(int(n)))<1e-14, "n must be an integer or a float equal to an integer"
   p = np.zeros(int(n)+1, dtype='complex')
@@ -28,26 +30,49 @@ def findroots(R, n):
   p[0]  = 1.0
   return np.roots(p)
 
+# normalises the stability function of Parareal from [0,Tend] to [0,1]
+# by computing all Tend=P roots and then selecting the one that is closest to the given
+# target angle
 def normalise(R, T, target):
   roots = findroots(R, T)
+  
+  # make sure all computed values are actually roots
   for x in roots:
-    assert abs(x**T-R)<1e-5, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
+    assert abs(x**T-R)<1e-3, ("Element in roots not a proper root: err=%5.3e" % abs(x**T-R))
+  
+  # find root that minimises distance to target angle
   minind = np.argmin(abs(np.angle(roots) - target))
   return roots[minind]
 
 
 if __name__ == "__main__":
 
-
+    # Tend has to be an integer as we assume Tend = P with P being the number of processors
     Tend     = 16.0
+    
+    # number of time slices, equal to the number of processors P
     nslices  = int(Tend) # Make sure each time slice has length 1
+    
+    # advection speed
     U_speed  = 1.0
+    
+    # diffusivity parameter
     nu       = 0.0
+    
+    # select coarse integrator:
+    # 0 = normal backward Euler method
+    # 1 = artificially constructed method with phase error from backward Euler and exact amplification factor
+    # 2 = artificially constructed method with exact phase and amplification factor from backward Euler
+    artifical_coarse = 2
+    
     ncoarse  = 1
     nfine    = 10
     niter_v  = [5, 10, 15]
-    dx       = 0.1
-    Nsamples = 60
+    dx       = 0.1 # only relevant if finite difference symbol is used instead of analytic symbol of spatial derivative operator
+    
+    # number of discrete values between kappa=0 and kappa=pi for which the dispersion relation is computed.
+    # try to increase this value of the normalisation fails.
+    Nsamples = 50
 
     k_vec = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
     k_vec = k_vec[1:]
@@ -61,26 +86,29 @@ if __name__ == "__main__":
     for i in range(0,np.size(k_vec)):
       
       symb = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
-#      symb_coarse = symb
-      symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
+      symb_coarse = symb
+#      symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
 
       # Solution objects define the problem
       u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
       ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
       
-      # create Parareal object
+      # create Parareal object; selects exact integrator (intexact) as fine propagator and backward Euler (impeuler) as coarse
       para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
            
       # get update matrix for imp Euler over one slice
       stab_fine   = para.timemesh.slices[0].get_fine_update_matrix(u0)    
       stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(ucoarse)
       
+      # exact stability function is exponential
       stab_ex     = np.exp(symb)
 
+      # compute frequency omeaga for fine propagator, exact propagator and coarse propagator
       sol_fine   = solve_omega(stab_fine[0,0])
       sol_ex     = solve_omega(stab_ex)
       sol_coarse = solve_omega(stab_coarse[0,0])
       
+      # compute phase speed and amplification factor for fine, coarse and exact propagator
       phase[0,i]      = sol_ex.real/k_vec[i]
       amp_factor[0,i] = np.exp(sol_ex.imag)
       
@@ -91,35 +119,51 @@ if __name__ == "__main__":
       amp_factor[2,i] = np.exp(sol_coarse.imag)
 
       #
-      # TESTS FOR SPECIALLY TAILORED COARSE METHOD
+      # MODIFICATIONS FOR SPECIALLY TAILORED COARSE METHOD
       #
 
+      if artifical_coarse==2:
       # for stab = r*exp(i*theta), r defines the amplitude factor and theta the phase speed
-      # stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
-      # stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
+        stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
+      elif artifical_coarse==1:
+        stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
 
-      # coarse method with exact phase but amplification factor corresponding to a single large backward Euler step
-      #stab_coarse_limit = 1.0/(1.0 - Tend*symb_coarse)
-      #stab_tailor = abs(stab_coarse_limit)*np.exp(1j*np.angle(stab_ex)) # exact phase speed, massively diffusive amplification factor
-
+      # if an artifical coarse method is used, need to reconstruct the Parareal object
+      if not artifical_coarse==0:
+        # Re-Create the parareal object to be used in the remainder
+        stab_tailor = sparse.csc_matrix(np.array([stab_tailor], dtype='complex'))
+      
+        # Use tailored integrator as coarse method
+        para = parareal(0.0, Tend, nslices, intexact, stab_tailor, nfine, ncoarse, 0.0, niter_v[0], u0)
+      
       # stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_ex)) ## for testing
       # stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_coarse[0,0])) ## for testing
-
-      # Re-Create the parareal object to be used in the remainder
-      # stab_tailor = sparse.csc_matrix(np.array([stab_tailor], dtype='complex'))
-      # para = parareal(0.0, Tend, nslices, intexact, stab_tailor, nfine, ncoarse, 0.0, niter_v[0], u0)
+      
+      # Create fine method with coarse level phase speed [FIGURE OUT HOW TO DO THIS CORRECTLY]
+      # stab_tailor = abs(stab_fine[0,0])*np.exp(1j*np.angle(stab_coarse[0,0]**nfine))
+      
+      
+      # Use tailored integrator aas fine method
+      #para = parareal(0.0, Tend, nslices, stab_tailor, stab_coarse, nfine, ncoarse, 0.0, niter_v[0], u0)
+      
 
       #################################################
 
-      # Compute Parareal phase velocity and amplification factor
-      svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)        
+      svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)
+      
+      # Compute Parareal phase velocity and amplification factor for 3 different values of K (number of iterations)
       for jj in range(0,3):
+      
+        # stability function of Parareal over interval [0,Tend]
         stab_para = para.get_parareal_stab_function(k=niter_v[jj], ucoarse=ucoarse)
 
+        # for very first wave number, target angle is computed by using angle of exact stability function
         if i==0:
           targets[jj,0] = np.angle(stab_ex)
 
+        # normalise stability function to [0,1] by selecting the correct root (see functions defined above)
         stab_para_norm = normalise(stab_para[0,0], Tend, targets[jj,i])
+        
         # Make sure that stab_norm*dt = stab
         err = abs(stab_para_norm**Tend - stab_para)
         if err>1e-10:
@@ -168,9 +212,8 @@ if __name__ == "__main__":
     plt.ylabel('Amplification factor', fontsize=fs, labelpad=0.5)
     fig.gca().tick_params(axis='both', labelsize=fs)
     plt.xlim([k_vec[0], k_vec[-1:]])
-    plt.ylim([0, 1.1*U_speed])
     plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2})
-    plt.gca().set_ylim([0.0, 1.1])
+    plt.gca().set_ylim([0.0, 1.2])
     plt.xticks([0, 1, 2, 3], fontsize=fs)
     #plt.show()
     filename = 'parareal-dispersion-ampf.pdf'
