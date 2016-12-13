@@ -55,6 +55,7 @@ if __name__ == "__main__":
     plt.plot(k_vec, svds[0,:], label=(r'$\nu$=%3.2f' % nu_v[0]))
     plt.plot(k_vec, svds[1,:], label=(r'$\nu$=%3.2f' % nu_v[1]))
     plt.plot(k_vec, svds[2,:], label=(r'$\nu$=%3.2f' % nu_v[2]))
+    plt.plot(k_vec, 1.0+0.0*k_vec, 'k--')
     plt.gca().tick_params(axis='both', which='major', labelsize=fs-2)
     plt.gca().tick_params(axis='x', which='minor', bottom='off')
     plt.xlabel(r'Wave number $\kappa$', fontsize=fs, labelpad=1)

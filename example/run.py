@@ -85,7 +85,7 @@ yend = np.zeros((3,m), dtype='complex')
 ### ...we use the JobLib module to speed up the computational
 def run_parareal(uhat, D, k):
   sol = solution_linear(np.asarray([[uhat]]), np.asarray([[D]]))
-  para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=impeuler, nsteps_fine=1, nsteps_coarse=2, tolerance=0.0, iter_max=k, u0 = sol)
+  para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=impeuler, nsteps_fine=10, nsteps_coarse=2, tolerance=0.0, iter_max=k, u0 = sol)
   para.run()
   temp = para.get_last_end_value()
   return temp.y[0,0]
@@ -126,7 +126,8 @@ plt.semilogy(xi, np.absolute(yend[1,m/2:m])/m, '-d', color='r', linewidth=1.5, l
 plt.semilogy(xi, np.absolute(yend[2,m/2:m])/m, '-x', color='r', linewidth=1.5, label='Parareal k='+str(Kiter_v[2]), markevery=(3,3), mew=1.0, markersize=fs/2)
 plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
 plt.ylabel(r'abs($\hat{u}$)')
-plt.xticks([0.0, 0.2, 0.4, 0.6], fontsize=fs)
+plt.xticks([0.0, 0.1, 0.3], fontsize=fs)
+plt.xlim([0.0, 0.3])
 plt.yticks([1e0, 1e-3, 1e-6, 1e-9, 1e-12], fontsize=fs)
 plt.legend(loc='upper right', fontsize=fs, prop={'size':fs-2})
 filename = 'parareal-gauss-peak-spectrum.pdf'
