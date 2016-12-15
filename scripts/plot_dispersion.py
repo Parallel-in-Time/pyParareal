@@ -63,7 +63,10 @@ if __name__ == "__main__":
     # 0 = normal backward Euler method
     # 1 = artificially constructed method with phase error from backward Euler and exact amplification factor
     # 2 = artificially constructed method with exact phase and amplification factor from backward Euler
-    artifical_coarse = 0
+    artificial_coarse = 0
+    
+    # equivalently, artifical_fine==1 constructs a fine propagator with exact amplitude but the same coarse propagation characteristics as backward Euler
+    artificial_fine = 1
     
     ncoarse  = 1
     nfine    = 10
@@ -103,6 +106,32 @@ if __name__ == "__main__":
       # exact stability function is exponential
       stab_ex     = np.exp(symb)
 
+
+      #
+      # MODIFICATIONS FOR SPECIALLY TAILORED COARSE METHOD
+      #
+
+      if artificial_coarse==2:
+      # for stab = r*exp(i*theta), r defines the amplitude factor and theta the phase speed
+        stab_coarse = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
+      elif artificial_coarse==1:
+        stab_coarse = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
+
+      # if an artifical coarse method is used, need to reconstruct the Parareal object
+      if not artificial_coarse==0:
+        # Re-Create the parareal object to be used in the remainder
+        stab_coarse = sparse.csc_matrix(np.array([stab_coarse], dtype='complex'))
+      
+        # Use tailored integrator as coarse method
+        para = parareal(0.0, Tend, nslices, intexact, stab_coarse, nfine, ncoarse, 0.0, niter_v[0], u0)
+      
+      if artificial_fine==1:
+        assert artificial_coarse==0, "Using artifical coarse and fine propagators together is not implemented and probably not working correctly"
+        stab_fine = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0]))
+        stab_fine = sparse.csc_matrix(np.array([stab_fine], dtype='complex'))
+        # Must use nfine=1 in this case
+        para = parareal(0.0, Tend, nslices, stab_fine, impeuler, 1, ncoarse, 0.0, niter_v[0], u0)
+      
       # compute frequency omeaga for fine propagator, exact propagator and coarse propagator
       sol_fine   = solve_omega(stab_fine[0,0])
       sol_ex     = solve_omega(stab_ex)
@@ -117,34 +146,6 @@ if __name__ == "__main__":
       
       phase[2,i]      = sol_coarse.real/k_vec[i]
       amp_factor[2,i] = np.exp(sol_coarse.imag)
-
-      #
-      # MODIFICATIONS FOR SPECIALLY TAILORED COARSE METHOD
-      #
-
-      if artifical_coarse==2:
-      # for stab = r*exp(i*theta), r defines the amplitude factor and theta the phase speed
-        stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
-      elif artifical_coarse==1:
-        stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
-
-      # if an artifical coarse method is used, need to reconstruct the Parareal object
-      if not artifical_coarse==0:
-        # Re-Create the parareal object to be used in the remainder
-        stab_tailor = sparse.csc_matrix(np.array([stab_tailor], dtype='complex'))
-      
-        # Use tailored integrator as coarse method
-        para = parareal(0.0, Tend, nslices, intexact, stab_tailor, nfine, ncoarse, 0.0, niter_v[0], u0)
-      
-      # stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_ex)) ## for testing
-      # stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_coarse[0,0])) ## for testing
-      
-      # Create fine method with coarse level phase speed [FIGURE OUT HOW TO DO THIS CORRECTLY]
-      # stab_tailor = abs(stab_fine[0,0])*np.exp(1j*np.angle(stab_coarse[0,0]**nfine))
-      
-      
-      # Use tailored integrator aas fine method
-      #para = parareal(0.0, Tend, nslices, stab_tailor, stab_coarse, nfine, ncoarse, 0.0, niter_v[0], u0)
       
 
       #################################################
