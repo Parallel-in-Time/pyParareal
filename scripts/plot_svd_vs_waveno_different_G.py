@@ -51,9 +51,9 @@ if __name__ == "__main__":
         para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 0, u0)
         stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(ucoarse)
 
-        if j==1:
+        if j==2:
           stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
-        elif j==2:
+        elif j==1:
           stab_tailor = abs(stab_coarse[0,0])*np.exp(1j*np.angle(stab_ex)) # exact phase speed
         
         if not j==0:
