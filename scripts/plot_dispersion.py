@@ -44,7 +44,9 @@ def normalise(R, T, target):
   minind = np.argmin(abs(np.angle(roots) - target))
   return roots[minind]
 
-
+#
+# Main script
+#
 if __name__ == "__main__":
 
     # Tend has to be an integer as we assume Tend = P with P being the number of processors
@@ -68,10 +70,17 @@ if __name__ == "__main__":
     # equivalently, artifical_fine==1 constructs a fine propagator with exact amplitude but the same coarse propagation characteristics as backward Euler
     artificial_fine = 0
     
-    ncoarse  = 2
+    # Select finite difference stencil for coarse propagator
+    # stencil = 0 : exact symbol, no approximation of spatial derivative
+    # stencil = 1 : first order upwind  (only fur nu=0)
+    # stencil = 2 : second order centred (only for nu=0)
+    stencil = 0
+
+    ncoarse  = 1
     nfine    = 10
     niter_v  = [5, 10, 15]
-    dx       = 0.1 # only relevant if finite difference symbol is used instead of analytic symbol of spatial derivative operator
+    dx       = 1.0 # only relevant if finite difference symbol is used instead of analytic symbol of spatial derivative operator
+    
     
     # number of discrete values between kappa=0 and kappa=pi for which the dispersion relation is computed.
     # try to increase this value of the normalisation fails.
@@ -82,15 +91,26 @@ if __name__ == "__main__":
 
     phase      = np.zeros((6,Nsamples))
     amp_factor = np.zeros((6,Nsamples))
-    svds       = np.zeros((3,Nsamples))
     u0_val     = np.array([[1.0]], dtype='complex')
     targets    = np.zeros((3,Nsamples))
 
     for i in range(0,np.size(k_vec)):
       
       symb = -(1j*U_speed*k_vec[i] + nu*k_vec[i]**2)
-      symb_coarse = symb
-#      symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*k_vec[i]*dx))
+     
+      if stencil==0:
+        symb_coarse = symb
+      
+      elif stencil==1:
+        assert nu==0, "Approximate coarse symbol currently only implemented for nu=0"
+        symb_coarse = -U_speed*( 1.0 - np.exp(-1j*k_vec[i]*dx) )/dx
+
+      elif stencil==2:
+        assert nu==0, "Approximate coarse symbol currently only implemented for nu=0"
+        symb_coarse = -U_speed*1j*np.sin(k_vec[i]*dx)/dx
+
+      else:
+        raise Exception("Not implemented")
 
       # Solution objects define the problem
       u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
@@ -149,8 +169,6 @@ if __name__ == "__main__":
       
 
       #################################################
-
-      svds[0,i]         = para.get_max_svd(ucoarse=ucoarse)
       
       # Compute Parareal phase velocity and amplification factor for 3 different values of K (number of iterations)
       for jj in range(0,3):
@@ -167,7 +185,7 @@ if __name__ == "__main__":
         
         # Make sure that stab_norm*dt = stab
         err = abs(stab_para_norm**Tend - stab_para)
-        if err>1e-10:
+        if err>1e-6:
           print ("WARNING: power of normalised update does not match update over full length of time. error %5.3e" % err)
         
         if i<np.size(k_vec)-1:
@@ -218,20 +236,5 @@ if __name__ == "__main__":
     plt.xticks([0, 1, 2, 3], fontsize=fs)
     #plt.show()
     filename = 'parareal-dispersion-ampf.pdf'
-    plt.gcf().savefig(filename, bbox_inches='tight')
-    call(["pdfcrop", filename, filename])
-
-    fig  = plt.figure()
-    plt.plot(k_vec, svds[0,:], '-s', color='r', linewidth=1.5, markevery=(1,6), mew=1.0, markersize=fs/2)
-    plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
-    plt.ylabel('Maximal singular value', fontsize=fs, labelpad=0.5)
-    fig.gca().tick_params(axis='both', labelsize=fs)
-    plt.xlim([k_vec[0], k_vec[-1:]])
-    plt.ylim([0, 2.0])
- #   plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2})
-    plt.gca().set_ylim([0.0, 2.0])
-    plt.xticks([0, 1, 2, 3], fontsize=fs)
-    #plt.show()
-    filename = 'parareal-dispersion-svd.pdf'
     plt.gcf().savefig(filename, bbox_inches='tight')
     call(["pdfcrop", filename, filename])

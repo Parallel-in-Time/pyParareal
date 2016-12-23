@@ -13,6 +13,11 @@ ampfa = np.zeros((3,N))
 dx = 1.0
 dt = 1.0
 
+# Select finite difference stencil
+# stencil = 0 : first order upwind
+# stencil = 1 : second order centred
+stencil = 1
+
 for k in range(0,np.size(k_vec)):
   
   # exact values
@@ -27,7 +32,15 @@ for k in range(0,np.size(k_vec)):
   phase[1,k] = omega.real/k_vec[k]
   ampfa[1,k] = np.exp(omega.imag)
   
-  delta_disc = -1j*np.sin(k_vec[k]*dx)/dx
+  if stencil==0:
+    delta_disc = -(1.0 - np.exp(-1j*k_vec[k]*dx))/dx
+  
+  elif stencil==1:
+    delta_disc = -1j*np.sin(k_vec[k]*dx)/dx
+  
+  else:
+    raise Exception("Not implemented")
+
   stab_disc  = 1.0/(1.0 - dt*delta_disc)
   omega_disc = 1j*np.log(stab_disc)/dt
 
@@ -38,9 +51,9 @@ rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 
 fig = plt.figure()
-plt.plot(k_vec, phase[2,:], '-b', linewidth=1.5, label='Continuous', markevery=(1,5), markersize=fs/2)
-plt.plot(k_vec, phase[1,:], 'g-o', linewidth=1.5, label='Implicit Euler', markevery=(3,5), markersize=fs/2)
-plt.plot(k_vec, phase[0,:], 'r-s', linewidth=1.5, label='Implicit Euler + Upwind', markevery=(5,5), markersize=fs/2)
+plt.plot(k_vec, phase[2,:], '-g', linewidth=1.5, label='Continuous', markevery=(1,5), markersize=fs/2)
+plt.plot(k_vec, phase[1,:], 'k-o', linewidth=1.5, label='Implicit Euler', markevery=(3,5), markersize=fs/2)
+plt.plot(k_vec, phase[0,:], 'b-s', linewidth=1.5, label='Implicit Euler + FD', markevery=(5,5), markersize=fs/2)
 plt.xlim([k_vec[0], k_vec[-1]])
 plt.ylim([0.0, 1.1])
 plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
@@ -53,9 +66,9 @@ plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 
 fig = plt.figure()
-plt.plot(k_vec, ampfa[2,:], 'b-', linewidth=1.5, label='Continuous', markevery=(1,5), markersize=fs/2)
-plt.plot(k_vec, ampfa[1,:], 'g-o', linewidth=1.5, label='Implicit Euler', markevery=(3,5), markersize=fs/2)
-plt.plot(k_vec, ampfa[0,:], 'r-s', linewidth=1.5, label='Implicit Euler + Upwind', markevery=(5,5), markersize=fs/2)
+plt.plot(k_vec, ampfa[2,:], 'g-', linewidth=1.5, label='Continuous', markevery=(1,5), markersize=fs/2)
+plt.plot(k_vec, ampfa[1,:], 'k-o', linewidth=1.5, label='Implicit Euler', markevery=(3,5), markersize=fs/2)
+plt.plot(k_vec, ampfa[0,:], 'b-s', linewidth=1.5, label='Implicit Euler + FD', markevery=(5,5), markersize=fs/2)
 plt.xlim([k_vec[0], k_vec[-1]])
 plt.ylim([0.0, 1.1])
 plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
