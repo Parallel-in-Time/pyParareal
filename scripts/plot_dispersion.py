@@ -66,9 +66,9 @@ if __name__ == "__main__":
     artificial_coarse = 0
     
     # equivalently, artifical_fine==1 constructs a fine propagator with exact amplitude but the same coarse propagation characteristics as backward Euler
-    artificial_fine = 1
+    artificial_fine = 0
     
-    ncoarse  = 1
+    ncoarse  = 2
     nfine    = 10
     niter_v  = [5, 10, 15]
     dx       = 0.1 # only relevant if finite difference symbol is used instead of analytic symbol of spatial derivative operator

@@ -20,7 +20,7 @@ from pylab import rcParams
 
 if __name__ == "__main__":
 
-    nslices_v = np.arange(2,32,2)
+    nslices_v = np.arange(2,64,2)
 
     U_speed  = 1.0
     nu       = 0.0
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     rcParams['figure.figsize'] = 2.5, 2.5
     fs = 8
     fig  = plt.figure()
-    plt.plot(nslices_v, svds[0,:], 'b-o', label=(r"$\kappa$=%4.2f" % waveno_v[0]), markersize=fs/2)
-    plt.plot(nslices_v, svds[1,:], 'r-s', label=(r"$\kappa$=%4.2f" % waveno_v[1]), markersize=fs/2)
-    plt.plot(nslices_v, svds[2,:], 'g-x', label=(r"$\kappa$=%4.2f" % waveno_v[2]), markersize=fs/2)
+    plt.plot(nslices_v, svds[0,:], 'b-o', label=(r"$\kappa$=%4.2f" % waveno_v[0]), markersize=fs/2, markevery=(1,6))
+    plt.plot(nslices_v, svds[1,:], 'r-s', label=(r"$\kappa$=%4.2f" % waveno_v[1]), markersize=fs/2, markevery=(3,6))
+    plt.plot(nslices_v, svds[2,:], 'g-x', label=(r"$\kappa$=%4.2f" % waveno_v[2]), markersize=fs/2, markevery=(5,6))
     plt.plot(nslices_v, 1.0+0.0*nslices_v, 'k--')
     plt.xlim([nslices_v[0], nslices_v[-1]])
     plt.xlabel('Number of processors', fontsize=fs)

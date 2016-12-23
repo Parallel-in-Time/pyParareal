@@ -68,9 +68,9 @@ if __name__ == "__main__":
     rcParams['figure.figsize'] = 2.5, 2.5
     fs = 8
     fig  = plt.figure()
-    plt.plot(k_vec, svds[0,:], label="Backward Euler")
-    plt.plot(k_vec, svds[1,:], label=r"$R_1$")
-    plt.plot(k_vec, svds[2,:], label=r"$R_2$")
+    plt.plot(k_vec, svds[0,:], 'b-o', label="Backward Euler", markersize=fs/2, markevery=(1,6))
+    plt.plot(k_vec, svds[1,:], 'r-s', label=r"$R_1$", markersize=fs/2, markevery=(3,6))
+    plt.plot(k_vec, svds[2,:], 'g-x', label=r"$R_2$", markersize=fs/2, markevery=(3,6))
     plt.plot(k_vec, 1.0+0.0*k_vec, 'k--')
     plt.gca().tick_params(axis='both', which='major', labelsize=fs-2)
     plt.gca().tick_params(axis='x', which='minor', bottom='off')
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     plt.xlim([k_vec[0], k_vec[-1]])
     plt.ylim([0.0, 1.4])
     plt.ylabel(r'Maximum singular value $\sigma$', fontsize=fs, labelpad=0)
-    plt.legend(loc='lower right', fontsize=fs, prop={'size':fs-2})
+    plt.legend(loc='lower right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
     filename='svd_vs_waveno_different_G.pdf'
     fig.savefig(filename, bbox_inches='tight')
     call(["pdfcrop", filename, filename])

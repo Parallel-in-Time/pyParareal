@@ -60,7 +60,7 @@ L = 4.0  # Width of spatial domain
 # 2 = artificially constructed method with exact phase and amplification factor from backward Euler
 artificial_coarse = 0
 
-artificial_fine = 1
+artificial_fine = 0
 
 # Grid points
 x = np.linspace(0, L, m, endpoint=False)
@@ -84,6 +84,7 @@ D = -1j*xi*uadv - nu*xi**2
 # Initial data
 sig   = 1.0
 u     = np.exp(-(x-0.5*L)**2/sig**2)
+u     = np.exp(2.0*np.pi*1j*x)
 uhat0 = np.fft.fft(u)
 
 yend = np.zeros((3,m), dtype='complex')
