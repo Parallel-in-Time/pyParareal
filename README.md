@@ -1,4 +1,4 @@
-pyParareal {#mainpage}
+pyParareal
 ============
 
 Python Parareal code to analyse Parareal's wave propagation characteristics.
