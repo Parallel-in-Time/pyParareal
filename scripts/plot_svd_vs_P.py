@@ -20,37 +20,46 @@ from pylab import rcParams
 
 if __name__ == "__main__":
 
-    nslices_v = [2, 4, 8, 16, 32, 64]
+    nslices_v = np.arange(2,64,2)
 
     U_speed  = 1.0
     nu       = 0.0
-    ncoarse  = 2
+    ncoarse  = 1
     nfine    = 10
-    niter_v  = [5, 10, 15]
-    dx       = 1.0
-    Nsamples = 60
     u0_val     = np.array([[1.0]], dtype='complex')
-
-    k_vec = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
+    Nsamples = 40
+    
+    Nk    = 6
+    k_vec = np.linspace(0, np.pi, Nk+1, endpoint=False)
     k_vec = k_vec[1:]
-    waveno = k_vec[-1]
+    waveno_v = [k_vec[0], k_vec[1], k_vec[-1]]
 
-    svds = np.zeros((1, np.size(nslices_v)))
+    svds = np.zeros((3, np.size(nslices_v)))
 
-    symb = -(1j*U_speed*waveno + nu*waveno**2)
-    symb_coarse = symb
+
+    for j in range(3):
+      symb = -(1j*U_speed*waveno_v[j] + nu*waveno_v[j]**2)
+      symb_coarse = symb
 #    symb_coarse = -(1.0/dx)*(1.0 - np.exp(-1j*waveno*dx))
 
-    # Solution objects define the problem
-    u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
-    ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
+      # Solution objects define the problem
+      u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
+      ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
+      for i in range(0,np.size(nslices_v)):
+          para = parareal(0.0, float(nslices_v[i]), nslices_v[i], intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
+          svds[j,i] = para.get_max_svd(ucoarse=ucoarse)
 
-    for i in range(0,np.size(nslices_v)):
-      para = parareal(0.0, float(nslices_v[i]), nslices_v[i], intexact, impeuler, nfine, ncoarse, 0.0, niter_v[0], u0)
-      svds[0,i] = para.get_max_svd(ucoarse=ucoarse)
-
-    rcParams['figure.figsize'] = 7.5, 7.5
+    rcParams['figure.figsize'] = 2.5, 2.5
     fs = 8
     fig  = plt.figure()
-    plt.plot(nslices_v, svds[0,:], 'b--')
-    plt.show()
+    plt.plot(nslices_v, svds[0,:], 'b-o', label=(r"$\kappa$=%4.2f" % waveno_v[0]), markersize=fs/2, markevery=(1,6))
+    plt.plot(nslices_v, svds[1,:], 'r-s', label=(r"$\kappa$=%4.2f" % waveno_v[1]), markersize=fs/2, markevery=(3,6))
+    plt.plot(nslices_v, svds[2,:], 'g-x', label=(r"$\kappa$=%4.2f" % waveno_v[2]), markersize=fs/2, markevery=(5,6))
+    plt.plot(nslices_v, 1.0+0.0*nslices_v, 'k--')
+    plt.xlim([nslices_v[0], nslices_v[-1]])
+    plt.xlabel('Number of processors', fontsize=fs)
+    plt.ylabel(r'Maximum singular value $\sigma$', fontsize=fs)
+    plt.legend(loc='lower right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+    filename = 'parareal-svd-vs-p.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])

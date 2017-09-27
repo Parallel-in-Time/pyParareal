@@ -31,8 +31,8 @@ if __name__ == "__main__":
     nfine   = 1
 
     err = np.zeros(nslices)
-    para_show = np.zeros((3,Nx))
-    niter_show = [5, 10, 15]
+    niter     = 15
+    para_plot = np.zeros((niter,Nx))
 
     symb      = -(1j*U_speed*k + nu*k**2)
     u0_val    = np.array([[1.0]], dtype='complex')
@@ -56,25 +56,20 @@ if __name__ == "__main__":
     y_coarse= stab_coarse[0,0]*y_start
     y_fine  = stab_fine[0,0]*y_start
 
-    for n in range(0,np.size(niter_show)):
-      stab_para = para.get_parareal_stab_function(niter_show[n])
-      para_show[n,:] = (stab_para[0,0]*y_start).real
+    for n in range(niter):
+      stab_para = para.get_parareal_stab_function(n)
+      para_plot[n,:] = (stab_para[0,0]*y_start).real
 
     fs = 8
     rcParams['figure.figsize'] = 2.5, 2.5
     fig = plt.figure()
-    plt.plot(x, y_ex.real,      'g-', label='Fine')
-    #plt.plot(x, y_coarse.real,  'b--', label='Coarse')
-    plt.plot(x, para_show[0,:], 'r-+', label='Parareal k='+str(niter_show[0]), markevery=(5, 20), markersize=fs/2, mew=1)
-    #plt.plot(x, para_show[1,:], 'r-s', label='Parareal k='+str(niter_show[1]), markevery=(10,20),  markersize=fs/2, mew=1)
-    plt.plot(x, para_show[2,:], 'r-o', label='Parareal k='+str(niter_show[2]), markevery=(15,20),  markersize=fs/2, mew=1)
-    plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+    plt.plot3d(x, range(niter), para_plot)
     plt.title((r'$\kappa$ = %4.2f' % k), fontsize=fs)
     plt.ylim([-1.5, 1.5])
     plt.xlim([x[0], x[-1]])
     plt.xlabel('x', fontsize=fs)
     plt.ylabel('y', fontsize=fs)
-    filename = 'parareal-sine-'+str(k_ind)+'.pdf'
+    filename = 'parareal-sine-xt.pdf'
     plt.gcf().savefig(filename, bbox_inches='tight')
     call(["pdfcrop", filename, filename])
 #    plt.show()

@@ -25,7 +25,7 @@ if __name__ == "__main__":
     Tend    = 16.0    
     nslices = 16
     U_speed = 1.0
-    nu      = 0.0
+    nu      = 0.1
     ncoarse = 1
     nfine   = 1
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     rcParams['figure.figsize'] = 2.5, 2.5
     fig = plt.figure()
     iter_v = range(1,nslices)
-    assert np.max(err[:,-1])<1e-14, "For at least one wavenumber, Parareal did not fully converge for niter=nslices"
+    assert np.max(err[:,-1])<1e-10, ("For at least one wavenumber, Parareal did not fully converge for niter=nslices. Error: %5.3e" % np.max(err[:,-1]))
     plt.semilogy(iter_v, err[0,0:-1], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
     plt.semilogy(iter_v, err[0,0]*np.power(svds[0], iter_v), 'b--')
 

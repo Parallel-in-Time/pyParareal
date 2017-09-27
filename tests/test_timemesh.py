@@ -151,6 +151,10 @@ class TestTimemesh(unittest.TestCase):
 
   # with coarse provided as matrix, run_coarse provides expected intermediate values
   def test_runcoarseintermediatewithmatrix(self):
+    # need at least three slices for this test
+    if self.nslices==2:
+      self.nslices = 3
+    
     dt = (self.tend - self.tstart)/(float(self.nslices)*float(self.ncoarse))
     mat = sparse.csc_matrix( np.array([1.0/(1.0 - dt)]) )
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, mat, self.nfine, self.ncoarse, 1e-10, 5)

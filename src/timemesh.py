@@ -21,11 +21,17 @@ class timemesh(object):
     # @NOTE: this setup would allow to set different values for tolerance and iter_max for different slices...
     # ... however, this has not yet been tested!!
     for i in range(0,nslices):
-      ts_fine   =   fine(self.timemesh[i], self.timemesh[i+1], nsteps_fine)
+     
+      if sparse.issparse(fine):
+        ts_fine = special_integrator(self.timemesh[i], self.timemesh[i+1], nsteps_fine, fine)
+      else:
+        ts_fine   =   fine(self.timemesh[i], self.timemesh[i+1], nsteps_fine)
+      
       if sparse.issparse(coarse):
         ts_coarse = special_integrator(self.timemesh[i], self.timemesh[i+1], nsteps_coarse, coarse)      
       else:
         ts_coarse = coarse(self.timemesh[i], self.timemesh[i+1], nsteps_coarse)
+      
       self.slices.append( timeslice(ts_fine, ts_coarse, tolerance, iter_max) )
 
   # Run the coarse method serially over all slices
