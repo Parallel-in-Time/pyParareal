@@ -23,8 +23,8 @@ if __name__ == "__main__":
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
     U_speed  = 1.0
-    nu       = 0.0
-    ncoarse_v = [1, 2, 4, 5, 10, 15, 20]
+    nu       = 0.1
+    ncoarse_v = [1, 2, 5, 10, 15, 20]
     nfine    = 20
     dx       = 1.0
     u0_val     = np.array([[1.0]], dtype='complex')
@@ -37,6 +37,9 @@ if __name__ == "__main__":
 
     svds = np.zeros((3,np.size(ncoarse_v)))
     dt_v = np.zeros((3,np.size(ncoarse_v)))
+    speedup = np.zeros((3,np.size(ncoarse_v)-1))
+    tolerance = 1e-2
+    nproc     = 16
 
     for k in range(3):
       if k==0:
@@ -54,11 +57,15 @@ if __name__ == "__main__":
       ucoarse = solution_linear(u0_val, np.array([[symb_coarse]],dtype='complex'))
 
       for i in range(0,np.size(ncoarse_v)):
-        para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse_v[i], 0.0, 1, u0)
+        para = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse_v[i], 0.0, 1, u0)
         dt_v[k,i] = Tend/float(ncoarse_v[i]*nslices)
         svds[k,i] = para.get_max_svd(ucoarse=ucoarse)        
-
-    rcParams['figure.figsize'] = 2.5, 2.5
+        if i<np.size(ncoarse_v)-1:
+          kiter = np.floor( np.log(tolerance)/np.log(svds[k,i]) )
+          coarse_to_fine = float(ncoarse_v[i])/float(nfine)
+          speedup[k,i] = 1.0/( (1 + kiter/nproc)*coarse_to_fine + kiter/nproc )
+  
+    rcParams['figure.figsize'] = 3.54, 3.54
     fs = 8
     fig  = plt.figure()
     plt.plot(dt_v[0,:], svds[0,:], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
@@ -68,6 +75,17 @@ if __name__ == "__main__":
     plt.xlabel(r'Coarse time step $\Delta t$', fontsize=fs)
     plt.ylabel(r'Maximum singular value $\sigma$', fontsize=fs)
     filename = 'parareal-sigma-vs-dt.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])
+
+    fig  = plt.figure()
+    plt.plot(dt_v[0,0:np.size(ncoarse_v)-1], speedup[0,:], 'b-o', label=(r"$\kappa$=%4.2f" % k_vec[0]), markersize=fs/2)
+    plt.plot(dt_v[1,0:np.size(ncoarse_v)-1], speedup[1,:], 'r-s', label=(r"$\kappa$=%4.2f" % k_vec[1]), markersize=fs/2)
+    plt.plot(dt_v[2,0:np.size(ncoarse_v)-1], speedup[2,:], 'g-x', label=(r"$\kappa$=%4.2f" % k_vec[2]), markersize=fs/2)
+    plt.legend(loc='upper right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+    plt.xlabel(r'Coarse time step $\Delta t$', fontsize=fs)
+    plt.ylabel(r'Project speedup', fontsize=fs)
+    filename = 'parareal-speedup-vs-dt.pdf'
     plt.gcf().savefig(filename, bbox_inches='tight')
     call(["pdfcrop", filename, filename])
     plt.show()
