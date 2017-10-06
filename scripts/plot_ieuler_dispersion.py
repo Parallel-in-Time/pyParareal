@@ -72,7 +72,7 @@ plt.plot(k_vec, ampfa[0,:], 'b-s', linewidth=1.5, label='Implicit Euler + FD', m
 plt.xlim([k_vec[0], k_vec[-1]])
 plt.ylim([0.0, 1.1])
 plt.xlabel('Wave number', fontsize=fs, labelpad=0.25)
-plt.ylabel('Phase speed', fontsize=fs, labelpad=0.5)
+plt.ylabel('Amplification factor', fontsize=fs, labelpad=0.5)
 fig.gca().tick_params(axis='both', labelsize=fs)
 plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2})
 plt.xticks([0, 1, 2, 3], fontsize=fs)
