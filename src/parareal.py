@@ -66,34 +66,30 @@ class parareal(object):
       Bmat = sparse.linalg.inv(Gmat)
       # this is call is necessary because if Bmat has only 1 entry, it gets converted to a dense array here 
       Bmat = sparse.csc_matrix(Bmat)
-      Pmat = Bmat.dot(Gmat-Fmat)
-      return Pmat, Bmat
+      Emat = Bmat.dot(Gmat-Fmat)
+      return Emat, Bmat
 
     # Returns the stability matrix for Parareal with fixed number of iterations
     def get_parareal_stab_function(self, k, ucoarse=None):
-      e0 = np.zeros((self.timemesh.nslices+1,1))
-      e0[0,:] = 1.0
-      Mat = np.zeros((self.u0.ndof,self.u0.ndof), dtype='complex')
-      Pmat, Bmat = self.get_parareal_matrix(ucoarse)
-      Id = sparse.eye(self.u0.ndof*(self.timemesh.nslices+1), format="csc")
+      e0         = np.zeros((self.timemesh.nslices+1,1))
+      e0[0,:]    = 1.0
+#      Mat        = np.zeros((self.u0.ndof,self.u0.ndof), dtype='complex')
+      Emat, Bmat = self.get_parareal_matrix(ucoarse)
+      Id         = sparse.eye(self.u0.ndof*(self.timemesh.nslices+1), format="csc")
 
-      # Selection matrix
+      # Selection matrices
       Zeros = np.zeros((self.u0.ndof,self.u0.ndof*self.timemesh.nslices))
       Idd   = sparse.eye(self.u0.ndof, format="csc")
-      R = sparse.hstack((Zeros,Idd), format="csc")
+      C1    = sparse.hstack((Zeros,Idd), format="csc")
+      Zeros = np.zeros((self.u0.ndof*self.timemesh.nslices, self.u0.ndof))
+      C2    = sparse.vstack((Idd, Zeros), format="csc")
 
-      # Construct stability matrix from unit vectors
-      for i in range(0,self.u0.ndof):
-        y0 = np.zeros((self.u0.ndof,1))
-        y0[i,0] = 1.0
-        ee0 = np.kron(e0, y0)
-        M = copy.deepcopy(Id)
-        # Compute (sum(j=1,..n) Pmat^j) *Bmat
-        for j in range(1,k+1):
-          M += Pmat**j
-        M = M.dot(Bmat)
-        M = M.dot(ee0)
-        Mat[:,i] = R.dot(M).flatten()
+      E_power_k = copy.deepcopy(Id)
+      # Compute (sum(j=1,..n) Pmat^j) *Bmat
+      for j in range(1,k+1):
+        E_power_k += Emat**j
+
+      Mat = C1.dot(E_power_k.dot(Bmat.dot(C2)))
       return Mat
 
     # Returns the largest singular value of the error propagation matrix
