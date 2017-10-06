@@ -59,7 +59,7 @@ if __name__ == "__main__":
     U_speed  = 1.0
     
     # diffusivity parameter
-    nu       = 0.0
+    nu       = 0.1
     
     # select coarse integrator:
     # 0 = normal backward Euler method
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     
     # number of discrete values between kappa=0 and kappa=pi for which the dispersion relation is computed.
     # try to increase this value of the normalisation fails.
-    Nsamples = 50
+    Nsamples = 30
 
     k_vec = np.linspace(0.0, np.pi, Nsamples+1, endpoint=False)
     k_vec = k_vec[1:]
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         amp_factor[3+jj,i] = np.exp(sol_para.imag)
 
     ###
-    rcParams['figure.figsize'] = 2.5, 2.5
+    rcParams['figure.figsize'] = 3.54, 3.54
     fs = 8
     fig  = plt.figure()
     plt.plot(k_vec, phase[0,:], '--', color='k', linewidth=1.5, label='Exact')

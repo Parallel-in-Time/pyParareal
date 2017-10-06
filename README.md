@@ -21,7 +21,8 @@ If you use it (or parts of it) for a publication, please cite
 How can I reproduce Figures from the publication?
 -----------------
 
- - Fig. 1 --> scripts/plot_dispersion.py with different parameters
+ - Fig. 1 and Fig. 2 --> scripts/plot_svd_vs_dt.py
+ - Fig. 3 --> scripts/plot_dispersion.py with parameter nu=0.0 and nu=0.1
  - Fig. 2 --> example/run.py
  - Fig. 3 --> scripts/plot_ieuler_dispersion.py
  - Fig. 4 --> scripts/plot_dispersion.py with approx_symbol=True
