@@ -90,7 +90,7 @@ class parareal(object):
         E_power_k += Emat**j
 
       Mat = C1.dot(E_power_k.dot(Bmat.dot(C2)))
-      return Mat
+      return Mat.todense()
 
     # Returns the largest singular value of the error propagation matrix
     def get_max_svd(self, ucoarse=None):
