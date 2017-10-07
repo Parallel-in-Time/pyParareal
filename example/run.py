@@ -72,6 +72,9 @@ tmax  = 16  # Final time
 #N    = 100  # number grid points in time
 #dt   = tmax/float(N)
 nproc = int(tmax)
+nfine = 10
+ncoarse = 2
+
 
 Kiter_v = [5, 10, 15]
 
@@ -84,7 +87,7 @@ D = -1j*xi*uadv - nu*xi**2
 # Initial data
 sig   = 1.0
 u     = np.exp(-(x-0.5*L)**2/sig**2)
-u     = np.exp(2.0*np.pi*1j*x)
+#u     = np.exp(2.0*np.pi*1j*x)
 uhat0 = np.fft.fft(u)
 
 yend = np.zeros((3,m), dtype='complex')
@@ -94,7 +97,7 @@ yend = np.zeros((3,m), dtype='complex')
 ### ...we use the JobLib module to speed up the computational
 def run_parareal(uhat, D, k):
   sol = solution_linear(np.asarray([[uhat]]), np.asarray([[D]]))
-  para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=impeuler, nsteps_fine=10, nsteps_coarse=1, tolerance=0.0, iter_max=k, u0 = sol)
+  para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=impeuler, nsteps_fine=nfine, nsteps_coarse=ncoarse, tolerance=0.0, iter_max=k, u0 = sol)
   stab_coarse = para.timemesh.slices[0].get_coarse_update_matrix(sol)
   stab_ex     = np.exp(D)
   
@@ -103,16 +106,18 @@ def run_parareal(uhat, D, k):
   elif artificial_coarse==1:
     stab_tailor = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0])) # exact amplification factor
 
+  # If some artificial propagator is used, need to re-compute Parareal stability matrix with newly designed
+  # stability matrix
   if not artificial_coarse == 0:
     stab_tailor = sp.csc_matrix(np.array([stab_tailor], dtype='complex'))
-    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=stab_tailor, nsteps_fine=10, nsteps_coarse=1, tolerance=0.0, iter_max=k, u0 = sol)
+    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=stab_tailor, nsteps_fine=nfine, nsteps_coarse=ncoarse, tolerance=0.0, iter_max=k, u0 = sol)
 
   if artificial_fine==1:
     assert artificial_coarse==0, "Using artifical coarse and fine propagators together is not implemented and probably not working correctly"
     stab_fine = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0]))
     stab_fine = sp.csc_matrix(np.array([stab_fine], dtype='complex'))
     # Must use nfine=1 in this case
-    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=stab_fine, coarse=impeuler, nsteps_fine=1, nsteps_coarse=1, tolerance=0.0, iter_max=k, u0 = sol)
+    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=stab_fine, coarse=impeuler, nsteps_fine=nfine, nsteps_coarse=ncoarse, tolerance=0.0, iter_max=k, u0 = sol)
 
   para.run()
   temp = para.get_last_end_value()
