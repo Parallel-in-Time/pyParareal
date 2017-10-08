@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
         svds[j,i]         = para.get_max_svd(ucoarse=ucoarse)
 
-    rcParams['figure.figsize'] = 2.5, 2.5
+    rcParams['figure.figsize'] = 3.54, 3.54
     fs = 8
     fig  = plt.figure()
     plt.plot(k_vec, svds[0,:], 'b-o', label="Backward Euler", markersize=fs/2, markevery=(1,6))

@@ -28,7 +28,7 @@ How can I reproduce Figures from the publication?
  - Fig. 6 --> scripts/plot_dispersion.py with stencil=2 (also set nu=0.0 and dx=1.0)
  - Fig. 7 --> scripts/plot_dispersion.py with artificial_coarse=1 and artifical_coarse=2
  - Fig. 8 --> example/run.py with artificial_coarse=2
- - Fig. 7 --> scripts/plot_svd_vs_waveno_different_G.py
+ - Fig. 9 --> scripts/plot_svd_vs_waveno_different_G.py
  - Fig. 8 --> scripts/plot_dispersion.py with artifical_fine=1
  - Fig. 9 --> example/run.py with artifical_fine=1
  - Fig. 10 -> scripts/plot_dispersion.py with ncoarse=2
