@@ -25,7 +25,7 @@ How can I reproduce Figures from the publication?
  - Fig. 3 --> scripts/plot_dispersion.py with parameter nu=0.0 and nu=0.1
  - Fig. 4 --> example/run.py
  - Fig. 5 --> scripts/plot_ieuler_dispersion.py
- - Fig. 4 --> scripts/plot_dispersion.py with approx_symbol=True
+ - Fig. 6 --> scripts/plot_dispersion.py with stencil=2 (also set nu=0.0 and dx=1.0)
  - Fig. 5 --> scripts/plot_dispersion.py with artificial_coarse=1 or 2
  - Fig. 6 --> example/run.py with artificial_coarse=2
  - Fig. 7 --> scripts/plot_svd_vs_waveno_different_G.py

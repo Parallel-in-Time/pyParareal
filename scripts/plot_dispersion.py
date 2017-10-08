@@ -59,7 +59,7 @@ if __name__ == "__main__":
     U_speed  = 1.0
     
     # diffusivity parameter
-    nu       = 0.1
+    nu       = 0.0
     
     # select coarse integrator:
     # 0 = normal backward Euler method
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # stencil = 0 : exact symbol, no approximation of spatial derivative
     # stencil = 1 : first order upwind  (only fur nu=0)
     # stencil = 2 : second order centred (only for nu=0)
-    stencil = 0
+    stencil = 2
 
     ncoarse  = 1
     nfine    = 10
