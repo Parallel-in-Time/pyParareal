@@ -127,7 +127,7 @@ for k in range(0,3):
   temp = Parallel(n_jobs=2, verbose=5)(delayed(run_parareal)(uhat0[n],D[n], Kiter_v[k]) for n in range(m))
   yend[k,:] = temp
 
-rcParams['figure.figsize'] = 2.5, 2.5
+rcParams['figure.figsize'] = 3.54, 3.54
 fs = 8
 fig1 = plt.figure()
 plt.plot(x, np.fft.ifft(yend[0,:]).real,  '-s', color='r', linewidth=1.5, label='Parareal k='+str(Kiter_v[0]), markevery=(1,6), mew=1.0, markersize=fs/2)

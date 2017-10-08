@@ -47,7 +47,7 @@ for k in range(0,np.size(k_vec)):
   phase[0,k] = omega_disc.real/k_vec[k]
   ampfa[0,k] = np.exp(omega_disc.imag)
 
-rcParams['figure.figsize'] = 2.5, 2.5
+rcParams['figure.figsize'] = 3.54, 3.54
 fs = 8
 
 fig = plt.figure()
