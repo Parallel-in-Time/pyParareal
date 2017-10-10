@@ -49,7 +49,7 @@ if __name__ == "__main__":
           para = parareal(0.0, float(nslices_v[i]), nslices_v[i], intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
           svds[j,i] = para.get_max_svd(ucoarse=ucoarse)
 
-    rcParams['figure.figsize'] = 2.5, 2.5
+    rcParams['figure.figsize'] = 3.54, 3.54
     fs = 8
     fig  = plt.figure()
     plt.plot(nslices_v, svds[0,:], 'b-o', label=(r"$\kappa$=%4.2f" % waveno_v[0]), markersize=fs/2, markevery=(1,6))
