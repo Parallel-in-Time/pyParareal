@@ -49,7 +49,7 @@ if __name__ == "__main__":
         para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 0, u0)
         svds[j,i]         = para.get_max_svd(ucoarse=ucoarse)        
 
-    rcParams['figure.figsize'] = 2.5, 2.5
+    rcParams['figure.figsize'] = 3.54, 3.54
     fs = 8
     fig  = plt.figure()
     plt.plot(k_vec, svds[0,:], 'b-o', label=(r'$\nu$=%3.2f' % nu_v[0]), markersize=fs/2, markevery=(1,6))
