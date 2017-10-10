@@ -58,7 +58,7 @@ L = 4.0  # Width of spatial domain
 # 0 = normal backward Euler method
 # 1 = artificially constructed method with phase error from backward Euler and exact amplification factor
 # 2 = artificially constructed method with exact phase and amplification factor from backward Euler
-artificial_coarse = 2
+artificial_coarse = 0
 
 artificial_fine = 0
 
