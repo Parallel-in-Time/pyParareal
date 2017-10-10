@@ -35,7 +35,7 @@ How can I reproduce Figures from the publication?
  - Fig. 13 -> scripts/plot_dispersion.py with Tend=64 and Nsamples=120
  - Fig. 14 -> scripts/plot_svd_vs_P.py
  - Fig. 15 -> scripts/plot_conv_vs_waveno.py
- - Fig. 14 -> scripts/plot_svd_vs_waveno.py 
+ - Fig. 16 -> scripts/plot_svd_vs_waveno.py 
 
 
 Who do I talk to?
