@@ -58,7 +58,7 @@ L = 4.0  # Width of spatial domain
 # 0 = normal backward Euler method
 # 1 = artificially constructed method with phase error from backward Euler and exact amplification factor
 # 2 = artificially constructed method with exact phase and amplification factor from backward Euler
-artificial_coarse = 0
+artificial_coarse = 2
 
 artificial_fine = 0
 
@@ -110,14 +110,14 @@ def run_parareal(uhat, D, k):
   # stability matrix
   if not artificial_coarse == 0:
     stab_tailor = sp.csc_matrix(np.array([stab_tailor], dtype='complex'))
-    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=stab_tailor, nsteps_fine=nfine, nsteps_coarse=ncoarse, tolerance=0.0, iter_max=k, u0 = sol)
+    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=intexact, coarse=stab_tailor, nsteps_fine=nfine, nsteps_coarse=1, tolerance=0.0, iter_max=k, u0 = sol)
 
   if artificial_fine==1:
     assert artificial_coarse==0, "Using artifical coarse and fine propagators together is not implemented and probably not working correctly"
     stab_fine = abs(stab_ex)*np.exp(1j*np.angle(stab_coarse[0,0]))
     stab_fine = sp.csc_matrix(np.array([stab_fine], dtype='complex'))
     # Must use nfine=1 in this case
-    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=stab_fine, coarse=impeuler, nsteps_fine=nfine, nsteps_coarse=ncoarse, tolerance=0.0, iter_max=k, u0 = sol)
+    para = parareal(tstart=0.0, tend=tmax, nslices=nproc, fine=stab_fine, coarse=impeuler, nsteps_fine=1, nsteps_coarse=ncoarse, tolerance=0.0, iter_max=k, u0 = sol)
 
   para.run()
   temp = para.get_last_end_value()
