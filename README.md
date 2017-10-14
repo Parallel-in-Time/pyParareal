@@ -16,7 +16,7 @@ If you use it (or parts of it) for a publication, please cite
 
 (this will be updated once published).
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.228104.svg)](https://doi.org/10.5281/zenodo.228104)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1012274.svg)](https://doi.org/10.5281/zenodo.1012274)
 
 How can I reproduce Figures from the publication?
 -----------------
