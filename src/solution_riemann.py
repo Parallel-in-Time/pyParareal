@@ -19,6 +19,15 @@ class solution_riemann(object):
     else:
       self.M = M
       assert np.array_equal( np.shape(M), [self.ndof, self.ndof]), "Matrix M does not match size of argument y"
+    self.A = np.array([1])
+
+  def riemann_solver(self, u_left, u_right, jacobian):
+    # find eigenvalue decomposition of Jacobian
+    S, Q = np.linalg.eig(jacobian)
+    
+    # transform left and right value into eigencoordinates
+    u_eigcoord_left  = (np.linalg.inv(Q)).dot(u_left)
+    u_eigcoord_right = (np.linalg.inv(Q)).dot(u_right)
 
   # Overwrite y with a*x+y
   def axpy(self, a, x):
@@ -33,8 +42,16 @@ class solution_riemann(object):
 
   # Overwrite y with f(y)
   def f(self):
-    raise NotImplementedError("Function f in generic solution not implemented: needs to be overloaded in derived class")
-
+    fluxes = np.zeros(self.ndof, dtype=np.complex)
+    for j in range(0,self.ndof+1):
+      if j==0:
+        pass
+      elif j==self.ndof:
+        pass
+      else:
+        u_interface = self.riemann_solver(self.y[j-1], self.y[j], self.A)
+        fluxes[j] = self.A.dot(u_interface)
+      
   # No mass matrix in FVM
   def applyM(self):
     pass

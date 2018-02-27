@@ -27,3 +27,7 @@ class test_solution_riemann(TestSolution):
   def test_solve_alpha_notzero(self):
     sol_rm = solution_riemann(self.y, self.M)
     sol_rm.solve(1.0)
+
+  def test_can_evaluate_f(self):
+    sol_rm = solution_riemann(self.y, self.M)
+    sol_rm.f()
