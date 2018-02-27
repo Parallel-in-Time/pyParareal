@@ -31,10 +31,10 @@ if __name__ == "__main__":
     dx       = 1.0
     u0_val     = np.array([[1.0]], dtype='complex')
 
-    nreal = 4
-    nimag = 3
+    nreal = 20
+    nimag = 50
     lambda_real = np.linspace(-2.0, 0.0, nreal)
-    lambda_imag = np.linspace(0.0,  5.0, nimag)
+    lambda_imag = np.linspace(0.0,  10.0, nimag)
 
     svds = np.zeros((nimag,nreal))
     speedup = np.zeros((nimag,nreal))
