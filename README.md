@@ -8,13 +8,14 @@ Attribution
 You can freely use and reuse this code in line with the BSD license. 
 If you use it (or parts of it) for a publication, please cite
 
-@unpublished{Ruprecht2017,   
-  author = {Ruprecht, Daniel},    
-  title = {{Wave propagation characteristics of Parareal}},    
-  year = {2017}    
+@Article{Ruprecht2018,
+author="Ruprecht, Daniel",
+title="Wave propagation characteristics of Parareal",
+journal="Computing and Visualization in Science",
+year="2018",
+doi="10.1007/s00791-018-0296-z",
+url="https://doi.org/10.1007/s00791-018-0296-z"
 }
-
-(this will be updated once published).
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1012274.svg)](https://doi.org/10.5281/zenodo.1012274)
 
