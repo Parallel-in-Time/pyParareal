@@ -55,7 +55,7 @@ class solution_riemann(solution):
     self.ncomponents  = 1
     # number of entries per component... should have ncomponents*nx = ndof
     self.nx = self.ndof/self.ncomponents
-    assert isinstance(self.nx, int), "Mismatch in nx, ncomponents and ndof"
+    assert isinstance(self.nx, (np.integer, int)), "Mismatch in nx, ncomponents and ndof"
     # Now reshape into ((nx, ncomponents)) array
     self.y = np.reshape(self.y, ((self.nx, self.ncomponents)))
     self.dx = dx
