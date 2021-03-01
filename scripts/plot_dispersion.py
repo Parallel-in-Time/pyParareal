@@ -91,6 +91,7 @@ if __name__ == "__main__":
 
     phase      = np.zeros((6,Nsamples))
     amp_factor = np.zeros((6,Nsamples))
+    group_vel  = np.zeros((6,Nsamples-1))
     u0_val     = np.array([[1.0]], dtype='complex')
     targets    = np.zeros((3,Nsamples))
 
@@ -156,6 +157,9 @@ if __name__ == "__main__":
       sol_fine   = solve_omega(stab_fine[0,0])
       sol_ex     = solve_omega(stab_ex)
       sol_coarse = solve_omega(stab_coarse[0,0])
+      
+      if i>0:
+        group_vel[0,i-1] = 0.0 # Need to store omega from last k value
       
       # compute phase speed and amplification factor for fine, coarse and exact propagator
       phase[0,i]      = sol_ex.real/k_vec[i]
