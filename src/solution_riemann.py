@@ -54,8 +54,13 @@ class solution_riemann(solution):
     self.A = np.array([1])
     self.ncomponents  = 1
     # number of entries per component... should have ncomponents*nx = ndof
+    print(self.ndof)
+    print(self.ncomponents)
+    # Outcome of integer division seems to always be of type float
     self.nx = self.ndof/self.ncomponents
-    assert isinstance(self.nx, (np.integer, int)), "Mismatch in nx, ncomponents and ndof"
+    assert self.nx.is_integer(), "Mismatch in nx, ncomponents and ndof"
+    # Now save to convert to an actual integer
+    self.nx = int(self.nx)
     # Now reshape into ((nx, ncomponents)) array
     self.y = np.reshape(self.y, ((self.nx, self.ncomponents)))
     self.dx = dx
