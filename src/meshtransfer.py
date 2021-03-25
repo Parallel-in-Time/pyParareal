@@ -5,8 +5,8 @@ class meshtransfer(object):
 
   def __init__(self, ndof_fine, ndof_coarse):
     assert ndof_fine >= ndof_coarse, "Numer of DoF for coarse level must be smaller or equal to number of DoF on fine level"
-    self.Rmat    = np.eye(ndof_fine, ndof_coarse)
-    self.Imat    = np.eye(ndof_coarse, ndof_fine)
+    self.Imat    = np.eye(ndof_fine, ndof_coarse)
+    self.Rmat    = np.eye(ndof_coarse, ndof_fine)
     self.ndof_fine   = ndof_fine
     self.ndof_coarse = ndof_coarse
     
