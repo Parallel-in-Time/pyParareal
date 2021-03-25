@@ -44,6 +44,8 @@ def riemann_solver(self, u_left, u_right, jacobian):
 class solution_riemann(solution):
 
   def __init__(self, y, dx):
+    super(solution_riemann, self).__init__(y)
+  
     assert isinstance(y, np.ndarray), "Argument y must be of type numpy.ndarray"
     assert np.shape(y)[0]==np.size(y), "Argument y must be a linear array"
     # If y is a purely 1D array, reshape it into a Nx1 2D array... if both types are mixed, horrible inconsistencies arise

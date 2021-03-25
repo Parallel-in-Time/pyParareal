@@ -8,16 +8,14 @@ from scipy import sparse
 
 class solution(object):
 
-  def __init__(self, y, M=0): 
+  def __init__(self, y, M=None):
     assert isinstance(y, np.ndarray), "Argument y must be of type numpy.ndarray"
     assert np.shape(y)[0]==np.size(y), "Argument y must be a linear array"
     # If y is a purely 1D array, reshape it into a Nx1 2D array... if both types are mixed, horrible inconsistencies arise
     self.y    = np.reshape(y, (np.shape(y)[0], 1))
     self.ndof = np.size(y)
-    if isinstance(M,int):
-      self.M = sparse.eye(self.ndof, format="csc")
-    else:
-      self.M = M
+    self.M = M
+    if not (self.M is None):
       assert np.array_equal( np.shape(M), [self.ndof, self.ndof]), "Matrix M does not match size of argument y"
 
   # Overwrite y with a*x+y
@@ -37,7 +35,9 @@ class solution(object):
 
   # Overwrite y with My
   def applyM(self):
-    self.y = self.M.dot(self.y)
+    if not (self.M is None):
+      self.y = self.M.dot(self.y)
+    # else do nothing as this assume M is the identiy
 
   # Overwrite y with solution of M*y-alpha*f(y) = y
   def solve(self, alpha):
@@ -46,6 +46,13 @@ class solution(object):
   # Return inf norm of y
   def norm(self):
     return np.linalg.norm(self.y, np.inf)
+    
+  # Return mass matrix
+  def getM(self):
+    if self.M is None:
+      return sparse.eye(self.ndof, format="csr")
+    else:
+      return self.M
     
   # Apply matrix
   def apply_matrix(self, A):

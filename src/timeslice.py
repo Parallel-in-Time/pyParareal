@@ -27,6 +27,8 @@ class timeslice(object):
     assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"
     self.sol_coarse = copy.deepcopy(self.sol_start)
     ### RESTRICT TO COARSE MESH
+    
+    # integrator does not require information about the size of the problem, this is stored in the solution object
     self.int_coarse.run(self.sol_coarse)
     ### INTERPOLATE RESULT TO FINE MESH AND STORE IN self.sol_coarse
 

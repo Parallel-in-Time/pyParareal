@@ -19,7 +19,7 @@ class TestSolution(unittest.TestCase):
   # Make sure solution can be instantiated and that default M is identity
   def test_caninstantiate(self):
     sol = solution(self.y)
-    assert np.array_equal(sol.M.todense(), sp.eye(self.ndof)), "Default M matrix is not identity"
+    assert np.array_equal(sol.getM().todense(), sp.eye(self.ndof)), "Default M matrix is not identity"
 
   # Make sure exception is raised if y is not of type numpy.ndarray
   def test_failnoarray(self):
@@ -34,7 +34,7 @@ class TestSolution(unittest.TestCase):
   # Make sure if matrix M is given as argument to constructor, it is used
   def test_fisused(self):
     sol = solution(self.y, self.M)
-    assert np.array_equal(sol.M, self.M), "Stored M matrix is not identical to input"
+    assert np.array_equal(sol.getM(), self.M), "Stored M matrix is not identical to input"
 
   # Make sure exception is raised if size of y and M does not match
   def test_mismatchym(self):

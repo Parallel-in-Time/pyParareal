@@ -19,7 +19,7 @@ class intexact(integrator):
   def get_update_matrix(self, sol):
     assert isinstance(sol, solution_linear), "Update function can only be computed for solutions of type solution_linear"
     # Fetch matrices from solution and make sure they are sparse
-    M = sparse.csc_matrix(sol.M)
+    M = sparse.csc_matrix(sol.getM())
     A = sparse.csc_matrix(sol.A)
     Minv = sparse.linalg.inv(M)
     # this is call is necessary because if Rmat has only 1 entry, it gets converted to a dense array here
