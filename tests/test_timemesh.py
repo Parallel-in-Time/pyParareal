@@ -30,7 +30,14 @@ class TestTimemesh(unittest.TestCase):
   def test_caninstantiatewithmatrix(self):
     mat = sparse.eye(1)
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, mat, self.nfine, self.ncoarse, 1e-10, 5)
-
+    
+  # timemesh class can be instantiated with u0coarse argument provided
+  def test_caninstantiatewithu0coarse(self):
+    ndofs = np.random.randint(25)
+    A_c = np.random.rand(ndofs, ndofs)
+    sol_c = solution_linear(np.random.rand(ndofs), A_c)
+    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, u0coarse = sol_c)
+     
   # initial value can be set for first time slice
   def test_cansetinitial(self):
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5)
@@ -94,10 +101,15 @@ class TestTimemesh(unittest.TestCase):
     Mat = tm.get_fine_matrix(self.u0)
 
   # get_coarse_matrix is callable
-  def test_finematrixcallable(self):
+  def test_coarsematrixcallable(self):
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5)
     Mat = tm.get_coarse_matrix(self.u0)
 
+  # get_coarse_matrix is callable when u0coarse was provided
+  def test_coarsematrixcallablewithu0coarse(self):
+    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, u0coarse = self.u0)
+    Mat = tm.get_coarse_matrix(self.u0)
+    
   # run_coarse is callable and provides expected output at very end
   def test_runcoarse(self):
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5)

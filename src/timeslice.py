@@ -28,12 +28,6 @@ class timeslice(object):
 
   def update_coarse(self):
     assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"
-    if not hasattr(self, 'meshtransfer'):
-      if self.coarse_temp is None:
-        # if u0coarse was not provided, no spatial coarsening is used and the number of DoF is the same on both levels: interpolation and restriction become the identity in this case
-        self.meshtransfer = meshtransfer(self.sol_start.ndof, self.sol_start.ndof)
-      else:
-        self.meshtransfer = meshtransfer(self.sol_start.ndof, self.coarse_temp.ndof)
 
     # Copy the
     if (self.coarse_temp is None):
@@ -55,7 +49,18 @@ class timeslice(object):
     self.sol_start = sol
     # For later use, also create the attribute sol_coarse - the values in it will be overwritten when update_coarse is called
     self.sol_coarse = copy.deepcopy(self.sol_start)
+    
+    # also generate the meshtransfer attribute now
+    if not hasattr(self, 'meshtransfer'):
+      self.setup_meshtransfer()
 
+  def setup_meshtransfer(self):
+      if self.coarse_temp is None:
+        # if u0coarse was not provided, no spatial coarsening is used and the number of DoF is the same on both levels: interpolation and restriction become the identity in this case
+        self.meshtransfer = meshtransfer(self.sol_start.ndof, self.sol_start.ndof)
+      else:
+        self.meshtransfer = meshtransfer(self.sol_start.ndof, self.coarse_temp.ndof)
+        
   def set_sol_end(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
     self.sol_end = sol
@@ -86,6 +91,10 @@ class timeslice(object):
       return self.int_coarse.get_update_matrix(sol)
     else:
       G = self.int_coarse.get_update_matrix(sol)
+      # if timeslice is used only to generate a matrix representation of the integrators, the meshtransfer object might not yet exists - if so, generate it
+      if not hasattr(self, 'meshtransfer'):
+        self.set_sol_start(sol)
+        self.setup_meshtransfer()
       return self.meshtransfer.Imat@(G@self.meshtransfer.Rmat)
 
   def get_tstart(self):

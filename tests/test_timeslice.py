@@ -138,7 +138,7 @@ class TestTimeslice(unittest.TestCase):
     ndof_coarse = np.min(ndofs)
 
     A_c = np.random.rand(ndof_coarse, ndof_coarse)
-    sol_c = solution_linear(np.ones(ndof_coarse), A_c)
+    sol_c = solution_linear(np.random.rand(ndof_coarse), A_c)
     
     # create time slice and set starting solution
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 3, u0coarse = sol_c)
