@@ -7,10 +7,14 @@ import numpy as np
 
 class parareal(object):
 
-    def __init__(self, tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, u0):
+    def __init__(self, tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, u0, u0coarse = None):
       assert isinstance(u0, solution), "Argument u0 must be an object of type solution"
       self.timemesh = timemesh(tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max)
       self.u0 = u0
+      if (u0coarse is None):
+        self.u0coarse = u0
+      else:
+        self.u0coarse = u0coarse
 
     '''
     Execute the Parareal iteration
@@ -62,7 +66,7 @@ class parareal(object):
     # with b = (u0, 0, ..., 0) and u0 the initial value at the first time slice.
     def get_parareal_matrix(self, ucoarse=None):
       if ucoarse is None:
-        Gmat = self.timemesh.get_coarse_matrix(self.u0)
+        Gmat = self.timemesh.get_coarse_matrix(self.u0coarse)
       else:
         Gmat = self.timemesh.get_coarse_matrix(ucoarse)
       Fmat = self.timemesh.get_fine_matrix(self.u0)
