@@ -7,7 +7,7 @@ import copy
 
 class timeslice(object):
 
-  def __init__(self, int_fine, int_coarse, tolerance, iter_max):
+  def __init__(self, int_fine, int_coarse, tolerance, iter_max, u0coarse = None):
     assert (isinstance(tolerance, float) and tolerance>=0), "Parameter tolerance must be positive or zero"
     assert (isinstance(iter_max, int) and iter_max>=0), "Parameter iter_max must be a positive integer or zero"
     assert isinstance(int_fine, integrator), "Parameter int_fine has to be an object of type integrator"
@@ -19,6 +19,7 @@ class timeslice(object):
     self.tolerance  = tolerance
     self.iter_max   = iter_max
     self.iteration  = 0
+    self.coarse_temp = copy.deepcopy(u0coarse)
 
   def update_fine(self):
     assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"   
@@ -31,12 +32,16 @@ class timeslice(object):
       # For now, have same number of DoF on both levels, so mesh transfer is just the identity
       self.meshtransfer = meshtransfer(self.sol_start.ndof, self.sol_start.ndof)
 
-
-    self.sol_coarse = copy.deepcopy(self.sol_start)
-    coarse_temp     = copy.deepcopy(self.sol_coarse) # This will need changing if Ndof actually differs
-    self.meshtransfer.restrict(self.sol_coarse, coarse_temp)
-    self.int_coarse.run(coarse_temp)
-    self.meshtransfer.interpolate(self.sol_coarse, coarse_temp)
+    # Copy the
+    if (self.coarse_temp is None):
+      # if coarse_temp is none, no u0coarse argument was provided and spatial coarsening is not used
+      temp     = copy.deepcopy(self.sol_coarse)
+    else:
+      temp     = copy.deepcopy(self.coarse_temp)
+      
+    self.meshtransfer.restrict(self.sol_start, temp)
+    self.int_coarse.run(temp)
+    self.meshtransfer.interpolate(self.sol_coarse, temp)
         
   #
   # SET functions
@@ -45,7 +50,8 @@ class timeslice(object):
   def set_sol_start(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
     self.sol_start = sol
-    
+    # For later use, also create the attribute sol_coarse - the values in it will be overwritten when update_coarse is called
+    self.sol_coarse = copy.deepcopy(self.sol_start)    
 
   def set_sol_end(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
