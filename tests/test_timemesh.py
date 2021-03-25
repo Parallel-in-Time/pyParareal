@@ -122,6 +122,45 @@ class TestTimemesh(unittest.TestCase):
     err = abs(u[-1] - tm.get_coarse_value(self.nslices-1).y)
     assert err<1e-12, ("run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
 
+  # run_coarse is callable and provides expected output at very end when u0coarse argument is provided for a scalar problem
+  def test_runcoarsewithu0coarse(self):
+    sol_c = solution_linear(np.array([1.0]), np.array([[-1.1]]))
+    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, u0coarse = sol_c)
+    tm.run_coarse(sol_c)
+    u = np.array([1.0])
+    Mat = tm.get_coarse_matrix(sol_c)
+    b = np.zeros(self.nslices+1)
+    b[0] = u[0]
+    u = linalg.spsolve(Mat, b)
+    err = abs(u[-1] - tm.get_coarse_value(self.nslices-1).y)
+    assert err<1e-12, ("When setting optional argument u0coarse, run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
+
+  # run_coarse is callable and provides expected output at very end when u0coarse argument is provided and the problem has more than one DoF
+  @unittest.skip("Using a coarse propagator with fewer DoF in the system case needs fixing")
+  def test_runcoarsewithu0coarsesystem(self):
+    self.nslices = 3
+    ndofs = [np.random.randint(3), np.random.randint(3)]
+    ndofs = [4, 4]
+    ndof_f = np.max(ndofs)
+    ndof_c = np.min(ndofs)
+    A_f = np.random.rand(ndof_f, ndof_f)
+    A_c = np.random.rand(ndof_c, ndof_c)
+    y0  = np.random.rand(ndof_f)
+    sol_f = solution_linear(y0, A_f)
+    sol_c = solution_linear(np.random.rand(ndof_c), A_c)
+    tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, u0coarse = sol_c)
+    ### PROBLEM: this runs the coarse propagator but takes the matrix from the fine ... this isn't what we want. But if we use sol_c as argument, the interpolation/restriction matrices won't match.
+    tm.run_coarse(sol_f)
+    Mat = tm.get_coarse_matrix(sol_c)
+    b = np.zeros((self.nslices+1)*ndof_f)
+    b[0:ndof_f] = y0
+    print(np.shape(Mat))
+    print(np.shape(b))
+    u = linalg.spsolve(Mat, b)
+    print(np.shape(tm.get_coarse_value(self.nslices-1).y))
+    err = np.linalg.norm(u - tm.get_coarse_value(self.nslices-1).y)
+    assert err<1e-12, ("When setting optional argument u0coarse, run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
+    
   # with coarse method provided as matrix, run_coarse is callable and provides expected output at very end
   def test_runcoarsewithmatrix(self):
     dt = (self.tend - self.tstart)/(float(self.nslices)*float(self.ncoarse))
