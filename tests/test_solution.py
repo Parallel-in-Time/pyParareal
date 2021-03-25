@@ -11,7 +11,6 @@ class TestSolution(unittest.TestCase):
 
   def setUp(self):
     self.ndof = np.random.randint(255)
-    self.ndof = 5
     self.M = np.random.rand(self.ndof, self.ndof)
     self.y = np.random.rand(self.ndof)
     self.x = np.random.rand(self.ndof)
@@ -79,3 +78,18 @@ class TestSolution(unittest.TestCase):
     sol_x = solution(self.x)
     with self.assertRaises(AssertionError):
       sol_y.axpy(a, sol_x)  
+
+  # Make sure the function apply_matrix can be called
+  def test_canapplymatrix(self):
+    A = np.eye(self.ndof)
+    sol = solution(self.y)
+    sol.apply_matrix(A)
+    
+  # Make sure apply_matrix does what is expected
+  def test_applymatrix(self):
+    A = np.random.rand(self.ndof,self.ndof)
+    # apply A, turn into 1xndof row vector than transpose into ndofx1 column vector
+    Ay = np.atleast_2d(A@self.y).T
+    sol = solution(self.y)
+    sol.apply_matrix(A)
+    assert np.linalg.norm(Ay - sol.y, np.inf)<1e-14, "apply_matrix did not produce expected result"

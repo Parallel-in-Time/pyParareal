@@ -46,3 +46,8 @@ class solution(object):
   # Return inf norm of y
   def norm(self):
     return np.linalg.norm(self.y, np.inf)
+    
+  # Apply matrix
+  def apply_matrix(self, A):
+    assert np.shape(A)[1] == self.ndof, "Number of columns in argument matrix A does not match the number of DoF for this solution"
+    self.y = A@self.y
