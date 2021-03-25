@@ -1,5 +1,7 @@
 from integrator import integrator
 from solution import solution
+from meshtransfer import meshtransfer
+
 import numpy as np
 import copy
 
@@ -25,13 +27,17 @@ class timeslice(object):
 
   def update_coarse(self):
     assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"
-    self.sol_coarse = copy.deepcopy(self.sol_start)
-    ### RESTRICT TO COARSE MESH
-    
-    # integrator does not require information about the size of the problem, this is stored in the solution object
-    self.int_coarse.run(self.sol_coarse)
-    ### INTERPOLATE RESULT TO FINE MESH AND STORE IN self.sol_coarse
+    if not hasattr(self, 'meshtransfer'):
+      # For now, have same number of DoF on both levels, so mesh transfer is just the identity
+      self.meshtransfer = meshtransfer(self.sol_start.ndof, self.sol_start.ndof)
 
+
+    self.sol_coarse = copy.deepcopy(self.sol_start)
+    coarse_temp     = copy.deepcopy(self.sol_coarse) # This will need changing if Ndof actually differs
+    self.meshtransfer.restrict(self.sol_coarse, coarse_temp)
+    self.int_coarse.run(coarse_temp)
+    self.meshtransfer.interpolate(self.sol_coarse, coarse_temp)
+        
   #
   # SET functions
   #
@@ -39,6 +45,7 @@ class timeslice(object):
   def set_sol_start(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
     self.sol_start = sol
+    
 
   def set_sol_end(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
