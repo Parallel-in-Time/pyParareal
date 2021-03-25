@@ -19,12 +19,16 @@ class timeslice(object):
     self.iteration  = 0
 
   def update_fine(self):
+    assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"   
     self.sol_fine = copy.deepcopy(self.sol_start)
     self.int_fine.run(self.sol_fine)
 
   def update_coarse(self):
+    assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"
     self.sol_coarse = copy.deepcopy(self.sol_start)
+    ### RESTRICT TO COARSE MESH
     self.int_coarse.run(self.sol_coarse)
+    ### INTERPOLATE RESULT TO FINE MESH AND STORE IN self.sol_coarse
 
   #
   # SET functions
@@ -60,6 +64,7 @@ class timeslice(object):
 
   # For linear problems, returns a matrix that corresponds to running the coarse method
   def get_coarse_update_matrix(self, sol):
+    ### GET SMALL COARSE LEVEL MATRIX, THEN APPLY RESTRICTION AND INTERPOLATION MATRIX TO BRING IT TO SIZE COMPATIBLE WITH FINE MESH
     return self.int_coarse.get_update_matrix(sol)
 
   def get_tstart(self):

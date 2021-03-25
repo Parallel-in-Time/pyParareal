@@ -12,6 +12,9 @@ class parareal(object):
       self.timemesh = timemesh(tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max)
       self.u0 = u0
 
+    '''
+    Execute the Parareal iteration
+    '''
     def run(self):
       
       # Coarse predictor; need deepcopy to keep self.u0 unaltered

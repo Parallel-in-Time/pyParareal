@@ -66,9 +66,15 @@ class timemesh(object):
     for i in range(0,self.nslices):
       self.slices[i].update_coarse()
 
+  '''
+  Updates the coarse value for one time slice
+  '''
   def update_coarse(self, i):
     self.slices[i].update_coarse()
 
+  '''
+  Updates the fine value for one time slice
+  '''
   def update_fine(self, i):
     self.slices[i].update_fine()
 
