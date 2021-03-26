@@ -39,9 +39,6 @@ class TestExpeuler(unittest.TestCase):
     nsteps = 50
     ee     = expeuler(0.0, 1.0, nsteps)
     ee.run(u0)
-    #print u0.y
-    #print u0.A.todense()
-    #print u0.M.todense()
     assert abs(u0.y - np.exp(-1.0))<5e-3, ("Very wrong solution. Error: %5.2e" % abs(u0.y - np.exp(-1.0)))
     Rmat = ee.get_update_matrix(u0)
     Rmat_ee = Rmat[0,0]

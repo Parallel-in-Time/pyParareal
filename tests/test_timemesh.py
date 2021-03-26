@@ -16,8 +16,8 @@ class TestTimemesh(unittest.TestCase):
     times        = np.sort( np.random.rand(2) )
     self.tstart  = times[0]
     self.tend    = times[1]
-    self.nslices = np.random.randint(2,64)
-    steps        = np.sort( np.random.randint(low=1, high=128, size=2) )
+    self.nslices = np.random.randint(2,32)
+    steps        = np.sort( np.random.randint(low=1, high=64, size=2) )
     self.ncoarse = steps[0]
     self.nfine   = steps[1]
     self.ndofs           = [np.random.randint(25), np.random.randint(25)]
@@ -119,7 +119,7 @@ class TestTimemesh(unittest.TestCase):
     # get the last ndof_f elements; then convert into column vector
     uend = np.atleast_2d(u[-self.ndof_f:]).T
     err = np.linalg.norm(uend - tm.get_coarse_value(self.nslices-1).y, np.inf)
-    assert err<1e-12, ("run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
+    assert err<1e-10, ("run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
 
     
   # with coarse method provided as matrix, run_coarse is callable and provides expected output at very end
@@ -137,7 +137,7 @@ class TestTimemesh(unittest.TestCase):
     u = linalg.spsolve(Mat, b)
     uend = np.atleast_2d(u[-self.ndof_f:]).T
     err = np.linalg.norm(uend - tm.get_coarse_value(self.nslices-1).y, np.inf)
-    assert err<1e-11, ("for coarse provided as matrix, run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
+    assert err<1e-10, ("for coarse provided as matrix, run_coarse and successive application of update matrix does not give identical results - error: %5.3e" % err)
 
   # run_fine is callable and provides expected output at very end
   def test_runfine(self):
@@ -151,7 +151,7 @@ class TestTimemesh(unittest.TestCase):
     u = linalg.spsolve(Mat, b)
     uend = np.atleast_2d(u[-self.ndof_f:]).T
     err = np.linalg.norm(uend - tm.get_fine_value(self.nslices-1).y, np.inf)
-    assert err<1e-11, ("run_fine and successive application of update matrix does not give identical results - error: %5.3e" % err)
+    assert err<1e-10, ("run_fine and successive application of update matrix does not give identical results - error: %5.3e" % err)
 
   # run_coarse provides expected intermediate values
   def test_runcoarseintermediate(self):
