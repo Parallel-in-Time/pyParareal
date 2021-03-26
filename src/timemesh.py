@@ -3,6 +3,7 @@ from special_integrator import special_integrator
 import numpy as np
 from scipy.sparse import linalg
 from scipy import sparse
+from solution import solution
 import copy
 
 class timemesh(object):
@@ -128,6 +129,7 @@ class timemesh(object):
   # |       ... ...   | | ... |   |     |
   # |            -F Id| | u_N |   |   0 |
   def get_fine_matrix(self, u0):
+    assert isinstance(u0, solution), "Argument u0 must be an object of type solution."
     Id = sparse.eye( u0.ndof, format="csc" )
     Fmat = Id
     for i in range(0,self.nslices):
@@ -141,7 +143,8 @@ class timemesh(object):
 
   # Returns a matrix such that inversion by block elimination corresponds to running the coarse method in serial
   def get_coarse_matrix(self, u0):
-    Id = sparse.eye( u0.ndof, format="csc" )
+    assert isinstance(u0, solution), "Argument u0 must be an object of type solution."
+    Id = sparse.eye( self.slices[0].ndof_f, format="csc" ) # PROBLEM
     Cmat = Id
     for i in range(0,self.nslices):
       if i==0:
