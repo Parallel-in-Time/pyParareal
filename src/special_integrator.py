@@ -11,7 +11,7 @@ class special_integrator(integrator):
   def run(self, u0):
     assert isinstance(u0, solution_linear), "special_integrator can only be run for solutions of type solution_linear"
     for i in range(0,self.nsteps):
-      u0.y = self.stab_function.dot(u0.y)
+      u0.y = self.stab_function@u0.y
 
   def get_update_matrix(self, sol):
     return self.stab_function**self.nsteps
