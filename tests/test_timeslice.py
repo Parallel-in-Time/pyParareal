@@ -16,59 +16,60 @@ class TestTimeslice(unittest.TestCase):
     nsteps_f        = 1+np.random.randint(125)
     self.int_coarse = impeuler(t[0], t[1], nsteps_c)
     self.int_fine   = impeuler(t[0], t[1], nsteps_f)
-    self.ts_default = timeslice(self.int_fine, self.int_coarse, 1e-10, 3)
+    self.ndofs           = [np.random.randint(25), np.random.randint(25)]
+    self.ndof_c          = np.min(self.ndofs)
+    self.ndof_f          = np.max(self.ndofs)
+    self.u0_f            = np.random.rand(self.ndof_f)
+    self.A_f             = np.random.rand(self.ndof_f, self.ndof_f)
+    self.u0fine          = solution_linear(self.u0_f, self.A_f)
+    self.u0_c            = np.random.rand(self.ndof_c)
+    self.A_c             = np.random.rand(self.ndof_c, self.ndof_c)
+    self.u0coarse        = solution_linear(self.u0_f, self.A_f)
+    # TODO: randomise tolerance and iteration number
 
   # Timeslice can be instantiated
   def test_caninstantiate(self):
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5)
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
     
   def test_cansinstanatiatewithu0coarse(self):
-    ndof_coarse = np.random.randint(25)
-    u0coarse = solution_linear(np.ones(ndof_coarse), -1.0*np.eye(ndof_coarse))
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, u0coarse)
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
 
   # Negative tolerance throws exception
   def test_failsnegativetol(self):
     with self.assertRaises(AssertionError):
-      ts = timeslice(self.int_fine, self.int_coarse, -1e-5, 5)
+      ts = timeslice(self.int_fine, self.int_coarse, -1e-5, 5, self.u0fine, self.u0fine)
 
   # Non-float tolerance throws exception
   def test_failsintegertol(self):
     with self.assertRaises(AssertionError):
-      ts = timeslice(self.int_fine, self.int_coarse, 1, 5)
+      ts = timeslice(self.int_fine, self.int_coarse, 1, 5, self.u0fine, self.u0fine)
 
   # Non-int iter_max raises exception
   def test_failsfloatitermax(self):
     with self.assertRaises(AssertionError):
-      ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 2.5)
+      ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 2.5, self.u0fine, self.u0fine)
 
   # Negative iter_max raises exception
   def test_failsnegativeitermax(self):
     with self.assertRaises(AssertionError):
-      ts = timeslice(self.int_fine, self.int_coarse, 1e-10, -5)
+      ts = timeslice(self.int_fine, self.int_coarse, 1e-10, -5, self.u0fine, self.u0fine)
 
   # Different values for tstart in fine and coarse integrator raise exception
   def test_failsdifferenttstart(self):
     int_c = integrator(1e-10+self.int_coarse.tstart, self.int_coarse.tend, self.int_coarse.nsteps)
     with self.assertRaises(AssertionError):
-      ts = timeslice(self.int_fine, int_c, 1e-10, 5)
+      ts = timeslice(self.int_fine, int_c, 1e-10, 5, self.u0fine, self.u0fine)
 
   # Different values for tend in fine and coarse integrator raise exception
   def test_failsdifferenttend(self):
     int_c = integrator(self.int_coarse.tstart, 1e-10+self.int_coarse.tend, self.int_coarse.nsteps)
     with self.assertRaises(AssertionError):
-      ts = timeslice(self.int_fine, int_c, 1e-10, 5)   
-
-  # Directly after initialisation, is_converged throws an exception because no residual is available
-  def test_isconvergedthrows(self):
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-14+np.random.rand(), 1+np.random.randint(1))
-    with self.assertRaises(AssertionError):
-      ts.is_converged()
+      ts = timeslice(self.int_fine, int_c, 1e-10, 5, self.u0fine, self.u0fine)
 
   # After running fine integrator and setting sol_end to the same value, is_converged returns True
   def test_isconverged(self):
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-14+np.random.rand(), 1+np.random.randint(1))
-    sol = solution_linear(np.ones(1), np.array([[-1.0]]))
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-14+np.random.rand(), 1+np.random.randint(1), self.u0fine, self.u0fine)
+    sol = solution_linear(np.random.rand(self.ndof_f), np.random.rand(self.ndof_f, self.ndof_f))
     ts.set_sol_start(sol)
     ts.update_fine()
     ts.set_sol_end(ts.get_sol_fine())
@@ -76,73 +77,62 @@ class TestTimeslice(unittest.TestCase):
 
   # get_tstart returns correct value
   def test_get_tstart(self):
-    assert abs(self.ts_default.get_tstart() - self.int_fine.tstart)==0, "get_start returned wrong value"
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
+    assert abs(ts.get_tstart() - ts.int_fine.tstart)==0, "get_start returned wrong value"
 
   # get_tend returns correct value
   def test_get_tend(self):
-    assert abs(self.ts_default.get_tend() - self.int_fine.tend)==0, "get_start returned wrong value"
-
-  # get_sol_fine without running update_fine before throws exception
-  def test_getfineexception(self):
-    with self.assertRaises(AssertionError):
-      sol_fine = self.ts_default.get_sol_fine()
-
-  # get_sol_coarse without running update_coarse before throws exception
-  def test_getfineexception(self):
-    with self.assertRaises(AssertionError):
-      sol_coarse = self.ts_default.get_sol_coarse()
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
+    assert abs(ts.get_tend() - ts.int_fine.tend)==0, "get_start returned wrong value"
 
   # set_sol_start with non-solution objects throws exception
   def test_solfinenosolutionthrows(self):
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
     with self.assertRaises(AssertionError):
-      self.ts_default.set_sol_start(-1)
+      ts.set_sol_start(-1)
 
   # update_fine runs and returns value equal to what matrix provides
   def test_fineequalsmatrix(self):
-    ndof = np.random.randint(25)
-    A = (-2.0)*np.eye(ndof)
-    y0 = np.random.rand(ndof)
-    sol = solution_linear(y0, A)
-    self.ts_default.set_sol_start(sol)
-    self.ts_default.update_fine()
-    sol_ts = self.ts_default.get_sol_fine()
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
+    # thi
+    u0 = np.random.rand(self.ndof_f)
+    A  = np.random.rand(self.ndof_f, self.ndof_f)
+    sol = solution_linear(u0, A)
+    # NOTE: this should use the values from sol but the matrix A_f used to generate u0fine
+    ts.set_sol_start(sol)
+    ts.update_fine()
+    sol_ts = ts.get_sol_fine()
     assert isinstance(sol_ts, solution_linear), "After running update_fine, object returned by get_sol_fine is of wrong type"
-    Fmat = self.ts_default.get_fine_update_matrix(sol)
-    fine = solution_linear( Fmat@y0, A)
+    Fmat = ts.get_fine_update_matrix(self.u0fine)
+    fine = solution_linear( Fmat@u0, self.A_f)
     fine.axpy(-1.0, sol_ts)
     assert fine.norm()<1e-12, "Solution generated with get_fine_update_matrix does not match the one generated by update_fine"
 
+  # If the length or type of the solution given to run_fine is different to what was given to the constructor, throw and exception
+  def test_runfinethrowsifsolutiondifferent(self):
+    pass
+    
+  # If the length or type of the solution given to run_coarse is different to what was given to the constructor, throw and exception
+  def test_coarsefinethrowsifsolutiondifferent(self):
+    pass
+
   # update_coarse runs and returns value equal to what matrix provides
   def test_canruncoarse(self):
-    ndof = np.random.randint(25)
-    A = (-2.0)*np.eye(ndof)
-    y0 = np.random.rand(ndof)
-    sol = solution_linear(y0, A)
-    self.ts_default.set_sol_start(sol)
-    self.ts_default.update_coarse()
-    sol_ts = self.ts_default.get_sol_coarse()
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0fine)
+    ts.update_coarse()
+    sol_ts = ts.get_sol_coarse()
     assert isinstance(sol_ts, solution_linear), "After running update_coarse, object returned by get_sol_coarse is of wrong type"
-    Cmat = self.ts_default.get_coarse_update_matrix(sol)
-    coarse = solution_linear( Cmat@y0, A)
+    Cmat = ts.get_coarse_update_matrix(self.u0fine)
+    coarse = solution_linear( Cmat@self.u0_f, self.A_f)
     coarse.axpy(-1.0, sol_ts)
     assert coarse.norm()<1e-12, "Solution generated with get_coarse_update_matrix does not match the one generated by update_coarse"
     
   # update_coarse runs and returns value equal to what matrix provides when argument u0coarse was provided
   def test_canruncoarsewithu0coarse(self):
-    ndofs = [np.random.randint(25), np.random.randint(25)]
-    ndof_fine   = np.max(ndofs)
-    A_f = np.random.rand(ndof_fine,ndof_fine)
-    y0  = np.random.rand(ndof_fine)
-    sol_f = solution_linear(y0, A_f)
 
-    ndof_coarse = np.min(ndofs)
-
-    A_c = np.random.rand(ndof_coarse, ndof_coarse)
-    sol_c = solution_linear(np.random.rand(ndof_coarse), A_c)
-    
     # create time slice and set starting solution
-    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 3, u0coarse = sol_c)
-    ts.set_sol_start(sol_f)
+    ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 3, self.u0fine, self.u0fine)
+    ts.set_sol_start(self.u0fine)  # should not be needed
     
     # run coarse method and fetch result
     ts.update_coarse()
@@ -152,8 +142,8 @@ class TestTimeslice(unittest.TestCase):
     assert isinstance(sol_ts, solution_linear), "After running update_coarse, object returned by get_sol_coarse is of wrong type"
     
     # get representation of coarse propagator as matrix
-    Cmat = ts.get_coarse_update_matrix(sol_c)
+    Cmat = ts.get_coarse_update_matrix(self.u0fine)
     # apply matrix
-    coarse = solution_linear( Cmat@y0, A_f)
+    coarse = solution_linear( Cmat@self.u0_f, self.A_f)
     coarse.axpy(-1.0, sol_ts)
     assert coarse.norm()<1e-12, "Solution generated with get_coarse_update_matrix does not match the one generated by update_coarse"

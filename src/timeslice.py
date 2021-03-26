@@ -7,38 +7,43 @@ import copy
 
 class timeslice(object):
 
-  def __init__(self, int_fine, int_coarse, tolerance, iter_max, u0coarse = None):
+  def __init__(self, int_fine, int_coarse, tolerance, iter_max, u0fine, u0coarse):
     assert (isinstance(tolerance, float) and tolerance>=0), "Parameter tolerance must be positive or zero"
     assert (isinstance(iter_max, int) and iter_max>=0), "Parameter iter_max must be a positive integer or zero"
     assert isinstance(int_fine, integrator), "Parameter int_fine has to be an object of type integrator"
     assert isinstance(int_coarse, integrator), "Parameter int_coarse has to be an object of type integrator"    
     assert np.isclose( int_fine.tstart, int_coarse.tstart, rtol = 1e-10, atol=1e-12 ), "Values tstart in coarse and fine integrator must be identical"
     assert np.isclose( int_fine.tend, int_coarse.tend, rtol = 1e-10, atol=1e-12 ), "Values tend in coarse and fine integrator must be identical"
+    assert isinstance(u0fine, solution), "Parameter u0fine has to be an object of type solution"
+    assert isinstance(u0coarse, solution), "Parameter u0coarse has to be an object of type solution"
     self.int_fine    = int_fine
     self.int_coarse  = int_coarse
     self.tolerance   = tolerance
     self.iter_max    = iter_max
     self.iteration   = 0
+    # Note: self.coarse_temp is the only object that will have size ndof_c - all other solutions, even self.sol_coarse, have size ndof_f
+    # Note also: the problem definition is fixed by these arguments; when functions later accept solution objects, this is only for the values
     self.coarse_temp = copy.deepcopy(u0coarse)
+    self.sol_start   = copy.deepcopy(u0fine)
+    self.sol_fine    = copy.deepcopy(u0fine)
+    self.sol_coarse  = copy.deepcopy(u0fine)
+    self.sol_end     = copy.deepcopy(u0fine)
+    self.ndof_f      = u0fine.ndof
+    self.ndof_c      = u0coarse.ndof
+    self.meshtransfer = meshtransfer(self.ndof_f, self.ndof_c)
 
   def update_fine(self):
-    assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"   
-    self.sol_fine = copy.deepcopy(self.sol_start)
+    # copy starting value to sol_fine and then overwrite sol_fine with result of fine integrator
+    self.sol_fine.y = copy.deepcopy(self.sol_start.y)
     self.int_fine.run(self.sol_fine)
 
   def update_coarse(self):
-    assert hasattr(self, 'sol_start'), "Timeslice object does not have attribute sol_start - may be function set_sol_start was never executed"
-
-    # Copy the
-    if (self.coarse_temp is None):
-      # if coarse_temp is none, no u0coarse argument was provided and spatial coarsening is not used
-      temp     = copy.deepcopy(self.sol_coarse)
-    else:
-      temp     = copy.deepcopy(self.coarse_temp)
-      
-    self.meshtransfer.restrict(self.sol_start, temp)
-    self.int_coarse.run(temp)
-    self.meshtransfer.interpolate(self.sol_coarse, temp)
+    # restrict the starting value and write the restricted solution into coarse_temp; if no spatial coarsening is used, the meshtransfer operators are just the identity
+    self.meshtransfer.restrict(self.sol_start, self.coarse_temp)
+    # run the coarse propagator on coarse_temp
+    self.int_coarse.run(self.coarse_temp)
+    # then interpolate back the result to the full size sol_coarse solution; not that sol_coarse has size ndof_f
+    self.meshtransfer.interpolate(self.sol_coarse, self.coarse_temp)
         
   #
   # SET functions
@@ -46,31 +51,22 @@ class timeslice(object):
 
   def set_sol_start(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
-    self.sol_start = sol
+    assert type(sol)==type(self.sol_start), "Parameter sol must have the same type as the argument u0fine provided to the constructor"
+    assert sol.ndof==self.ndof_f, "Argument sol must have same number of DoF as argument u0fine given to the constructor"
+    # NOTE: doing this properly would require to add a copy function to the solution class
+    self.sol_start.y = copy.deepcopy(sol.y)
     # For later use, also create the attribute sol_coarse - the values in it will be overwritten when update_coarse is called
-    self.sol_coarse = copy.deepcopy(self.sol_start)
-    
-    # also generate the meshtransfer attribute now
-    if not hasattr(self, 'meshtransfer'):
-      self.setup_meshtransfer()
-
-  def setup_meshtransfer(self):
-      if self.coarse_temp is None:
-        # if u0coarse was not provided, no spatial coarsening is used and the number of DoF is the same on both levels: interpolation and restriction become the identity in this case
-        self.meshtransfer = meshtransfer(self.sol_start.ndof, self.sol_start.ndof)
-      else:
-        self.meshtransfer = meshtransfer(self.sol_start.ndof, self.coarse_temp.ndof)
+    self.sol_coarse.y = copy.deepcopy(self.sol_start.y)
         
   def set_sol_end(self, sol):
     assert isinstance(sol, solution), "Parameter sol has to be of type solution"
+    assert type(sol)==type(self.sol_end), "Parameter sol must have the same type as the argument u0fine provided to the constructor"
     self.sol_end = sol
 
   def increase_iter(self):
     self.iteration += 1
 
   def set_residual(self):
-    assert hasattr(self, 'sol_fine'), "Timeslice object does not have attribute sol_fine - may be function update_fine was never executed"
-    assert hasattr(self, 'sol_end'), "Timeslice object does not have attribute sol_end - it has to be assigned using set_sol_end"
     # compute || F(y_n-1) - y_n ||
     res = self.sol_fine
     res.axpy(-1.0, self.sol_end)
@@ -87,15 +83,8 @@ class timeslice(object):
 
   # For linear problems, returns a matrix that corresponds to running the coarse method
   def get_coarse_update_matrix(self, sol):
-    if self.coarse_temp is None:
-      return self.int_coarse.get_update_matrix(sol)
-    else:
-      G = self.int_coarse.get_update_matrix(sol)
-      # if timeslice is used only to generate a matrix representation of the integrators, the meshtransfer object might not yet exists - if so, generate it
-      if not hasattr(self, 'meshtransfer'):
-        self.set_sol_start(sol)
-        self.setup_meshtransfer()
-      return self.meshtransfer.Imat@(G@self.meshtransfer.Rmat)
+    G = self.int_coarse.get_update_matrix(sol)
+    return self.meshtransfer.Imat@(G@self.meshtransfer.Rmat)
 
   def get_tstart(self):
     return self.int_fine.tstart
@@ -104,15 +93,12 @@ class timeslice(object):
     return self.int_fine.tend
 
   def get_sol_fine(self):
-    assert hasattr(self, 'sol_fine'), "Timeslice object does not have attribute sol_fine - may be function update_fine was never executed"
     return self.sol_fine
 
   def get_sol_coarse(self):
-    assert hasattr(self, 'sol_coarse'), "Timeslice object does not have attribute sol_coarse - may be function update_coarse was never executed"
     return self.sol_coarse
 
   def get_sol_end(self):
-    assert hasattr(self, 'sol_end'), "Timeslice object does not have attribute sol_end - may be function set_sol_end was never executed"
     return self.sol_end
 
   def get_residual(self):
