@@ -77,7 +77,8 @@ class timeslice(object):
   # GET functions
   #
 
-  # For linear problems, returns a matrix that corresponds to running the fine method
+  # For linear problems, returns a matrix that corresponds to running the fine method;
+  # if
   def get_fine_update_matrix(self, sol):
     return self.int_fine.get_update_matrix(sol)
 
