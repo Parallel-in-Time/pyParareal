@@ -7,7 +7,7 @@ import copy
 
 class timemesh(object):
 
-  def __init__(self, tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, u0coarse = None):
+  def __init__(self, tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, u0fine, u0coarse):
     assert tstart<tend, "tstart has to be smaller than tend"
     #
     # For the time being, all timeslices are created equal...
@@ -32,7 +32,7 @@ class timemesh(object):
       else:
         ts_coarse = coarse(self.timemesh[i], self.timemesh[i+1], nsteps_coarse)
       
-      self.slices.append( timeslice(ts_fine, ts_coarse, tolerance, iter_max, u0coarse) )
+      self.slices.append( timeslice(ts_fine, ts_coarse, tolerance, iter_max, u0fine, u0coarse) )
 
   # Run the coarse method serially over all slices
   def run_coarse(self, u0):
