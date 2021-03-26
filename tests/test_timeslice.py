@@ -12,11 +12,11 @@ class TestTimeslice(unittest.TestCase):
 
   def setUp(self):
     t = np.sort( np.random.rand(2) )
-    nsteps_c        = 1+np.random.randint(32)
-    nsteps_f        = 1+np.random.randint(64)
+    nsteps_c        = 1+np.random.randint(16)
+    nsteps_f        = 1+np.random.randint(32)
     self.int_coarse = impeuler(t[0], t[1], nsteps_c)
     self.int_fine   = impeuler(t[0], t[1], nsteps_f)
-    self.ndofs           = [np.random.randint(25), np.random.randint(25)]
+    self.ndofs           = [np.random.randint(4,25), np.random.randint(4,25)]
     self.ndof_c          = np.min(self.ndofs)
     self.ndof_f          = np.max(self.ndofs)
     self.u0_f            = np.random.rand(self.ndof_f)

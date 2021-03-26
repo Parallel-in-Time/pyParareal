@@ -20,7 +20,7 @@ class TestParareal(unittest.TestCase):
     steps        = np.sort( np.random.randint(low=1, high=64, size=2) )
     self.ncoarse = steps[0]
     self.nfine   = steps[1]
-    ndofs         = [ np.random.randint(2,32), np.random.randint(2,32)]
+    ndofs         = [ np.random.randint(4,32), np.random.randint(4,32)]
 
     self.ndof_f   = np.max(ndofs)
     self.A_f       = sparse.spdiags([ np.ones(self.ndof_f), -2.0*np.ones(self.ndof_f), np.ones(self.ndof_f)], [-1,0,1], self.ndof_f, self.ndof_f, format="csc")

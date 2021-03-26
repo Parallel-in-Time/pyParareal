@@ -11,7 +11,7 @@ import numpy as np
 class TestMeshtransfer(unittest.TestCase):
 
   def setUp(self):
-    ndofs = np.random.randint(2)
+    ndofs = np.random.randint(5,64,size=2)
     self.ndof_coarse = np.min(ndofs)
     self.ndof_fine   = np.max(ndofs)
     
