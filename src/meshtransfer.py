@@ -17,14 +17,14 @@ class meshtransfer(object):
     for n in range(self.ndof_coarse):
       e = np.zeros(self.ndof_coarse)
       e[n] = 1.0
-      f = interp1d(self.xaxis_c, e, kind='cubic')
+      f = interp1d(self.xaxis_c, e, kind='linear')
       self.Imat[:,n] = f(self.xaxis_f)
       
     self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
     for n in range(self.ndof_fine):
       e = np.zeros(self.ndof_fine)
       e[n] = 1.0
-      f = interp1d(self.xaxis_f, e, kind='cubic')
+      f = interp1d(self.xaxis_f, e, kind='linear')
       self.Rmat[:,n] = f(self.xaxis_c)
       
     #self.Imat = np.eye(self.ndof_fine,self.ndof_coarse)
