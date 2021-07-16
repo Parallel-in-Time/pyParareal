@@ -15,7 +15,7 @@ from pylab import rcParams
 import matplotlib.pyplot as plt
 
 ndof_f = 16
-ndof_c = 16
+ndof_c = 15
 
 xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
 xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
@@ -25,10 +25,15 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 u0_f   = np.ones(ndof_f)
 u0_c   = np.ones(ndof_c)
 col    = np.zeros(ndof_f)
+# First order upwind
 col[0] = 1.0
 col[1] = -1.0
 A_f    = (1.0/dx_f)*spla.circulant(col)
 A_c    = (1.0/dx_c)*spla.circulant(col[0:ndof_c])
+# Second order centered
+#col[1]  = -1.0
+#col[-1] = 1.0
+#A_f = (1.0/(2.0*dx_f))*spla.circulant(col)
 
 u0fine   = solution_linear(u0_f, A_f)
 u0coarse = solution_linear(u0_c, A_c)
@@ -42,11 +47,11 @@ ncoarse = 1
 
 
 
-para = parareal(0.0, Tend, nslices, trapezoidal, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
+para     = parareal(0.0, Tend, nslices, trapezoidal, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
 E, Mginv = para.get_parareal_matrix()
-F = para.timemesh.slices[0].get_fine_update_matrix(u0fine)
-G = para.timemesh.slices[0].get_coarse_update_matrix(u0coarse)
-rank_F = LA.matrix_rank(F.todense())
+F        = para.timemesh.slices[0].get_fine_update_matrix(u0fine)
+G        = para.timemesh.slices[0].get_coarse_update_matrix(u0coarse)
+rank_F   = LA.matrix_rank(F.todense())
 if not rank_F==ndof_f:
   print("Rank of F is not equal to ndof_f")
 rank_C = LA.matrix_rank(G)
