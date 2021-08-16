@@ -9,23 +9,31 @@ class meshtransfer(object):
 
     self.ndof_fine   = ndof_fine
     self.ndof_coarse = ndof_coarse
-    # For the time being, assume we are operating on the unit interval
-    self.xaxis_f = np.linspace(0.0, 1.0, self.ndof_fine, endpoint=True)
-    self.xaxis_c = np.linspace(0.0, 1.0, self.ndof_coarse, endpoint=True)
     
-    self.Imat = np.zeros((self.ndof_fine, self.ndof_coarse))
-    for n in range(self.ndof_coarse):
-      e = np.zeros(self.ndof_coarse)
-      e[n] = 1.0
-      f = interp1d(self.xaxis_c, e, kind='linear')
-      self.Imat[:,n] = f(self.xaxis_f)
+    # for a scalar problem, there is no interpolation or restriction; set corresponding operators to 1x1 identity matrix
+    if self.ndof_fine==1 and self.ndof_coarse==1:
+      self.Imat = np.eye(1)
+      self.Rmat = np.eye(1)
+    
+    else:
       
-    self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
-    for n in range(self.ndof_fine):
-      e = np.zeros(self.ndof_fine)
-      e[n] = 1.0
-      f = interp1d(self.xaxis_f, e, kind='linear')
-      self.Rmat[:,n] = f(self.xaxis_c)
+      # For the time being, assume we are operating on the unit interval
+      self.xaxis_f = np.linspace(0.0, 1.0, self.ndof_fine, endpoint=True)
+      self.xaxis_c = np.linspace(0.0, 1.0, self.ndof_coarse, endpoint=True)
+      
+      self.Imat = np.zeros((self.ndof_fine, self.ndof_coarse))
+      for n in range(self.ndof_coarse):
+        e = np.zeros(self.ndof_coarse)
+        e[n] = 1.0
+        f = interp1d(self.xaxis_c, e, kind='linear')
+        self.Imat[:,n] = f(self.xaxis_f)
+        
+      self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
+      for n in range(self.ndof_fine):
+        e = np.zeros(self.ndof_fine)
+        e[n] = 1.0
+        f = interp1d(self.xaxis_f, e, kind='linear')
+        self.Rmat[:,n] = f(self.xaxis_c)
       
     #self.Imat = np.eye(self.ndof_fine,self.ndof_coarse)
     #self.Rmat = np.eye(self.ndof_coarse,self.ndof_fine)
