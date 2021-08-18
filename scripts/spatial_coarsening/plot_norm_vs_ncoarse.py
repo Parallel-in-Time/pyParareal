@@ -11,6 +11,7 @@ from impeuler import impeuler
 from intexact import intexact
 from trapezoidal import trapezoidal
 from solution_linear import solution_linear
+from get_matrix import get_upwind, get_centered, get_diffusion
 
 from pylab import rcParams
 import matplotlib.pyplot as plt
@@ -38,23 +39,13 @@ col    = np.zeros(ndof_f)
 problem = 3
 
 if problem==1:
-  col[0] = 1.0
-  col[1] = -1.0
-  A_f    = -(1.0/dx_f)*spla.circulant(col)
-  # non-periodic boundary conditions instead
-  #A_f[0,-1] = 0.0
+  A_f = get_upwind(ndof_f, dx_f)
 elif problem==2:
-  col[1]  = -1.0
-  col[-1] = 1.0
-  A_f = -(1.0/(2.0*dx_f))*spla.circulant(col)
+  A_f = get_centered(ndof_f, dx_f)
 elif problem==3:
-  col[0]  = -2.0
-  col[1]  = 1.0
-  col[-1] = 1.0
-  A_f = (1/dx_f**2)*spla.circulant(col)
+  A_f = get_diffusion(ndof_f, dx_f)
 else:
   quit()
-A_f = sp.csc_matrix(A_f)
 
 D = A_f*A_f.H - A_f.H*A_f
 print("Normality number: %5.3f" % np.linalg.norm(D.todense()))

@@ -10,7 +10,7 @@ from impeuler import impeuler
 from intexact import intexact
 from trapezoidal import trapezoidal
 from solution_linear import solution_linear
-
+from get_matrix import get_upwind, get_centered
 from pylab import rcParams
 import matplotlib.pyplot as plt
 
@@ -31,12 +31,9 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 
 u0_f   = np.ones(ndof_f)
 u0_c   = np.ones(ndof_c)
-col    = np.zeros(ndof_f)
-# First order upwind
-col[0] = 1.0
-col[1] = -1.0
-A_f    = -(1.0/dx_f)*spla.circulant(col)
-A_c    = -(1.0/dx_c)*spla.circulant(col[0:ndof_c])
+A_f = get_upwind(ndof_f, dx_f)
+A_c = get_upwind(ndof_c, dx_c)
+
 # Second order centered
 #col[1]  = -1.0
 #col[-1] = 1.0
@@ -49,17 +46,7 @@ para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol,
 E, Mginv = para.get_parareal_matrix()
 F        = para.timemesh.slices[0].get_fine_update_matrix(u0fine)
 G        = para.timemesh.slices[0].get_coarse_update_matrix(u0coarse)
-'''
-rank_F   = LA.matrix_rank(F.todense())
-if not rank_F==ndof_f:
-  print("Rank of F is not equal to ndof_f")
-rank_C = LA.matrix_rank(G)
-if not rank_C==ndof_c:
-  print("Rank of G is not equal to ndof_c")
-rank_E = LA.matrix_rank(E.todense())
-if not rank_E==nslices*ndof_f:
-  print("Rank of E is not equal to nslices x ndof_f: rank(E) = %3i" % rank_E)
-  '''
+
 Enorm_2   = np.linalg.norm(E.todense(), 2)
 Enorm_1   = np.linalg.norm(E.todense(), 1)
 Enorm_inf = np.linalg.norm(E.todense(), np.inf)
