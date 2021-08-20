@@ -11,20 +11,21 @@ from impeuler import impeuler
 from intexact import intexact
 from trapezoidal import trapezoidal
 from solution_linear import solution_linear
+from get_matrix import get_upwind, get_centered, get_diffusion
 
 from pylab import rcParams
 import matplotlib.pyplot as plt
 from subprocess import call
 
 def uex(x,t):
-  return np.exp(-(x-1.0-t)**2/0.1**2)
+  return np.exp(-(x-1.0-t)**2/0.25**2)
   
-Tend    = 0.4
-nslices = 8
+Tend    = 1.0
+nslices = 10
 tol     = 0.0
-maxiter = 7
-nfine   = 5
-ncoarse = 5
+maxiter = 10
+nfine   = 1
+ncoarse = 1
 
 ndof_f   = 64
 ndof_c_v = [32, 48, 63, 64]
@@ -32,38 +33,30 @@ ndof_c_v = [32, 48, 63, 64]
 #ndof_c_v = [8, 12, 15, 16]
 
 xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
-dx_f = xaxis_f[1] - xaxis_f[0]
-u0_f   = uex(xaxis_f, 0.0)
-col    = np.zeros(ndof_f)
+dx_f    = xaxis_f[1] - xaxis_f[0]
+u0_f    = uex(xaxis_f, 0.0)
+col     = np.zeros(ndof_f)
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = diffusion with trapezoidal rule / centered second order FD
-problem = 3
+problem = 2
+matrix_power = False # if False, do an actual Parareal iteration, if True, compute || E^k ||
 
 if problem==1:
-  col[0] = 1.0
-  col[1] = -1.0
-  A_f    = -(1.0/dx_f)*spla.circulant(col)
-  # non-periodic boundary conditions instead
-  # A_f[0,-1] = 0.0
+  A_f = get_upwind(ndof_f, dx_f)
 elif problem==2:
-  col[1]  = -1.0
-  col[-1] = 1.0
-  A_f = -(1.0/(2.0*dx_f))*spla.circulant(col)
+  A_f = get_centered(ndof_f, dx_f)
 elif problem==3:
-  col[0]  = -2.0
-  col[1]  = 1.0
-  col[-1] = 1.0
-  A_f = (1/dx_f**2)*spla.circulant(col)
+  A_f = get_diffusion(ndof_f, dx_f)
 else:
   quit()
   
-A_f = sp.csc_matrix(A_f)
 D = A_f*A_f.H - A_f.H*A_f
 print("Normality number: %5.3f" % np.linalg.norm(D.todense()))
-u0fine   = solution_linear(u0_f, A_f)
-defect_inf = np.zeros((4,maxiter+1))
-defect_l2  = np.zeros((4,maxiter+1))
+u0fine     = solution_linear(u0_f, A_f)
+defect_inf = np.zeros((4,maxiter))
+defect_l2  = np.zeros((4,maxiter))
+slopes     = np.zeros(4)
 
 for nn in range(4):
 
@@ -74,77 +67,84 @@ for nn in range(4):
   col    = np.zeros(ndof_c)
   
   if problem==1:
-    # First order upwind
-    col[0] = 1.0
-    col[1] = -1.0
-    A_c    = -(1.0/dx_c)*spla.circulant(col[0:ndof_c])
-    # non-periodic BC instead
-    #A_c[0,-1] = 0.0
-  # Second order centered
+    A_c = get_upwind(ndof_c, dx_c)
   elif problem==2:
-    col = np.zeros(ndof_c)
-    col[1] = -1.0
-    col[-1] = 1.0
-    A_c = -(1.0/(2.0*dx_c))*spla.circulant(col)
+    A_c = get_centered(ndof_c, dx_c)
   elif problem==3:
-    col = np.zeros(ndof_c)
-    col[0] = -2.0
-    col[1] = 1.0
-    col[-1] = 1.0
-    A_c = (1/dx_c**2)*spla.circulant(col)
+    A_c = get_diffusion(ndof_c, dx_c)
+  else:
+    quit()
     
   u0coarse = solution_linear(u0_c, A_c)
 
-  if problem==1:
+  if not matrix_power:
     para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
   else:
     para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
   Pmat, Bmat = para.get_parareal_matrix()
   ### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
 
-  print("2-norm of E: %5.3f" % np.linalg.norm(Pmat.todense(),2))
+  slopes[nn] = np.linalg.norm(Pmat.todense(),2)
 
   Fmat = para.timemesh.get_fine_matrix(u0fine)
   ### Fine propagator: Fmat*y = b
   b = np.zeros((ndof_f*(nslices+1),1))
-  b[0:ndof_f,:] = u0fine.y
-
+#  b[0:ndof_f,:] = u0fine.y
+  b[0:ndof_f,:] = 1.0
+  
   # compute fine solution
   u = linalg.spsolve(Fmat, b)
   u = u.reshape((ndof_f*(nslices+1),1))
 
   # Now do Parareal iteration
   u_para_old = Bmat@b
-  defect_inf[nn,0] = np.linalg.norm(u_para_old - u, np.inf)
-  defect_l2[nn,0]  = np.linalg.norm(u_para_old - u, 2)
   for k in range(maxiter):
-    u_para_new = Pmat@u_para_old + Bmat@b
-    defect_inf[nn,k+1] = np.linalg.norm(u_para_new - u, np.inf)
-    defect_l2[nn,k+1]  = np.linalg.norm(u_para_old - u, 2)
-    u_para_old = np.copy(u_para_new)
+    
+    # Compute actual Parareal iteration
+    if False:
+      u_para_new = Pmat@u_para_old + Bmat@b
+      defect_l2[nn,k]  = np.linalg.norm(u_para_new - u, 2)
+      u_para_old      = np.copy(u_para_new)
+    # Compute norm of powers of E
+    else:
+      P_power_k        = LA.matrix_power(Pmat.todense(), k)
+      defect_l2[nn,k]  = np.linalg.norm(P_power_k , 2)
   
+rcParams['figure.figsize'] = 2.5, 2.5
+fs = 8
+ms = 4
 fig = plt.figure(1)
-plt.semilogy(range(maxiter+1), defect_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]))
-plt.semilogy(range(maxiter+1), defect_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]))
-plt.semilogy(range(maxiter+1), defect_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]))
-plt.semilogy(range(maxiter+1), np.zeros(maxiter+1)+defect_l2[3,0], 'k+-', label='m=n='+str(ndof_c_v[3]))
-#plt.semilogy(range(maxiter+1), defect_l2[0,:],  'b--')
-#plt.semilogy(range(maxiter+1), defect_l2[1,:],  'r--')
-#plt.semilogy(range(maxiter+1), defect_l2[2,:],  'c--')
-plt.legend()
-plt.xlabel('Iteration')
-plt.ylabel('Error to fine solution')
+plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
+plt.semilogy(range(1,maxiter+1), defect_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
+plt.semilogy(range(1,maxiter+1), defect_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
+plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+defect_l2[3,0], 'k+-', label='m=n='+str(ndof_c_v[3]), markersize=ms)
+
+plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
+plt.xlabel('$k$', fontsize=fs)
+plt.ylabel('$||\mathbf{e}^k ||_2$', fontsize=fs)
 #plt.ylim([1e-15, 1e1])
-plt.xlabel([0, maxiter])
+plt.xlim([1, maxiter])
 if problem==1:
-  filename='parareal-coarsening-advection-upwind.pdf'
+  if not matrix_power:
+    filename='parareal-coarsening-advection-upwind-convergence.pdf'
+  else:
+    filename='parareal-coarsening-advection-upwind-matrix_power.pdf'
+
 elif problem==2:
-  filename='parareal-coarsening-advection-centered.pdf'
+  if not matrix_power:
+    filename='parareal-coarsening-advection-centered-convergence.pdf'
+  else:
+    filename='parareal-coarsening-advection-centered-matrix_power.pdf'
+
 elif problem==3:
-  filename='parareal-coarsening-heat.pdf'
+  if not matrix_power:
+    filename='parareal-coarsening-heat-convergence.pdf'
+  else:
+    filename='parareal-coarsening-heat-matrix_power.pdf'
+
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
-
+plt.show()
 
 #fig = plt.figure(2)
 #plt.plot(xaxis_f, u[-ndof_f:,0], 'r+')

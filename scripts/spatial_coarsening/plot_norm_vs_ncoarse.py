@@ -61,26 +61,16 @@ for nn in range(4):
   dx_c    = xaxis_c[1] - xaxis_c[0]
   u0_c    = uex(xaxis_c, 0.0)
   col     = np.zeros(ndof_c)
-  if problem==1:
-    # First order upwind
-    col[0] = 1.0
-    col[1] = -1.0
-    A_c    = -(1.0/dx_c)*spla.circulant(col[0:ndof_c])
-    # non-periodic BC instead
-    #A_c[0,-1] = 0.0
-  # Second order centered
-  elif problem==2:
 
-    col = np.zeros(ndof_c)
-    col[1] = -1.0
-    col[-1] = 1.0
-    A_c = -(1.0/(2.0*dx_c))*spla.circulant(col)
+  if problem==1:
+    A_c = get_upwind(ndof_c, dx_c)
+  elif problem==2:
+    A_c = get_centered(ndof_c, dx_c)
   elif problem==3:
-    col = np.zeros(ndof_c)
-    col[0] = -2.0
-    col[1] = 1.0
-    col[-1] = 1.0
-    A_c = (1/dx_c**2)*spla.circulant(col)
+    A_c = get_diffusion(ndof_c, dx_c)
+  else:
+    quit()
+    
   u0coarse = solution_linear(u0_c, A_c)
   
   for mm in range(np.size(nsteps)):
@@ -108,7 +98,7 @@ plt.plot(dt_f_v[0,:], norm_l2[3,:], 'k+-', label='m='+str(ndof_c_v[3]), markersi
 #plt.plot(nsteps, norm_inf[2,:], 'c+--')
 
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
-plt.xlabel(r'$\delta t$', fontsize=fs)
+plt.xlabel(r'$\delta t = \Delta t$', fontsize=fs)
 plt.ylabel(r'$|| E ||_2$', fontsize=fs)
 #plt.ylim([1e-15, 1e1])
 #plt.xlabel([0, maxiter])
