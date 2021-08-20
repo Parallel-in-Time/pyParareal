@@ -23,14 +23,12 @@ def uex(x,t):
 Tend    = 1.0
 nslices = 10
 tol     = 0.0
-maxiter = 10
-nfine   = 1
-ncoarse = 1
+maxiter = 9
+nfine   = 10
+ncoarse = 10
 
 ndof_f   = 64
 ndof_c_v = [32, 48, 63, 64]
-#ndof_f = 16
-#ndof_c_v = [8, 12, 15, 16]
 
 xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
 dx_f    = xaxis_f[1] - xaxis_f[0]
@@ -39,7 +37,7 @@ col     = np.zeros(ndof_f)
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = diffusion with trapezoidal rule / centered second order FD
-problem = 2
+problem = 3
 matrix_power = False # if False, do an actual Parareal iteration, if True, compute || E^k ||
 
 if problem==1:
@@ -77,7 +75,7 @@ for nn in range(4):
     
   u0coarse = solution_linear(u0_c, A_c)
 
-  if not matrix_power:
+  if problem==1:
     para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
   else:
     para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
@@ -87,10 +85,10 @@ for nn in range(4):
   slopes[nn] = np.linalg.norm(Pmat.todense(),2)
 
   Fmat = para.timemesh.get_fine_matrix(u0fine)
+  
   ### Fine propagator: Fmat*y = b
   b = np.zeros((ndof_f*(nslices+1),1))
-#  b[0:ndof_f,:] = u0fine.y
-  b[0:ndof_f,:] = 1.0
+  b[0:ndof_f,:] = u0fine.y
   
   # compute fine solution
   u = linalg.spsolve(Fmat, b)
@@ -98,13 +96,15 @@ for nn in range(4):
 
   # Now do Parareal iteration
   u_para_old = Bmat@b
+  #u_para_old = np.zeros((ndof_f*(nslices+1),1))
   for k in range(maxiter):
     
     # Compute actual Parareal iteration
-    if False:
+    if not matrix_power:
       u_para_new = Pmat@u_para_old + Bmat@b
       defect_l2[nn,k]  = np.linalg.norm(u_para_new - u, 2)
       u_para_old      = np.copy(u_para_new)
+      
     # Compute norm of powers of E
     else:
       P_power_k        = LA.matrix_power(Pmat.todense(), k)
@@ -117,13 +117,18 @@ fig = plt.figure(1)
 plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
 plt.semilogy(range(1,maxiter+1), defect_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
 plt.semilogy(range(1,maxiter+1), defect_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
-plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+defect_l2[3,0], 'k+-', label='m=n='+str(ndof_c_v[3]), markersize=ms)
+plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+defect_l2[3,0], 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
 
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlabel('$k$', fontsize=fs)
-plt.ylabel('$||\mathbf{e}^k ||_2$', fontsize=fs)
+if not matrix_power:
+  plt.ylabel('$||\mathbf{e}^k ||_2$', fontsize=fs)
+else:
+  plt.ylabel('$||\mathbf{E}^k ||_2$', fontsize=fs)
+
 #plt.ylim([1e-15, 1e1])
 plt.xlim([1, maxiter])
+plt.xticks(range(1,maxiter,2))
 if problem==1:
   if not matrix_power:
     filename='parareal-coarsening-advection-upwind-convergence.pdf'
