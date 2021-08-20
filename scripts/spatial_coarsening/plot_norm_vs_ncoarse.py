@@ -20,8 +20,8 @@ from subprocess import call
 def uex(x,t):
   return np.exp(-(x-1.0-t)**2/0.1**2)
   
-Tend    = 0.4
-nslices = 8
+Tend    = 1.0
+nslices = 10
 tol     = 0.0
 maxiter = 7
 nsteps  = [1, 2, 4, 6, 8, 10]
@@ -36,7 +36,7 @@ col    = np.zeros(ndof_f)
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = diffusion with trapezoidal rule / centered second order FD
-problem = 3
+problem = 1
 
 if problem==1:
   A_f = get_upwind(ndof_f, dx_f)
@@ -52,6 +52,8 @@ print("Normality number: %5.3f" % np.linalg.norm(D.todense()))
 u0fine   = solution_linear(u0_f, A_f)
 norm_l2  = np.zeros((4,np.size(nsteps)))
 norm_inf = np.zeros((4,np.size(nsteps)))
+dt_f_v   = np.zeros((1,np.size(nsteps)))
+
 for nn in range(4):
 
   ndof_c  = ndof_c_v[nn]
@@ -59,7 +61,6 @@ for nn in range(4):
   dx_c    = xaxis_c[1] - xaxis_c[0]
   u0_c    = uex(xaxis_c, 0.0)
   col     = np.zeros(ndof_c)
-  
   if problem==1:
     # First order upwind
     col[0] = 1.0
@@ -89,21 +90,26 @@ for nn in range(4):
     else:
       para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)
     Pmat, Bmat = para.get_parareal_matrix()
+    dt_f_v[0,mm] = para.timemesh.slices[0].int_fine.dt
     ### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
     norm_l2[nn,mm] = np.linalg.norm(Pmat.todense(), 2)
     norm_inf[nn,mm] = np.linalg.norm(Pmat.todense(), np.inf)
+    
+rcParams['figure.figsize'] = 2.5, 2.5
+fs = 8
+ms = 4
 fig = plt.figure(1)
-plt.plot(nsteps, norm_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]))
-plt.plot(nsteps, norm_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]))
-plt.plot(nsteps, norm_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]))
-plt.plot(nsteps, norm_l2[3,:], 'k+-', label='m='+str(ndof_c_v[3]))
+plt.plot(dt_f_v[0,:], norm_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
+plt.plot(dt_f_v[0,:], norm_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
+plt.plot(dt_f_v[0,:], norm_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
+plt.plot(dt_f_v[0,:], norm_l2[3,:], 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
 #plt.plot(nsteps, norm_inf[0,:], 'b+--')
 #plt.plot(nsteps, norm_inf[1,:], 'r+--')
 #plt.plot(nsteps, norm_inf[2,:], 'c+--')
 
-plt.legend()
-plt.xlabel('Number of coarse/fine steps per slice')
-plt.ylabel(r'$|| E ||_2$')
+plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
+plt.xlabel(r'$\delta t$', fontsize=fs)
+plt.ylabel(r'$|| E ||_2$', fontsize=fs)
 #plt.ylim([1e-15, 1e1])
 #plt.xlabel([0, maxiter])
 if problem==1:
