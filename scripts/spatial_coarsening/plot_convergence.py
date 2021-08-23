@@ -19,6 +19,11 @@ from subprocess import call
 
 def uex(x,t):
   return np.exp(-(x-1.0-t)**2/0.25**2)
+#  return np.sin(np.pi*(x-t)) + np.sin(24.0*np.pi*(x-t))
+#  y = 0.0*x
+#  for n in range(32):
+#    y = y + np.sin(float(n)*np.pi*(x-t))
+#  return y
   
 Tend    = 1.0
 nslices = 10
@@ -102,12 +107,12 @@ for nn in range(4):
     # Compute actual Parareal iteration
     if not matrix_power:
       u_para_new = Pmat@u_para_old + Bmat@b
-      defect_l2[nn,k]  = np.linalg.norm(u_para_new - u, 2)
+      defect_l2[nn,k] = np.linalg.norm(u_para_new - u, 2)
       u_para_old      = np.copy(u_para_new)
       
     # Compute norm of powers of E
     else:
-      P_power_k        = LA.matrix_power(Pmat.todense(), k)
+      P_power_k        = LA.matrix_power(Pmat.todense(), k+1)
       defect_l2[nn,k]  = np.linalg.norm(P_power_k , 2)
   
 rcParams['figure.figsize'] = 2.5, 2.5
@@ -117,7 +122,10 @@ fig = plt.figure(1)
 plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
 plt.semilogy(range(1,maxiter+1), defect_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
 plt.semilogy(range(1,maxiter+1), defect_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
-plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+defect_l2[3,0], 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
+if matrix_power:
+  plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+1e-16, 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
+else:
+  plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+defect_l2[3,0], 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
 
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlabel('$k$', fontsize=fs)
@@ -155,5 +163,5 @@ plt.show()
 #plt.plot(xaxis_f, u[-ndof_f:,0], 'r+')
 #plt.plot(xaxis_f, uex(xaxis_f, Tend), 'b--')
 err = u[-ndof_f:,0] - uex(xaxis_f, Tend)
-print("Discretisation error: %5.3f" % np.linalg.norm(err, np.inf))
+print("Discretisation error: %5.3f" % np.linalg.norm(err, 2))
 #plt.show()
