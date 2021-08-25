@@ -19,7 +19,7 @@ from subprocess import call
 
 def uex(x,t):
   return np.exp(-(x-1.0-t)**2/0.25**2)
-#  return np.sin(np.pi*(x-t)) + np.sin(24.0*np.pi*(x-t))
+#  return np.sin(np.pi*(x-t)) + np.sin(98.0*np.pi*(x-t))
 #  y = 0.0*x
 #  for n in range(32):
 #    y = y + np.sin(float(n)*np.pi*(x-t))
@@ -35,6 +35,9 @@ ncoarse = 10
 ndof_f   = 64
 ndof_c_v = [32, 48, 63, 64]
 
+#ndof_f   = 256
+#ndof_c_v = [128, 196, 255, 256]
+
 xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
 dx_f    = xaxis_f[1] - xaxis_f[0]
 u0_f    = uex(xaxis_f, 0.0)
@@ -42,7 +45,7 @@ col     = np.zeros(ndof_f)
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = diffusion with trapezoidal rule / centered second order FD
-problem = 3
+problem = 1
 matrix_power = False # if False, do an actual Parareal iteration, if True, compute || E^k ||
 
 if problem==1:
@@ -88,7 +91,7 @@ for nn in range(4):
   ### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
 
   slopes[nn] = np.linalg.norm(Pmat.todense(),2)
-
+  
   Fmat = para.timemesh.get_fine_matrix(u0fine)
   
   ### Fine propagator: Fmat*y = b
@@ -126,8 +129,14 @@ if matrix_power:
   plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+1e-16, 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
 else:
   plt.semilogy(range(1,maxiter+1), np.zeros(maxiter)+defect_l2[3,0], 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
-
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
+#plt.legend(loc='upper right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+plt.semilogy(range(1,5), [slopes[0]**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b--')
+plt.semilogy(range(1,5), [slopes[1]**(val-1)*1.1*defect_l2[1,0] for val in range(1,5)], 'r--')
+plt.semilogy(range(1,5), [slopes[2]**(val-1)*1.1*defect_l2[2,0] for val in range(1,5)], 'c--')
+
+#print([(slopes[0]/defect_l2[0,0])**val for val in range(1,3)])
+
 plt.xlabel('$k$', fontsize=fs)
 if not matrix_power:
   plt.ylabel('$||\mathbf{e}^k ||_2$', fontsize=fs)

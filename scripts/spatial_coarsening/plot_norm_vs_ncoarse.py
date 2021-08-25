@@ -24,7 +24,8 @@ Tend    = 1.0
 nslices = 10
 tol     = 0.0
 maxiter = 7
-nsteps  = [1, 2, 4, 6, 8, 10]
+#nsteps  = [1, 2, 4, 6, 8, 10]
+nsteps  = [1, 2, 4, 8, 12, 16, 20]
 
 ndof_f   = 64
 ndof_c_v = [32, 48, 63, 64]
@@ -36,7 +37,7 @@ col    = np.zeros(ndof_f)
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = diffusion with trapezoidal rule / centered second order FD
-problem = 1
+problem = 3
 
 if problem==1:
   A_f = get_upwind(ndof_f, dx_f)
@@ -99,7 +100,7 @@ plt.plot(dt_f_v[0,:], norm_l2[3,:], 'k+-', label='m='+str(ndof_c_v[3]), markersi
 
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlabel(r'$\delta t = \Delta t$', fontsize=fs)
-plt.ylabel(r'$|| E ||_2$', fontsize=fs)
+plt.ylabel(r'$|| \mathbf{E} ||_2$', fontsize=fs)
 #plt.ylim([1e-15, 1e1])
 #plt.xlabel([0, maxiter])
 if problem==1:
