@@ -30,28 +30,35 @@ TODO: compute pseudo-spectral radius by finding point on isoline with maximum di
 '''
 if __name__ == "__main__":
 
-    Tend     = 64.0
+    Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
     ncoarse  = 1
     nfine    = 1
     u0_val     = np.array([[1.0]], dtype='complex')
 
-    nreal = 40
-    nimag = 40
-    lambda_real = np.linspace(-2.5, 2.5,  nreal)
-    lambda_imag = np.linspace(-2.5, 2.5, nimag)
+    nreal = 60
+    nimag = 60
+    lambda_real = np.linspace(-4.0, 4.0,  nreal)
+    lambda_imag = np.linspace(-2.0, 4.0, nimag)
 
     sigmin   = np.zeros((nimag,nreal))
     circs = np.zeros((nimag,nreal))
     nproc    = Tend
-    symb     = 0.0 + 1.0*1j
+    symb     = -0.0 + 3.0*1j
 
     # Solution objects define the problem
     u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
     ucoarse = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
 
-    para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
+    para = parareal(0.0, Tend, nslices, intexact, trapezoidal, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
+    D = E*E.H - E.H*E
+    print("Normality number for E: %5.3e" % np.linalg.norm(D.todense()))
+    '''
+    Diffusive problems have (i) very small normality number, (ii) a small pseudo spectral radius and (iii) a small norm
+    Also, the eps-isolines are very much circles.
+    QUESTION: can we work out the D matrix above and say something about how it looks like for diffusive/non-diffusive problems?
+    '''
     eigs = np.linalg.eigvals(E.todense())
     print("Norm of E: %5.3f" % np.linalg.norm(E.todense(),2))
     for i in range(0,nreal):
@@ -67,10 +74,11 @@ fs = 8
 fig, ax  = plt.subplots()
 X, Y = np.meshgrid(lambda_real, lambda_imag)
 #cset = ax.contour(X, Y, np.log10(sigmin))
-cset = ax.contour(X, Y, sigmin)
+lvls = np.linspace(0.0, 1.0, 11)
+cset = ax.contour(X, Y, sigmin, levels=lvls)
 ax.clabel(cset, fontsize=9, inline=True)
-cset2 = ax.contour(X, Y, circs, linestyles='dotted')
-ax.clabel(cset2, fontsize=9, inline=True)
+#cset2 = ax.contour(X, Y, circs, linestyles='dotted')
+#ax.clabel(cset2, fontsize=9, inline=True)
 plt.xlabel(r'Real part', fontsize=fs)
 plt.ylabel(r'Imaginary part', fontsize=fs)
 plt.title(r'$1/|| (z - E)^{-1} \||_2$')
@@ -87,7 +95,7 @@ Check out Fig. 24.4 on p. 235: plot the difference between rho-eps and rho over 
 '''
 NOW COMPUTE THE PSEUDO SPECTRAL RADIUS
 '''
-epsilon = 1.0
+epsilon = 0.1
 
 def constraint(x):
     z = x[0] + 1j*x[1]
