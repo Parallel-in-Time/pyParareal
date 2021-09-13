@@ -13,6 +13,8 @@ from scipy.linalg import svdvals
 import math
 
 from pylab import rcParams
+from scipy.optimize import NonlinearConstraint
+from scipy.optimize import minimize
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -51,7 +53,7 @@ if __name__ == "__main__":
     para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     eigs = np.linalg.eigvals(E.todense())
-    print(np.linalg.norm(E.todense(),2))
+    print("Norm of E: %5.3f" % np.linalg.norm(E.todense(),2))
     for i in range(0,nreal):
       for j in range(0,nimag):
         z = lambda_real[i] + 1j*lambda_imag[j]
@@ -77,49 +79,31 @@ ax.plot(0.0, 0.0, 'k+', markersize=fs)
 #plt.gcf().savefig(filename, bbox_inches='tight')
 #call(["pdfcrop", filename, filename])
 #fig.colorbar(surf, shrink=0.5, aspect=5)
-plt.show()
-
-'''
-Trefethen page 18: for a normal matrix, the eps-pseudospectrum is the union of eps-balls around the eigenvalues.
-Since all eigenvalues of E are zero, if E were normal, the pseudo-spectrum would be the radius eps unit ball
-'''
-
-'''
-Check Theorem 16.1 on p. 158: there is M, gamma such that
-
-  || E^k || <= (rho_eps(E))^(k+1)/eps
-
-for any (!) eps
-
-Here, rho_eps(E) = sup{ |z| : z in sigma_eps(E) }.
-
-That will be the point on some isoline that is furthest away from the origin
-
-'''
-
-'''
-Theorem 16.6. on p. 164: E^N = 0 is equivalent to spectrum(E) = {0} and
-
-  || (z - A)^(-1) || = O(1/|z|^{N})
-
-as |z| -> 0 which implies
-
-  1/||(z-A)^-1|| = O(|z|^N)
-
-Therefore, we expect the norm of ||(z-A)^-1|| to grow faster as we move towards the origin if the number of time slices increases
-'''
-
-'''
-Theorem 16.4 on p. 160 gives a lower bound (!)
-
-sup || E^k || >= (rho_eps(E)-1)/eps
-k>=0
-
-This would give an idea when E^k grows before collapsing towards zero.
-
-Plot || E^k || versus the upper and lower bound provided by rho_eps(E) for various eps
-'''
 
 '''
 Check out Fig. 24.4 on p. 235: plot the difference between rho-eps and rho over eps (for us, this is rho_eps/eps)
 '''
+
+'''
+NOW COMPUTE THE PSEUDO SPECTRAL RADIUS
+'''
+epsilon = 1.0
+
+def constraint(x):
+    z = x[0] + 1j*x[1]
+    M = z*sparse.identity(np.shape(E)[0]) - E
+    sv = svdvals(M.todense())
+    return np.min(sv)
+    
+def target(x):
+  return 1.0/np.linalg.norm(x, 2)**2
+
+nlc   = NonlinearConstraint(constraint, epsilon-1e-9, epsilon+1e-9)
+# for a normal matrix, the epsilon isoline is a circle: therefore, use a point on the circle as starting value for the optimisation
+result = minimize(target, [np.sqrt(epsilon), np.sqrt(epsilon)], constraints=nlc, tol = 1e-10, options = {'method': 'BFGS', 'gtol': 1e-10, 'maxiter': 500})
+print(result)
+plt.plot(result.x[0], result.x[1], 'ko', markersize=fs)
+print("Constraint at solution: %5.3f" % constraint(result.x))
+print("Target at solution: %5.3f" % target(result.x))
+print("Pseudo-spectral-radius: %5.3f" % np.linalg.norm(result.x,2))
+plt.show()
