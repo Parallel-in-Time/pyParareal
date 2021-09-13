@@ -100,8 +100,7 @@ def target(x):
 
 nlc   = NonlinearConstraint(constraint, epsilon-1e-9, epsilon+1e-9)
 # for a normal matrix, the epsilon isoline is a circle: therefore, use a point on the circle as starting value for the optimisation
-result = minimize(target, [np.sqrt(epsilon), np.sqrt(epsilon)], constraints=nlc, tol = 1e-10, options = {'method': 'BFGS', 'gtol': 1e-10, 'maxiter': 500})
-print(result)
+result = minimize(target, [np.sqrt(epsilon), np.sqrt(epsilon)], constraints=nlc, tol = 1e-10, method='trust-constr', options = {'xtol': 1e-10, 'gtol': 1e-10, 'maxiter': 500})
 plt.plot(result.x[0], result.x[1], 'ko', markersize=fs)
 print("Constraint at solution: %5.3f" % constraint(result.x))
 print("Target at solution: %5.3f" % target(result.x))
