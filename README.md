@@ -42,4 +42,4 @@ How can I reproduce Figures from the publication?
 Who do I talk to?
 -----------------
 
-This code is written by [Daniel Ruprecht](http://www.parallelintime.org/groups/leeds.html).
+This code is written by [Daniel Ruprecht](http://parallel-in-time.org/groups/tuhh.html).
