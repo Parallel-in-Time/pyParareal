@@ -40,9 +40,9 @@ if __name__ == "__main__":
     u0_val     = np.array([[1.0]], dtype='complex')
 
     nproc    = Tend
-    symb     = 0.0 + 3.0*1j
+    symb     = 0.0 - 1.0j
 
-    epsilon = 1e-3
+    epsilon = 1e-6
     '''
     NOTE: the lower bound is the sup over all epsilons... so finding a epsilon where the lower bound is large will imply non-monotonic convergence
     NOTE: generally, it seems that smaller epsilons represent converge later in the iteration where larger eps correspond to the first few iterations... can we substantiate this?
@@ -55,17 +55,17 @@ if __name__ == "__main__":
     u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
     ucoarse = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
 
-    para = parareal(0.0, Tend, nslices, intexact, trapezoidal, nfine, ncoarse, 0.0, 1, u0)
+    para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     E_norm = np.linalg.norm(E.todense(),2)
-  
+
     # Find the pseudo spectral radius
     def constraint(x):
         z = x[0] + 1j*x[1]
         M = z*sparse.identity(np.shape(E)[0]) - E
         sv = svdvals(M.todense())
         return np.min(sv)
-        
+
     def target(x):
       return 1.0/np.linalg.norm(x, 2)**2
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     psr = np.linalg.norm(result.x, 2)
     print("Pseudospectralradius:   %5.3f" % psr)
     # Now compute powers of E
-    power_norms = np.zeros((4,int(nproc)))
+    power_norms = np.zeros((6, int(nproc)))
     for k in range(int(nproc)):
       E_power_k = LA.matrix_power(E.todense(), k+1)
       power_norms[0,k] = np.linalg.norm(E_power_k, 2)
@@ -86,13 +86,18 @@ if __name__ == "__main__":
      # power_norms[2,k] = (psr-1.0)/epsilon
       power_norms[2,k] = psr**(k+1) - ( (E_norm + epsilon)**(k+1) - E_norm**(k+1) ) # (16.25) on p. 163
       power_norms[3,k] = E_norm**(k+1)
-      
+    power_norms[4, :] = para.get_linear_bound(int(nproc)-1, mgritTerm=True)
+    power_norms[5, :] = para.get_superlinear_bound(int(nproc)-1, bruteForce=True)
+    power_norms[4:, :] *= power_norms[0,0]
+
     plt.figure(1)
     iters = range(int(nproc))
     plt.semilogy(iters, power_norms[0,:], 'bo--')
     plt.semilogy(iters, power_norms[1,:], 'r-', label='PSR')
     plt.semilogy(iters, power_norms[2,:], 'g-')
     plt.semilogy(iters, power_norms[3,:], 'c--', label='Norm')
+    plt.semilogy(iters, power_norms[4,:], 'p:', label='Linear')
+    plt.semilogy(iters, power_norms[5,:], 's:', label='Superlinear')
     plt.ylim([1e-16, 1e5])
     plt.title((r'$\varepsilon$ = %5.3e' % epsilon), fontsize=fs)
     #print(power_norms[2,:])

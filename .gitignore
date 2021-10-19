@@ -2,3 +2,5 @@
 *.py~
 startup.sh
 *.sh~
+.spyproject
+scripts/*.pdf

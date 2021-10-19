@@ -2,30 +2,31 @@ from timemesh import timemesh
 from solution import solution
 from scipy.sparse import linalg
 from scipy import sparse
+from scipy.special import factorial, binom
 import copy
 import numpy as np
 
 class parareal(object):
 
     def __init__(self, tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, u0, u0coarse = None):
-      assert isinstance(u0, solution), "Argument u0 must be an object of type solution"
-      self.u0 = u0
-      if (u0coarse is None):
-        self.u0coarse = copy.deepcopy(u0)
-      else:
-        self.u0coarse = u0coarse
-      self.timemesh = timemesh(tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, self.u0, self.u0coarse)
+        assert isinstance(u0, solution), "Argument u0 must be an object of type solution"
+        self.u0 = u0
+        if (u0coarse is None):
+            self.u0coarse = copy.deepcopy(u0)
+        else:
+            self.u0coarse = u0coarse
+        self.timemesh = timemesh(tstart, tend, nslices, fine, coarse, nsteps_fine, nsteps_coarse, tolerance, iter_max, self.u0, self.u0coarse)
 
     '''
     Execute the Parareal iteration
     '''
     def run(self):
-      
+
       # Coarse predictor; need deepcopy to keep self.u0 unaltered
       self.timemesh.run_coarse(copy.deepcopy(self.u0))
 
       while True:
-        
+
         # Run fine method
         self.timemesh.update_fine_all()
 
@@ -51,11 +52,29 @@ class parareal(object):
           self.timemesh.set_end_value(fine, i)
 
         # increase iteration counter
-        self.timemesh.increase_iter_all() 
+        self.timemesh.increase_iter_all()
 
         # stop loop if all slices have converged
         if self.timemesh.all_converged():
           break
+
+    #
+    # Properties
+    #
+
+    @property
+    def eigvals_fine(self):
+        """Eigenvalue with largest abs. value for fine solver Jacobian matrix"""
+        int_fine = self.timemesh.slices[0].int_fine
+        jac = int_fine.get_update_matrix(self.u0).todense()
+        return np.linalg.eigvals(jac)
+
+    @property
+    def eigvals_coarse(self):
+        """Eigenvalue with largest abs. value for coarse solver Jacobian matrix"""
+        int_coarse = self.timemesh.slices[0].int_coarse
+        jac = int_coarse.get_update_matrix(self.u0).todense()
+        return np.linalg.eigvals(jac)
 
     #
     # GET functions
@@ -71,7 +90,7 @@ class parareal(object):
         Gmat = self.timemesh.get_coarse_matrix(ucoarse)
       Fmat = self.timemesh.get_fine_matrix(self.u0)
       Bmat = sparse.linalg.inv(Gmat)
-      # this is call is necessary because if Bmat has only 1 entry, it gets converted to a dense array here 
+      # this is call is necessary because if Bmat has only 1 entry, it gets converted to a dense array here
       Bmat = sparse.csc_matrix(Bmat)
       Emat = Bmat.dot(Gmat-Fmat)
       return Emat, Bmat
@@ -97,6 +116,40 @@ class parareal(object):
 
       Mat = C1.dot(E_power_k.dot(Bmat.dot(C2)))
       return Mat.todense()
+
+    def get_linear_bound(self, nIter, mgritTerm=False):
+        """Linear bound from M.J Gander"""
+        lamF, lamG = self.eigvals_fine, self.eigvals_coarse
+        gamma = np.abs(lamF - lamG)/(1-np.abs(lamG))
+        if mgritTerm:
+            N = self.timemesh.nslices
+            gamma *= 1 - np.abs(lamG)**(N-1)
+        gamma = np.max(gamma)
+        bound = [gamma**k for k in range(nIter+1)]
+        return np.array(bound)
+
+    def get_superlinear_bound(self, nIter, bruteForce=False):
+        """Superlinear bound from Generating Function Method"""
+        lamF, lamG = self.eigvals_fine, self.eigvals_coarse
+        alpha = np.max(np.abs(lamF - lamG))
+        beta = np.max(np.abs(lamG))
+        N = self.timemesh.nslices
+        if bruteForce:
+            bound = [alpha**k * sum([binom(i+k-1,i) * beta**i
+                                     for i in range(N-k)])
+                     for k in range(nIter+1)]
+            # Simplification of the binom term, but there is still an error ...
+            # bound = [1] + [alpha**k / factorial(k-1) * sum(
+            #             [np.prod([(i+l)*beta**i for l in range(1, k)])
+            #              for i in range(N-k)])
+            #          for k in range(1, nIter+1)]
+        else:
+            # Bounding beta by 1, simplification used by M.J Gander
+            bound = [alpha**k / factorial(k) * np.prod(
+                        [N-j for j in range(1, k)])
+                     for k in range(nIter+1)]
+        return np.array(bound)
+
 
     # Returns the largest singular value of the error propagation matrix
     def get_max_svd(self, ucoarse=None):

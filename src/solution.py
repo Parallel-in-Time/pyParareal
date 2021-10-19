@@ -24,6 +24,10 @@ class solution(object):
     # Ask for foregiveness instead of permission...
     try:
       self.y = a*x.y + self.y
+      # BUG : the following lines (that should be equivalent since axpy
+      # overwrites y values) do not pass the tests
+      # self.y += a*x.y
+      # np.copyto(self.y, a*x.y + self.y)
     except:
       assert isinstance(x, solution), "Input x must be an object of type solution"
       assert x.ndof==self.ndof, "Number of degrees of freedom is different in x than in this solution object"
@@ -36,7 +40,7 @@ class solution(object):
   # Overwrite y with My
   def applyM(self):
     if not (self.M is None):
-      self.y = self.M.dot(self.y)
+      np.copyto(self.y, self.M.dot(self.y))
     # else do nothing as this assume M is the identiy
 
   # Overwrite y with solution of M*y-alpha*f(y) = y
@@ -46,14 +50,14 @@ class solution(object):
   # Return inf norm of y
   def norm(self):
     return np.linalg.norm(self.y, np.inf)
-    
+
   # Return mass matrix
   def getM(self):
     if self.M is None:
       return sparse.eye(self.ndof, format="csr")
     else:
       return self.M
-    
+
   # Apply matrix
   def apply_matrix(self, A):
     assert np.shape(A)[1] == self.ndof, "Number of columns in argument matrix A does not match the number of DoF for this solution"
