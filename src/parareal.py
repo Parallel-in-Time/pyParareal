@@ -135,18 +135,20 @@ class parareal(object):
         beta = np.max(np.abs(lamG))
         N = self.timemesh.nslices
         if bruteForce:
-            bound = [alpha**k * sum([binom(i+k-1,i) * beta**i
-                                     for i in range(N-k)])
-                     for k in range(nIter+1)]
-            # Simplification of the binom term, but there is still an error ...
-            # bound = [1] + [alpha**k / factorial(k-1) * sum(
-            #             [np.prod([(i+l)*beta**i for l in range(1, k)])
-            #              for i in range(N-k)])
-            #          for k in range(1, nIter+1)]
+            bound = [1] + \
+                [alpha**k * sum([binom(i+k-1, i) * beta**i
+                                 for i in range(N-k)])
+                 for k in range(nIter+1)]
+            # Equivalent formulation with a simplification of the binom term
+            bound = [1] + \
+                [alpha**k / factorial(k-1) * sum(
+                    [np.prod([i+l for l in range(1, k)]) * beta**i
+                      for i in range(N-k)])
+                  for k in range(1, nIter+1)]
         else:
             # Bounding beta by 1, simplification used by M.J Gander
             bound = [alpha**k / factorial(k) * np.prod(
-                        [N-j for j in range(1, k)])
+                        [N-l for l in range(1, k+1)])
                      for k in range(nIter+1)]
         return np.array(bound)
 
