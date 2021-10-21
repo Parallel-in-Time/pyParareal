@@ -78,7 +78,7 @@ if __name__ == "__main__":
     psr = np.linalg.norm(result.x, 2)
     print("Pseudospectralradius:   %5.3f" % psr)
     # Now compute powers of E
-    power_norms = np.zeros((6, int(nproc)))
+    power_norms = np.zeros((7, int(nproc)))
     for k in range(int(nproc)):
       E_power_k = LA.matrix_power(E.todense(), k+1)
       power_norms[0,k] = np.linalg.norm(E_power_k, 2)
@@ -86,8 +86,12 @@ if __name__ == "__main__":
      # power_norms[2,k] = (psr-1.0)/epsilon
       power_norms[2,k] = psr**(k+1) - ( (E_norm + epsilon)**(k+1) - E_norm**(k+1) ) # (16.25) on p. 163
       power_norms[3,k] = E_norm**(k+1)
-    power_norms[4, :] = para.get_linear_bound(int(nproc)-1, mgritTerm=True)
-    power_norms[5, :] = para.get_superlinear_bound(int(nproc)-1, bruteForce=True)
+    power_norms[4, :] = para.get_linear_bound(int(nproc)-1,
+                                              mgritTerm=True)
+    power_norms[5, :] = para.get_superlinear_bound(int(nproc)-1,
+                                                   bruteForce=False)
+    power_norms[6, :] = para.get_superlinear_bound(int(nproc)-1,
+                                                   bruteForce=True)
     power_norms[4:, :] *= power_norms[0,0]
 
     plt.figure(1)
@@ -97,7 +101,8 @@ if __name__ == "__main__":
     plt.semilogy(iters, power_norms[2,:], 'g-')
     plt.semilogy(iters, power_norms[3,:], 'c--', label='Norm')
     plt.semilogy(iters, power_norms[4,:], 'p:', label='Linear')
-    plt.semilogy(iters, power_norms[5,:], 's:', label='Superlinear')
+    plt.semilogy(iters, power_norms[5,:], 's:', label='Superlinear (Gander)')
+    plt.semilogy(iters, power_norms[6,:], '>:', label='Superlinear (Tibo)')
     plt.ylim([1e-16, 1e5])
     plt.title((r'$\varepsilon$ = %5.3e' % epsilon), fontsize=fs)
     #print(power_norms[2,:])
