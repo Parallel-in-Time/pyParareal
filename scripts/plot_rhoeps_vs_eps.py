@@ -48,7 +48,7 @@ if __name__ == "__main__":
     para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     
-    epsvec = [2.0, 1.0, 0.8, 0.6, 0.4, 0.2, 0.1]
+    epsvec = [1.0, 0.5, 0.1]
     nn = np.size(epsvec)
     rhoeps = np.zeros(nn)
     for j in range(nn):
@@ -59,9 +59,21 @@ if __name__ == "__main__":
       print("Target at solution: %5.3f" % tar)
       print("Pseudo-spectral-radius: %5.3f" % psr)
 
+   # plt.figure(1)
+   # plt.plot(epsvec, rhoeps, '+--')
+   # plt.xlabel(r'$\varepsilon$')
+   # plt.ylabel(r'$\rho_{\varepsilon}$')
+    
+    niter = 5
+    bounds = np.zeros((2,niter))
+    E_power_k = E
+    for j in range(niter):
+      bounds[0,j] = rhoeps[2]**(j+1)/epsvec[2]
+      bounds[1,j] = np.linalg.norm( E_power_k.todense() )
+      E_power_k = E@E_power_k
+      
     plt.figure(1)
-    plt.plot(epsvec, np.divide(rhoeps-1.0, epsvec), '+--')
-    plt.xlabel(r'$\varepsilon$')
-    plt.ylabel(r'$\rho_{\varepsilon}$')
+    plt.semilogy(range(niter), bounds[0,:], 'b')
+    plt.semilogy(range(niter), bounds[1,:], 'r')
     plt.show()
   
