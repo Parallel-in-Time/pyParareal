@@ -39,7 +39,7 @@ if __name__ == "__main__":
     u0_val     = np.array([[1.0]], dtype='complex')
     
     nproc    = Tend
-    symb     = -1.0 + 0.0*1j
+    symb     = -0.0 + 1.0*1j
 
     # Solution objects define the problem
     u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     
-    epsvec = [1.0, 0.5, 0.1]
+    epsvec = [0.1, 0.01, 0.001]
     nn = np.size(epsvec)
     rhoeps = np.zeros(nn)
     for j in range(nn):
@@ -64,16 +64,20 @@ if __name__ == "__main__":
    # plt.xlabel(r'$\varepsilon$')
    # plt.ylabel(r'$\rho_{\varepsilon}$')
     
-    niter = 5
-    bounds = np.zeros((2,niter))
+    niter = 12
+    bounds = np.zeros((nn+1,niter))
     E_power_k = E
     for j in range(niter):
-      bounds[0,j] = rhoeps[2]**(j+1)/epsvec[2]
-      bounds[1,j] = np.linalg.norm( E_power_k.todense() )
+      bounds[0,j] = np.linalg.norm( E_power_k.todense() )
       E_power_k = E@E_power_k
+      for k in range(nn):
+        bounds[k+1,j] = rhoeps[k]**(j+1)/epsvec[k]
       
     plt.figure(1)
-    plt.semilogy(range(niter), bounds[0,:], 'b')
-    plt.semilogy(range(niter), bounds[1,:], 'r')
+    plt.semilogy(range(8,niter), bounds[3,8:niter], 'b:', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[2]))
+    plt.semilogy(range(4,8), bounds[2,4:8], 'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[1]))
+    plt.semilogy(range(0,4), bounds[1,0:4], 'b--', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[0]))
+    plt.semilogy(range(niter), bounds[0,:], 'r', label = r'$\left\|| E^k \right\||_2$')
+    plt.legend()
     plt.show()
   
