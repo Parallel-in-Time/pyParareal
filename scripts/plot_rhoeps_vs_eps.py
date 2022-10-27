@@ -32,14 +32,14 @@ TODO: compute pseudo-spectral radius by finding point on isoline with maximum di
 '''
 if __name__ == "__main__":
 
-    Tend     = 16.0
+    Tend     = 32.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 1
+    ncoarse  = 2
     nfine    = 1
     u0_val     = np.array([[1.0]], dtype='complex')
     
     nproc    = Tend
-    symb     = -0.0 + 1.0*1j
+    symb     = -0.0 + 2.0*1j
 
     # Solution objects define the problem
     u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
@@ -48,9 +48,10 @@ if __name__ == "__main__":
     para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     
-    epsvec = [0.1, 0.01, 0.001]
+    epsvec = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-12]
     nn = np.size(epsvec)
     rhoeps = np.zeros(nn)
+    lower_bound = 0.0
     for j in range(nn):
       psr_obj = pseudo_spectral_radius(E, epsvec[j])
       psr, x, tar, cons = psr_obj.get_psr()
@@ -58,13 +59,15 @@ if __name__ == "__main__":
       print("Constraint at solution: %5.3f" % cons)
       print("Target at solution: %5.3f" % tar)
       print("Pseudo-spectral-radius: %5.3f" % psr)
-
-   # plt.figure(1)
-   # plt.plot(epsvec, rhoeps, '+--')
-   # plt.xlabel(r'$\varepsilon$')
-   # plt.ylabel(r'$\rho_{\varepsilon}$')
+      lower_bound = max(lower_bound, (rhoeps[j]-1.0)/rhoeps[j])
+    plt.figure(1)
+    plt.semilogx(epsvec, rhoeps, '+--', label=r'$\rho_{\varepsilon}$')
+    plt.semilogx(epsvec, np.maximum(np.zeros(nn), np.divide(rhoeps - 1.0, epsvec)), 'rx-', label=r'$\max(0,(\rho_{\varepsilon}-1)/\varepsilon)$')
+    plt.xlabel(r'$\varepsilon$')
+    plt.ylabel(r'$\rho_{\varepsilon}$')
+    plt.legend()
     
-    niter = 12
+    niter = 24
     bounds = np.zeros((nn+1,niter))
     E_power_k = E
     for j in range(niter):
@@ -72,12 +75,17 @@ if __name__ == "__main__":
       E_power_k = E@E_power_k
       for k in range(nn):
         bounds[k+1,j] = rhoeps[k]**(j+1)/epsvec[k]
-      
-    plt.figure(1)
-    plt.semilogy(range(8,niter), bounds[3,8:niter], 'b:', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[2]))
-    plt.semilogy(range(4,8), bounds[2,4:8], 'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[1]))
-    plt.semilogy(range(0,4), bounds[1,0:4], 'b--', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[0]))
+     
+    eps_index_1 = 2
+    eps_index_2 = 4
+    eps_index_3 = 6
+
+    plt.figure(2)
+    plt.semilogy(range(8,12), bounds[eps_index_3,8:12], 'b:', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_3]))
+    plt.semilogy(range(4,8), bounds[eps_index_2,4:8], 'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_2]))
+    plt.semilogy(range(0,4), bounds[eps_index_1,0:4], 'b--', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_1]))
     plt.semilogy(range(niter), bounds[0,:], 'r', label = r'$\left\|| E^k \right\||_2$')
+    plt.semilogy(range(niter), np.zeros(niter) + lower_bound, 'g', label = r'$(\rho_{\varepsilon} - 1 ) / \rho_{\varepsilon}$')
     plt.legend()
     plt.show()
   

@@ -48,12 +48,17 @@ elif problem==3:
 else:
   quit()
 
+A_eigs, dummy = LA.eig(A_f.todense())
+A_eigs = -np.sort(-A_eigs)
+
 D = A_f*A_f.H - A_f.H*A_f
 print("Normality number: %5.3f" % np.linalg.norm(D.todense()))
 u0fine   = solution_linear(u0_f, A_f)
 norm_l2  = np.zeros((4,np.size(nsteps)))
 norm_inf = np.zeros((4,np.size(nsteps)))
 dt_f_v   = np.zeros((1,np.size(nsteps)))
+dt_c_v   = np.zeros((1,np.size(nsteps)))
+bounds   = np.zeros(4)
 
 for nn in range(4):
 
@@ -74,6 +79,7 @@ for nn in range(4):
     
   u0coarse = solution_linear(u0_c, A_c)
   
+  
   for mm in range(np.size(nsteps)):
   
     if problem==1:
@@ -82,17 +88,32 @@ for nn in range(4):
       para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)
     Pmat, Bmat = para.get_parareal_matrix()
     dt_f_v[0,mm] = para.timemesh.slices[0].int_fine.dt
+    dt_c_v[0,mm] = para.timemesh.slices[0].int_coarse.dt
+    
     ### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
     norm_l2[nn,mm] = np.linalg.norm(Pmat.todense(), 2)
     norm_inf[nn,mm] = np.linalg.norm(Pmat.todense(), np.inf)
     
+  if nn<3:  
+      bounds[nn] = np.exp(A_eigs[ndof_c_v[nn]]*dt_c_v[0,-1])
+
+fig = plt.figure(2)
+plt.plot(A_eigs)
+ 
+print(bounds)
 rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 ms = 4
 fig = plt.figure(1)
 plt.plot(dt_f_v[0,:], norm_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
+plt.hlines(bounds[0], 0.0, dt_f_v[0,-1], colors='b', linestyles='--')
+
 plt.plot(dt_f_v[0,:], norm_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
+plt.hlines(bounds[1], 0.0, dt_f_v[0,-1], colors='r', linestyles='--')
+
 plt.plot(dt_f_v[0,:], norm_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
+plt.hlines(bounds[2], 0.0, dt_f_v[0,-1], colors='c', linestyles='--')
+
 plt.plot(dt_f_v[0,:], norm_l2[3,:], 'k+-', label='m='+str(ndof_c_v[3]), markersize=ms)
 #plt.plot(nsteps, norm_inf[0,:], 'b+--')
 #plt.plot(nsteps, norm_inf[1,:], 'r+--')
@@ -101,7 +122,7 @@ plt.plot(dt_f_v[0,:], norm_l2[3,:], 'k+-', label='m='+str(ndof_c_v[3]), markersi
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlabel(r'$\delta t = \Delta t$', fontsize=fs)
 plt.ylabel(r'$|| \mathbf{E} ||_2$', fontsize=fs)
-#plt.ylim([1e-15, 1e1])
+plt.xlim([0.0, dt_f_v[0,0]])
 #plt.xlabel([0, maxiter])
 if problem==1:
   filename='parareal-coarsening-advection-upwind-norm.pdf'

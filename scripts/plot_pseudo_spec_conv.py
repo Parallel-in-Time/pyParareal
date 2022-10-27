@@ -28,21 +28,19 @@ from pylab import rcParams
 
 fs = 8
 
-'''
-TODO: compute pseudo-spectral radius by finding point on isoline with maximum distance from origin
-'''
+
 if __name__ == "__main__":
 
-    Tend     = 16.0
+    Tend     = 32.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 2
+    ncoarse  = 5
     nfine    = 1
     u0_val     = np.array([[1.0]], dtype='complex')
 
     nproc    = Tend
-    symb     = 0.0 - 1.0j
+    symb     = 0.0 + 1.0j
 
-    epsilon = 1e-6
+    epsilon = 5e-1
     '''
     NOTE: the lower bound is the sup over all epsilons... so finding a epsilon where the lower bound is large will imply non-monotonic convergence
     NOTE: generally, it seems that smaller epsilons represent converge later in the iteration where larger eps correspond to the first few iterations... can we substantiate this?
@@ -83,26 +81,23 @@ if __name__ == "__main__":
       E_power_k = LA.matrix_power(E.todense(), k+1)
       power_norms[0,k] = np.linalg.norm(E_power_k, 2)
       power_norms[1,k] = psr**(k+2)/epsilon
-     # power_norms[2,k] = (psr-1.0)/epsilon
-      power_norms[2,k] = psr**(k+1) - ( (E_norm + epsilon)**(k+1) - E_norm**(k+1) ) # (16.25) on p. 163
+      power_norms[2,k] = (psr-1.0)/epsilon
+      #power_norms[2,k] = psr**(k+1) - ( (E_norm + epsilon)**(k+1) - E_norm**(k+1) ) # (16.25) on p. 163
       power_norms[3,k] = E_norm**(k+1)
-    power_norms[4, :] = para.get_linear_bound(int(nproc)-1,
-                                              mgritTerm=True)
-    power_norms[5, :] = para.get_superlinear_bound(int(nproc)-1,
-                                                   bruteForce=False)
-    power_norms[6, :] = para.get_superlinear_bound(int(nproc)-1,
-                                                   bruteForce=True)
-    power_norms[4:, :] *= power_norms[0,0]
+    #power_norms[4, :] = para.get_linear_bound(int(nproc)-1,mgritTerm=True)
+    #power_norms[5, :] = para.get_superlinear_bound(int(nproc)-1,bruteForce=False)
+    #power_norms[6, :] = para.get_superlinear_bound(int(nproc)-1,bruteForce=True)
+    #power_norms[4:, :] *= power_norms[0,0]
 
     plt.figure(1)
     iters = range(int(nproc))
-    plt.semilogy(iters, power_norms[0,:], 'bo--')
+    plt.semilogy(iters, power_norms[0,:], 'bo--', label=r'|| E^k ||')
     plt.semilogy(iters, power_norms[1,:], 'r-', label='PSR')
-    plt.semilogy(iters, power_norms[2,:], 'g-')
+    plt.semilogy(iters, power_norms[2,:], 'g-', label='Lower bound for sup|| E^k||')
     plt.semilogy(iters, power_norms[3,:], 'c--', label='Norm')
-    plt.semilogy(iters, power_norms[4,:], 'p:', label='Linear')
-    plt.semilogy(iters, power_norms[5,:], 's:', label='Superlinear (Gander)')
-    plt.semilogy(iters, power_norms[6,:], '>:', label='Superlinear (Tibo)')
+    #plt.semilogy(iters, power_norms[4,:], 'p:', label='Linear')
+    #plt.semilogy(iters, power_norms[5,:], 's:', label='Superlinear (Gander)')
+    #plt.semilogy(iters, power_norms[6,:], '>:', label='Superlinear (Tibo)')
     plt.ylim([1e-16, 1e5])
     plt.title((r'$\varepsilon$ = %5.3e' % epsilon), fontsize=fs)
     #print(power_norms[2,:])
