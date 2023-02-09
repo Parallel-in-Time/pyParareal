@@ -138,7 +138,7 @@ class parareal(object):
             bound = [1] + \
                 [alpha**k * sum([binom(i+k-1, i) * beta**i
                                  for i in range(N-k)])
-                 for k in range(nIter+1)]
+                 for k in range(1, nIter+1)]
             # Equivalent formulation with a simplification of the binom term
             bound = [1] + \
                 [alpha**k / factorial(k-1) * sum(
@@ -147,8 +147,8 @@ class parareal(object):
                   for k in range(1, nIter+1)]
         else:
             # Bounding beta by 1, simplification used by M.J Gander
-            bound = [alpha**k / factorial(k) * np.prod(
-                        [N-l for l in range(1, k+1)])
+            bound = [alpha**k / factorial(k)
+                     * np.prod([N-1-l for l in range(k)])
                      for k in range(nIter+1)]
         return np.array(bound)
 
