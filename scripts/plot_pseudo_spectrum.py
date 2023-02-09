@@ -27,10 +27,9 @@ from pylab import rcParams
 
 from pseudo_spectral_radius import pseudo_spectral_radius
 
-'''
-TODO: compute pseudo-spectral radius by finding point on isoline with maximum distance from origin
-'''
 if __name__ == "__main__":
+
+    case = 1
 
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
@@ -40,13 +39,21 @@ if __name__ == "__main__":
 
     nreal = 90
     nimag = 90
-    lambda_real = np.linspace(-8.0, 8.0,  nreal)
-    lambda_imag = np.linspace(-3.0, 6.0, nimag)
-
+    
+    if case==1:
+        lambda_real = np.linspace(-8.0, 8.0,  nreal)
+        lambda_imag = np.linspace(-3.0, 6.0, nimag)
+        symb = 0.0 + 3.*1j
+        filename = 'parareal-pseudospectrum-imag.pdf'        
+    else:
+        lambda_real = np.linspace(-1.25, 1.25,  nreal)
+        lambda_imag = np.linspace(-1.25, 1.25, nimag)
+        symb = -1.0 + 0.*1j
+        filename = 'parareal-pseudospectrum-real.pdf'    
+        
     sigmin   = np.zeros((nimag,nreal))
     circs = np.zeros((nimag,nreal))
     nproc    = Tend
-    symb     = 0.0 + 3.0*1j
 
     # Solution objects define the problem
     u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
@@ -92,10 +99,7 @@ plt.xlabel(r'Real part', fontsize=fs)
 plt.ylabel(r'Imaginary part', fontsize=fs)
 plt.title(r'$1/|| (z - E)^{-1} \||_2$')
 ax.plot(0.0, 0.0, 'k+', markersize=fs)
-filename = 'parareal-pseudospectrum.pdf'
-plt.gcf().savefig(filename, bbox_inches='tight')
-call(["pdfcrop", filename, filename])
-#fig.colorbar(surf, shrink=0.5, aspect=5)
+
 
 '''
 Check out Fig. 24.4 on p. 235: plot the difference between rho-eps and rho over eps (for us, this is rho_eps/eps)
@@ -110,4 +114,8 @@ plt.plot(x[0], x[1], 'ko', markersize=fs)
 print("Constraint at solution: %5.3f" % cons)
 print("Target at solution: %5.3f" % tar)
 print("Pseudo-spectral-radius: %5.3f" % psr)
+
+plt.gcf().savefig(filename, bbox_inches='tight')
+#call(["pdfcrop", filename, filename])
+#fig.colorbar(surf, shrink=0.5, aspect=5)
 plt.show()

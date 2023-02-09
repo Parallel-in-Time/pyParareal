@@ -38,9 +38,9 @@ if __name__ == "__main__":
     u0_val     = np.array([[1.0]], dtype='complex')
 
     nproc    = Tend
-    symb     = 0.0 + 1.0j
+    symb     = 0.0 + 3.0j
 
-    epsilon = 5e-1
+    epsilon = 1e-3
     '''
     NOTE: the lower bound is the sup over all epsilons... so finding a epsilon where the lower bound is large will imply non-monotonic convergence
     NOTE: generally, it seems that smaller epsilons represent converge later in the iteration where larger eps correspond to the first few iterations... can we substantiate this?

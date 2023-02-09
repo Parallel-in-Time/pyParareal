@@ -48,8 +48,8 @@ if __name__ == "__main__":
     para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     
-    epsvec = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-12]
-    nn = np.size(epsvec)
+    epsvec = [0.1, 0.05, 0.001]
+    nn     = np.size(epsvec)
     rhoeps = np.zeros(nn)
     lower_bound = 0.0
     for j in range(nn):
@@ -76,16 +76,25 @@ if __name__ == "__main__":
       for k in range(nn):
         bounds[k+1,j] = rhoeps[k]**(j+1)/epsvec[k]
      
-    eps_index_1 = 2
-    eps_index_2 = 4
-    eps_index_3 = 6
+    eps_index_1 = 1
+    eps_index_2 = 2
+    eps_index_3 = 3
+    
+    eps_iter_1 = 3
+    eps_iter_2 = 9
+    eps_iter_3 = 16
 
     plt.figure(2)
-    plt.semilogy(range(8,12), bounds[eps_index_3,8:12], 'b:', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_3]))
-    plt.semilogy(range(4,8), bounds[eps_index_2,4:8], 'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_2]))
-    plt.semilogy(range(0,4), bounds[eps_index_1,0:4], 'b--', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_1]))
+    plt.semilogy(range(eps_iter_3,eps_iter_3+4),  (bounds[0,eps_iter_3]/bounds[eps_index_3,eps_iter_3])*bounds[eps_index_3, eps_iter_3:eps_iter_3+4], 'b-', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_3-1]), linewidth=2.0)
+    plt.semilogy(range(eps_iter_2,eps_iter_2+4),   (bounds[0,eps_iter_2]/bounds[eps_index_2,eps_iter_2])*bounds[eps_index_2, eps_iter_2:eps_iter_2+4],  'b--', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_2-1]), linewidth=2.0)
+    plt.semilogy(range(eps_iter_1,eps_iter_1+4),   (bounds[0,eps_iter_1]/bounds[eps_index_1,eps_iter_1])*bounds[eps_index_1, eps_iter_1:eps_iter_1+4],  'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_1-1]), linewidth=2.0)
     plt.semilogy(range(niter), bounds[0,:], 'r', label = r'$\left\|| E^k \right\||_2$')
     plt.semilogy(range(niter), np.zeros(niter) + lower_bound, 'g', label = r'$(\rho_{\varepsilon} - 1 ) / \rho_{\varepsilon}$')
+    plt.xlabel('Iteration')
+    plt.ylabel(r'\left\| A^k \right\|')
     plt.legend()
-    plt.show()
-  
+    
+    
+filename = 'parareal-rhoeps-conv.pdf'
+plt.gcf().savefig(filename, bbox_inches='tight')
+plt.show() 
