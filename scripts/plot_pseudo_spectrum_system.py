@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 64
-    nfine    = 64
+    ncoarse  = 64 # spatial resolution for coarse propagator
+    nfine    = 64 # spatial resolution for fine propagator
     u0_val     = np.ones(nfine, dtype='complex')
     u0_c_val   = np.ones(ncoarse, dtype='complex')
     

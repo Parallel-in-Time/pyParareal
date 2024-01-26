@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../src')
+sys.path.append('./spatial_coarsening')
 
 from parareal import parareal
 from impeuler import impeuler
@@ -14,6 +15,7 @@ import math
 from numpy import linalg as LA
 from scipy.optimize import NonlinearConstraint
 from scipy.optimize import minimize
+from get_matrix import get_upwind, get_centered, get_diffusion
 
 from pylab import rcParams
 
@@ -31,16 +33,30 @@ fs = 8
 
 if __name__ == "__main__":
 
-    Tend     = 32.0
+    Tend     = 8.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 5
-    nfine    = 1
-    u0_val     = np.array([[1.0]], dtype='complex')
-
+    ncoarse  = 1 # coarse time steps per slice
+    nfine    = 20 # fine time steps per slice
+    
+    ndof_fine   = 64 # fine spatial resolution
+    ndof_coarse = 16  # coarse spatial resolution
+    
+    # ... use something more interesting as initial value
+    u0_val     = np.ones(ndof_fine, dtype='complex')
+    u0_c_val   = np.ones(ndof_coarse, dtype='complex')
+    
     nproc    = Tend
-    symb     = 0.0 + 3.0j
-
-    epsilon = 1e-3
+    
+    # CAREFUL: rn, meshtransfer class assumes we operate on the unit interval
+    xaxis_f = np.linspace(0.0, 1.0, ndof_fine, endpoint=True)
+    h_f = xaxis_f[1] - xaxis_f[0]
+    xaxis_c = np.linspace(0.0, 1.0, ndof_coarse, endpoint=True)      
+    h_c = xaxis_c[1] - xaxis_c[0]
+      
+    symb = get_centered(ndof_fine, h_f)
+    symb_c = get_upwind(ndof_coarse, h_c)
+        
+    epsilon = 0.1
     '''
     NOTE: the lower bound is the sup over all epsilons... so finding a epsilon where the lower bound is large will imply non-monotonic convergence
     NOTE: generally, it seems that smaller epsilons represent converge later in the iteration where larger eps correspond to the first few iterations... can we substantiate this?
@@ -50,10 +66,10 @@ if __name__ == "__main__":
 
 
     # Solution objects define the problem
-    u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
-    ucoarse = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
+    u0      = solution_linear(u0_val, symb)
+    ucoarse = solution_linear(u0_c_val, symb_c)
 
-    para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
+    para = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     E_norm = np.linalg.norm(E.todense(),2)
 
