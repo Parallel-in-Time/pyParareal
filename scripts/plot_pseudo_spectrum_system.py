@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../src')
+sys.path.append('./spatial_coarsening')
 
 from parareal import parareal
 from impeuler import impeuler
@@ -7,7 +8,9 @@ from intexact import intexact
 from trapezoidal import trapezoidal
 from special_integrator import special_integrator
 from solution_linear import solution_linear
+from get_matrix import get_upwind, get_centered, get_diffusion
 import numpy as np
+from numpy import linalg as LA
 import scipy.sparse as sparse
 from scipy.linalg import svdvals
 import math
@@ -29,30 +32,53 @@ from pseudo_spectral_radius import pseudo_spectral_radius
 
 if __name__ == "__main__":
 
-    case = 1
+    case = 2
 
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 2
-    nfine    = 4
+    ncoarse  = 16
+    nfine    = 32
     u0_val     = np.ones(nfine, dtype='complex')
     u0_c_val   = np.ones(ncoarse, dtype='complex')
     
-    nreal = 90
-    nimag = 90
+    nreal = 20
+    nimag = 20
     
-    if case==1:
+    sigma = 0.5
+    
+    if case==0:
         lambda_real = np.linspace(-8.0, 8.0,  nreal)
         lambda_imag = np.linspace(-3.0, 6.0, nimag)
         symb   = (0.0 + 3.*1j)*sparse.identity(nfine, dtype='complex')
         symb_c = (0.0 + 3.*1j)*sparse.identity(ncoarse, dtype='complex')
         
         filename = 'parareal-pseudospectrum-imag.pdf'        
-    else:
+    elif case==1:
         lambda_real = np.linspace(-1.25, 1.25,  nreal)
         lambda_imag = np.linspace(-1.25, 1.25, nimag)
-        symb = (-1.0 + 0.*1j)*sparse.identity(2, dtype='complex')
+        symb   = (-1.0 + 0.*1j)*sparse.identity(nfine, dtype='complex')
+        symb_c = (-1.0 + 0.*1j)*sparse.identity(ncoarse, dtype='complex')        
         filename = 'parareal-pseudospectrum-real.pdf'    
+    elif case==2:
+        lambda_real = np.linspace(-3.0, 3.0,  nreal)
+        lambda_imag = np.linspace(-3.0, 3.0, nimag)
+        # CAREFUL: rn, meshtransfer class assumes we operate on the unit interval
+        xaxis_f = np.linspace(0.0, 1.0, nfine, endpoint=True)
+        h_f = xaxis_f[1] - xaxis_f[0]
+        xaxis_c = np.linspace(0.0, 1.0, ncoarse, endpoint=True)      
+        h_c = xaxis_c[1] - xaxis_c[0]
+        symb = get_centered(nfine, h_f)
+        symb_c = get_upwind(ncoarse, h_c)
+        filename = 'parareal-pseudospectrum-advection.pdf'  
+    elif case==3:
+        # CAREFUL: rn, meshtransfer class assumes we operate on the unit interval
+        xaxis_f = np.linspace(0.0, 1.0, nfine, endpoint=True)
+        h_f = xaxis_f[1] - xaxis_f[0]
+        xaxis_c = np.linspace(0.0, 1.0, ncoarse, endpoint=True)      
+        h_c = xaxis_c[1] - xaxis_c[0]
+        symb = get_diffusion(nfine, h_f)
+        symb_c = get_diffusion(ncoarse, h_c)
+        filename = 'parareal-pseudospectrum-advection.pdf'  
         
     sigmin   = np.zeros((nimag,nreal))
     circs = np.zeros((nimag,nreal))
@@ -62,7 +88,7 @@ if __name__ == "__main__":
     u0      = solution_linear(u0_val, symb)
     ucoarse = solution_linear(u0_c_val, symb_c)
 
-    para = parareal(0.0, Tend, nslices, impeuler, trapezoidal, nfine, ncoarse, 0.0, 1, u0)
+    para = parareal(0.0, Tend, nslices, impeuler, impeuler, 50, 5, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
     D = E*E.H - E.H*E
     print("Normality number for E: %5.3e" % np.linalg.norm(D.todense()))
@@ -111,7 +137,7 @@ Check out Fig. 24.4 on p. 235: plot the difference between rho-eps and rho over 
 '''
 NOW COMPUTE THE PSEUDO SPECTRAL RADIUS
 '''
-psr_obj = pseudo_spectral_radius(E, 0.1)
+psr_obj = pseudo_spectral_radius(E, sigma)
 psr, x, tar, cons = psr_obj.get_psr()
 plt.plot(x[0], x[1], 'ko', markersize=fs)
 print("Constraint at solution: %5.3f" % cons)
@@ -121,4 +147,19 @@ print("Pseudo-spectral-radius: %5.3f" % psr)
 plt.gcf().savefig(filename, bbox_inches='tight')
 #call(["pdfcrop", filename, filename])
 #fig.colorbar(surf, shrink=0.5, aspect=5)
+
+'''
+COMPUTE AND PLOT E^k
+'''
+power_norms = np.zeros(nslices)
+for i in range(nslices):
+  power_norms[i] = np.linalg.norm( LA.matrix_power(E.todense(), i+1), 2)
+sigs = np.divide( power_norms[0:-2], power_norms[1:-1] )
+print(power_norms)
+print(sigs)
+  
+plt.figure(2)
+plt.semilogy(range(nslices), power_norms, 'o')
+plt.xlabel('k')
+plt.ylabel(r'$||E^k||_2$')
 plt.show()
