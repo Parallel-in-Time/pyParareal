@@ -62,9 +62,12 @@ if __name__ == "__main__":
       rhoeps[j,1] = psr      
 
     plt.figure(1)
-    plt.semilogx(epsvec, rhoeps[:,0], 'b+-', label=r'Hyperbolic')
-    plt.semilogx(epsvec, rhoeps[:,1], 'ro-', label=r'Parabolic')
+    plt.semilogx(epsvec, rhoeps[:,0], 'b+-', label=r'$\lambda = 2i$')
+    plt.semilogx(epsvec, rhoeps[:,1], 'ro-', label=r'$\lambda = -1$')
     plt.xlabel(r'$\varepsilon$')
     plt.ylabel(r'$\rho_{\varepsilon}$')
     plt.legend()
+    filename = 'parareal-rhoeps-para-hyp.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    call(["pdfcrop", filename, filename])    
     plt.show()

@@ -39,7 +39,7 @@ if __name__ == "__main__":
     u0_val     = np.array([[1.0]], dtype='complex')
     
     nproc    = Tend
-    symb     = -0.0 + 2.0*1j
+    symb     = -1.0 + 0.0*1j
 
     # Solution objects define the problem
     u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
@@ -60,12 +60,12 @@ if __name__ == "__main__":
       print("Target at solution: %5.3f" % tar)
       print("Pseudo-spectral-radius: %5.3f" % psr)
       lower_bound = max(lower_bound, (rhoeps[j]-1.0)/rhoeps[j])
-    plt.figure(1)
-    plt.semilogx(epsvec, rhoeps, '+--', label=r'$\rho_{\varepsilon}$')
-    plt.semilogx(epsvec, np.maximum(np.zeros(nn), np.divide(rhoeps - 1.0, epsvec)), 'rx-', label=r'$\max(0,(\rho_{\varepsilon}-1)/\varepsilon)$')
-    plt.xlabel(r'$\varepsilon$')
-    plt.ylabel(r'$\rho_{\varepsilon}$')
-    plt.legend()
+    #plt.figure(1)
+    #plt.semilogx(epsvec, rhoeps, '+--', label=r'$\rho_{\varepsilon}$')
+    #plt.semilogx(epsvec, np.maximum(np.zeros(nn), np.divide(rhoeps - 1.0, epsvec)), 'rx-', label=r'$\max(0,(\rho_{\varepsilon}-1)/\varepsilon)$')
+    #plt.xlabel(r'$\varepsilon$')
+    #plt.ylabel(r'$\rho_{\varepsilon}$')
+    #plt.legend()
     
     niter = 24
     bounds = np.zeros((nn+1,niter))
@@ -90,8 +90,9 @@ if __name__ == "__main__":
     plt.semilogy(range(eps_iter_1,eps_iter_1+4),   (bounds[0,eps_iter_1]/bounds[eps_index_1,eps_iter_1])*bounds[eps_index_1, eps_iter_1:eps_iter_1+4],  'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_1-1]), linewidth=2.0)
     plt.semilogy(range(niter), bounds[0,:], 'r', label = r'$\left\|| E^k \right\||_2$')
     plt.semilogy(range(niter), np.zeros(niter) + lower_bound, 'g', label = r'$(\rho_{\varepsilon} - 1 ) / \rho_{\varepsilon}$')
-    plt.xlabel('Iteration')
-    plt.ylabel(r'\left\| A^k \right\|')
+    plt.xlabel('Parareal Iteration')
+    plt.ylabel(r'$\left|| A^k \right||$')
+    #plt.ylim([1e-2, 1e1])
     plt.legend()
     
     

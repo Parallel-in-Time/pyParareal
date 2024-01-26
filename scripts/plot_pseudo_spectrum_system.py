@@ -33,9 +33,9 @@ if __name__ == "__main__":
 
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 1
-    nfine    = 1
-    u0_val     = np.array([[1.0]], dtype='complex')
+    ncoarse  = 2
+    nfine    = 2
+    u0_val     = np.array([[1.0],[1.0]], dtype='complex')
 
     nreal = 90
     nimag = 90
@@ -43,12 +43,12 @@ if __name__ == "__main__":
     if case==1:
         lambda_real = np.linspace(-8.0, 8.0,  nreal)
         lambda_imag = np.linspace(-3.0, 6.0, nimag)
-        symb = 0.0 + 3.*1j
+        symb = (0.0 + 3.*1j)*sparse.identity(2, dtype='complex')
         filename = 'parareal-pseudospectrum-imag.pdf'        
     else:
         lambda_real = np.linspace(-1.25, 1.25,  nreal)
         lambda_imag = np.linspace(-1.25, 1.25, nimag)
-        symb = -1.0 + 0.*1j
+        symb = (-1.0 + 0.*1j)*sparse.identity(2, dtype='complex')
         filename = 'parareal-pseudospectrum-real.pdf'    
         
     sigmin   = np.zeros((nimag,nreal))
@@ -56,8 +56,8 @@ if __name__ == "__main__":
     nproc    = Tend
 
     # Solution objects define the problem
-    u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
-    ucoarse = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
+    u0      = solution_linear(u0_val, symb)
+    ucoarse = solution_linear(u0_val, symb)
 
     para = parareal(0.0, Tend, nslices, impeuler, trapezoidal, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
