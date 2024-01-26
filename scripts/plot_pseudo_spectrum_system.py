@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 16
-    nfine    = 32
+    ncoarse  = 64
+    nfine    = 64
     u0_val     = np.ones(nfine, dtype='complex')
     u0_c_val   = np.ones(ncoarse, dtype='complex')
     
@@ -71,6 +71,8 @@ if __name__ == "__main__":
         symb_c = get_upwind(ncoarse, h_c)
         filename = 'parareal-pseudospectrum-advection.pdf'  
     elif case==3:
+        lambda_real = np.linspace(-3.0, 3.0,  nreal)
+        lambda_imag = np.linspace(-3.0, 3.0, nimag)      
         # CAREFUL: rn, meshtransfer class assumes we operate on the unit interval
         xaxis_f = np.linspace(0.0, 1.0, nfine, endpoint=True)
         h_f = xaxis_f[1] - xaxis_f[0]
@@ -154,9 +156,6 @@ COMPUTE AND PLOT E^k
 power_norms = np.zeros(nslices)
 for i in range(nslices):
   power_norms[i] = np.linalg.norm( LA.matrix_power(E.todense(), i+1), 2)
-sigs = np.divide( power_norms[0:-2], power_norms[1:-1] )
-print(power_norms)
-print(sigs)
   
 plt.figure(2)
 plt.semilogy(range(nslices), power_norms, 'o')
