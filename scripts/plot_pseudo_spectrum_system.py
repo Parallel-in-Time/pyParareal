@@ -34,16 +34,19 @@ if __name__ == "__main__":
     Tend     = 16.0
     nslices  = int(Tend) # Make sure each time slice has length 1
     ncoarse  = 2
-    nfine    = 2
-    u0_val     = np.array([[1.0],[1.0]], dtype='complex')
-
+    nfine    = 4
+    u0_val     = np.ones(nfine, dtype='complex')
+    u0_c_val   = np.ones(ncoarse, dtype='complex')
+    
     nreal = 90
     nimag = 90
     
     if case==1:
         lambda_real = np.linspace(-8.0, 8.0,  nreal)
         lambda_imag = np.linspace(-3.0, 6.0, nimag)
-        symb = (0.0 + 3.*1j)*sparse.identity(2, dtype='complex')
+        symb   = (0.0 + 3.*1j)*sparse.identity(nfine, dtype='complex')
+        symb_c = (0.0 + 3.*1j)*sparse.identity(ncoarse, dtype='complex')
+        
         filename = 'parareal-pseudospectrum-imag.pdf'        
     else:
         lambda_real = np.linspace(-1.25, 1.25,  nreal)
@@ -57,7 +60,7 @@ if __name__ == "__main__":
 
     # Solution objects define the problem
     u0      = solution_linear(u0_val, symb)
-    ucoarse = solution_linear(u0_val, symb)
+    ucoarse = solution_linear(u0_c_val, symb_c)
 
     para = parareal(0.0, Tend, nslices, impeuler, trapezoidal, nfine, ncoarse, 0.0, 1, u0)
     E, Mginv = para.get_parareal_matrix()
