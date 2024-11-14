@@ -36,10 +36,15 @@ class pseudo_spectral_radius(object):
   '''
   Computes the epsilon-pseudospectral radius of the matrix E.
   '''
-  def get_psr(self):
+  def get_psr(self, verbose=False):
     # The constraint will keep us on an isoline where the minimum singular value of z I - E equals eps, meaning that || (z I - E)^(-1) ||_2 = 1\eps - we allow for a bit of variation (1e-9) to help with convergence of the optimiser
     nlc   = NonlinearConstraint(self.constraint, self.eps-1e-9, self.eps+1e-9)
     # Now run the minimiser to minimise 1/||x||_2^2 while keeping min(svd(zI-E))=eps
     result = minimize(self.target, [np.sqrt(self.eps), np.sqrt(self.eps)], constraints=nlc, tol = 1e-10, method='trust-constr', options = {'xtol': 1e-10, 'gtol': 1e-10, 'maxiter': 500})
     # The eps - pseudo spectral radius corresponds to the maximum distance from the origin on the eps isoline of min(svd(zI-E))
+    if verbose:
+      print("Message returned by minimize function: \n")
+      print(result.message)
+      print("Constraint at solution: %5.3f" % self.constraint(result.x))
+      print("Target at solution:     %5.3f" % self.target(result.x))      
     return np.linalg.norm(result.x,2), result.x, self.target(result.x), self.constraint(result.x)

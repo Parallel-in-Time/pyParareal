@@ -16,6 +16,7 @@ from numpy import linalg as LA
 from scipy.optimize import NonlinearConstraint
 from scipy.optimize import minimize
 from get_matrix import get_upwind, get_centered, get_diffusion
+from pseudo_spectral_radius import pseudo_spectral_radius
 
 from pylab import rcParams
 
@@ -74,22 +75,8 @@ if __name__ == "__main__":
     E_norm = np.linalg.norm(E.todense(),2)
 
     # Find the pseudo spectral radius
-    def constraint(x):
-        z = x[0] + 1j*x[1]
-        M = z*sparse.identity(np.shape(E)[0]) - E
-        sv = svdvals(M.todense())
-        return np.min(sv)
-
-    def target(x):
-      return 1.0/np.linalg.norm(x, 2)**2
-
-    nlc   = NonlinearConstraint(constraint, epsilon-1e-9, epsilon+1e-9)
-    # for a normal matrix, the epsilon isoline is a circle: therefore, use a point on the circle as starting value for the optimisation
-    result = minimize(target, [np.sqrt(epsilon), np.sqrt(epsilon)], constraints=nlc, tol = 1e-10, method='trust-constr', options = {'xtol': 1e-10, 'gtol': 1e-10, 'maxiter': 1500})
-    print(result.message)
-    print("Constraint at solution: %5.3f" % constraint(result.x))
-    #print("Target at solution:     %5.3f" % target(result.x))
-    psr = np.linalg.norm(result.x, 2)
+    psr_e = pseudo_spectral_radius(E, epsilon)
+    psr, x, target, constraint = psr_e.get_psr(verbose=True)
     print("Pseudospectralradius:   %5.3f" % psr)
     # Now compute powers of E
     power_norms = np.zeros((7, int(nproc)))
