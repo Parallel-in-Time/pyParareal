@@ -5,7 +5,7 @@ from scipy.linalg import svdvals
 import numpy as np
 
 '''
-Computes the epsilon pseudo spectral radius of the matrix E.
+Computes the epsilon pseudo spectral radius of a nil-potent matrix E where this can be done by maximizing the distance from the origin while staying on an eps-isoline.
 '''
 class pseudo_spectral_radius(object):
 
@@ -15,6 +15,10 @@ class pseudo_spectral_radius(object):
     self.E   = E
     self.n   = np.shape(E)[0]
     assert self.n==np.shape(E)[1], "Matrix E must be square"
+    # Note that the simple way of computing the PSR used here only works for nil-potent matrices where epsilon isolines are around the origin. 
+    # The matrix E is nil-potent if and only if its spectrum is {0}, so check that it is
+    eigval, dummy = np.linalg.eig(E.todense())
+    assert min(eigval)==0 and max(eigval)==0, "Provided matrix is not nil-potent"
     self.Id  = sparse.identity(self.n)
   
   '''
@@ -28,7 +32,7 @@ class pseudo_spectral_radius(object):
       return np.min(sv)
     
   '''
-  Minimise 1/||x||_2 while the constraint keeps us on the isoline with maximise distance from the origin and yield the spectral radius.
+  Minimise 1/||x||_2 while the constraint keeps us on the isoline with maximise distance from the origin to yield the spectral radius.
   '''
   def target(self,x):
     return 1.0/np.linalg.norm(x, 2)**2
@@ -45,6 +49,6 @@ class pseudo_spectral_radius(object):
     if verbose:
       print("Message returned by minimize function: \n")
       print(result.message)
-      print("Constraint at solution: %5.3f" % self.constraint(result.x))
+      print("Constraint at solution (should equal provided eps): %5.3f" % self.constraint(result.x))
       print("Target at solution:     %5.3f" % self.target(result.x))      
     return np.linalg.norm(result.x,2), result.x, self.target(result.x), self.constraint(result.x)
