@@ -48,8 +48,8 @@ col     = np.zeros(ndof_f)
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = diffusion with trapezoidal rule / centered second order FD
-problem      = 3
-matrix_power = False # if False, do an actual Parareal iteration, if True, compute || E^k ||
+problem      = 1
+matrix_power = True # if False, do an actual Parareal iteration, if True, compute || E^k ||
 
 if problem==1:
   A_f = get_upwind(ndof_f, dx_f)
@@ -61,7 +61,7 @@ else:
   quit()
   
 D = A_f*A_f.H - A_f.H*A_f
-print("Normality number: %5.3f" % np.linalg.norm(D.todense()))
+print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))
 u0fine     = solution_linear(u0_f, A_f)
 defect_inf = np.zeros((4,maxiter))
 defect_l2  = np.zeros((4,maxiter))
@@ -125,6 +125,7 @@ for nn in range(4):
 fig = plt.figure(5)
 plt.plot(xaxis_f, uex(xaxis_f, Tend), 'b--')
 plt.plot(xaxis_f, u[-ndof_f:,0], 'r-')
+# The uex is probably missing the periodic BC?!
 err = np.linalg.norm(u[-ndof_f:,0] - uex(xaxis_f, Tend), 2)
 print("Fine Method Discretisation error: %5.3e" % err)
 

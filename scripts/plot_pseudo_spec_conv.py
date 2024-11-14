@@ -38,8 +38,8 @@ if __name__ == "__main__":
     ncoarse  = 1 # coarse time steps per slice
     nfine    = 20 # fine time steps per slice
     
-    ndof_fine   = 64 # fine spatial resolution
-    ndof_coarse = 16  # coarse spatial resolution
+    ndof_fine   = 16 # fine spatial resolution
+    ndof_coarse = 8  # coarse spatial resolution
     
     # ... use something more interesting as initial value
     u0_val     = np.ones(ndof_fine, dtype='complex')
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     xaxis_c = np.linspace(0.0, 1.0, ndof_coarse, endpoint=True)      
     h_c = xaxis_c[1] - xaxis_c[0]
       
-    symb = get_centered(ndof_fine, h_f)
-    symb_c = get_upwind(ndof_coarse, h_c)
+    symb   = get_centered(ndof_fine, h_f)
+    symb_c = get_centered(ndof_coarse, h_c)
         
     epsilon = 0.1
     '''
