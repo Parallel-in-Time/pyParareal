@@ -38,7 +38,7 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
-problem      = 1
+problem      = 1 # 1 generates figure_1, 2 generates figure_2
 
 if problem==1:
   A_f = get_upwind(ndof_f, dx_f)
@@ -95,7 +95,7 @@ ms = 4
 fig = plt.figure(1)
 plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| e^k ||$')
 plt.semilogy(range(1,5), [E_norm**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b--', label=r'$|| E ||_2^k$')
-plt.semilogy(range(1,5), [psr**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b-.', label=r'$\sigma_{\epsilon}(E)^k$')
+plt.semilogy(range(1,5), [psr**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'r-.', label=r'$\sigma_{\epsilon}(E)^k$')
 plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
 
 
@@ -104,7 +104,12 @@ plt.xlabel('Iteration $k$', fontsize=fs)
 #plt.ylim([1e-15, 1e1])
 plt.xlim([1, maxiter+1])
 plt.xticks(range(2,maxiter,2))
-filename = 'figure_1.pdf'
+if problem==1:
+  filename = 'figure_1.pdf'
+elif problem==2:
+  filename = 'figure_2.pdf'
+else:
+  quit()
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 plt.show()
