@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../../src')
+
 import numpy as np
 import scipy.linalg as LA
 from get_matrix import get_upwind, get_centered, get_diffusion
