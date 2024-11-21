@@ -50,5 +50,5 @@ class pseudo_spectral_radius(object):
       print("Message returned by minimize function: \n")
       print(result.message)
       print("Constraint at solution (should equal provided eps): %5.3f" % self.constraint(result.x))
-      print("Target at solution:     %5.3f" % self.target(result.x))      
+      print("Target at solution:     %5.3f" % self.target(result.x))
     return np.linalg.norm(result.x,2), result.x, self.target(result.x), self.constraint(result.x)
