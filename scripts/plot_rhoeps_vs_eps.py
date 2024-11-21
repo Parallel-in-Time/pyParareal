@@ -11,6 +11,7 @@ import numpy as np
 import scipy.sparse as sparse
 from scipy.linalg import svdvals
 import math
+from get_matrix import get_upwind, get_centered
 
 from pylab import rcParams
 from scipy.optimize import NonlinearConstraint
@@ -31,71 +32,70 @@ from pseudo_spectral_radius import pseudo_spectral_radius
 TODO: compute pseudo-spectral radius by finding point on isoline with maximum distance from origin
 '''
 if __name__ == "__main__":
-
-    Tend     = 32.0
-    nslices  = int(Tend) # Make sure each time slice has length 1
-    ncoarse  = 2
-    nfine    = 1
-    u0_val     = np.array([[1.0]], dtype='complex')
+  
+    Tend    = 1.0
+    nslices = 10
+    tol     = 0.0
+    maxiter = 9
+    nfine   = 10
+    ncoarse = 1
     
-    nproc    = Tend
-    symb     = -1.0 + 0.0*1j
+    ndof_f   = 32
+    ndof_c   = 24
 
-    # Solution objects define the problem
-    u0      = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
-    ucoarse = solution_linear(u0_val, np.array([[symb]],dtype='complex'))
+    xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
+    dx_f    = xaxis_f[1] - xaxis_f[0]
 
-    para = parareal(0.0, Tend, nslices, intexact, impeuler, nfine, ncoarse, 0.0, 1, u0)
+    xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
+    dx_c = xaxis_c[1] - xaxis_c[0]
+
+    # 1 = advection with implicit Euler / upwind FD
+    # 2 = advection with trapezoidal rule / centered FD
+    problem      = 2
+
+    if problem==1:
+      A_f = get_upwind(ndof_f, dx_f)
+      A_c = get_upwind(ndof_c, dx_c)
+    elif problem==2:
+      A_f = get_centered(ndof_f, dx_f)
+      A_c = get_centered(ndof_c, dx_c)
+    else:
+      quit()
+      
+    ### Shape of plot looks similar but PSRs are > 1 for problem 2 and < 1 for problem 1
+  
+    D = A_f*A_f.H - A_f.H*A_f
+    print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))
+
+
+    u0fine     = solution_linear(np.zeros(ndof_f), A_f)
+    u0coarse = solution_linear(np.zeros(ndof_c), A_c)
+
+    if problem==1:
+      para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
+    elif problem==2:
+      para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
+    else:
+      quit()
+
     E, Mginv = para.get_parareal_matrix()
     
-    epsvec = [0.1, 0.05, 0.001]
+    epsvec = np.linspace(0.1, 0.5, 6)
     nn     = np.size(epsvec)
     rhoeps = np.zeros(nn)
-    lower_bound = 0.0
     for j in range(nn):
       psr_obj = pseudo_spectral_radius(E, epsvec[j])
       psr, x, tar, cons = psr_obj.get_psr()
-      rhoeps[j] = psr
+      rhoeps[j] = np.max(0.0, (psr-1.0)/epsvec[j])
       print("Constraint at solution: %5.3f" % cons)
       print("Target at solution: %5.3f" % tar)
       print("Pseudo-spectral-radius: %5.3f" % psr)
-      lower_bound = max(lower_bound, (rhoeps[j]-1.0)/rhoeps[j])
-    #plt.figure(1)
-    #plt.semilogx(epsvec, rhoeps, '+--', label=r'$\rho_{\varepsilon}$')
-    #plt.semilogx(epsvec, np.maximum(np.zeros(nn), np.divide(rhoeps - 1.0, epsvec)), 'rx-', label=r'$\max(0,(\rho_{\varepsilon}-1)/\varepsilon)$')
-    #plt.xlabel(r'$\varepsilon$')
-    #plt.ylabel(r'$\rho_{\varepsilon}$')
-    #plt.legend()
-    
-    niter = 24
-    bounds = np.zeros((nn+1,niter))
-    E_power_k = E
-    for j in range(niter):
-      bounds[0,j] = np.linalg.norm( E_power_k.todense() )
-      E_power_k = E@E_power_k
-      for k in range(nn):
-        bounds[k+1,j] = rhoeps[k]**(j+1)/epsvec[k]
      
-    eps_index_1 = 1
-    eps_index_2 = 2
-    eps_index_3 = 3
+    plt.figure(1)
+    plt.plot(epsvec, rhoeps, 'bo-')
     
-    eps_iter_1 = 3
-    eps_iter_2 = 9
-    eps_iter_3 = 16
-
-    plt.figure(2)
-    plt.semilogy(range(eps_iter_3,eps_iter_3+4),  (bounds[0,eps_iter_3]/bounds[eps_index_3,eps_iter_3])*bounds[eps_index_3, eps_iter_3:eps_iter_3+4], 'b-', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_3-1]), linewidth=2.0)
-    plt.semilogy(range(eps_iter_2,eps_iter_2+4),   (bounds[0,eps_iter_2]/bounds[eps_index_2,eps_iter_2])*bounds[eps_index_2, eps_iter_2:eps_iter_2+4],  'b--', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_2-1]), linewidth=2.0)
-    plt.semilogy(range(eps_iter_1,eps_iter_1+4),   (bounds[0,eps_iter_1]/bounds[eps_index_1,eps_iter_1])*bounds[eps_index_1, eps_iter_1:eps_iter_1+4],  'b-.', label = r'$\rho_{\varepsilon}^{k+1} / \varepsilon$ for $\rho_{\varepsilon} = $' + str(epsvec[eps_index_1-1]), linewidth=2.0)
-    plt.semilogy(range(niter), bounds[0,:], 'r', label = r'$\left\|| E^k \right\||_2$')
-    plt.semilogy(range(niter), np.zeros(niter) + lower_bound, 'g', label = r'$(\rho_{\varepsilon} - 1 ) / \rho_{\varepsilon}$')
-    plt.xlabel('Parareal Iteration')
-    plt.ylabel(r'$\left|| A^k \right||$')
-    #plt.ylim([1e-2, 1e1])
-    plt.legend()
-    
-    
-filename = 'parareal-rhoeps-conv.pdf'
-plt.gcf().savefig(filename, bbox_inches='tight')
-plt.show() 
+    plt.xlabel(r'$\epsilon$')
+    plt.ylabel(r'$(\rho_{\epsilon}(E)-1)/\epsilon$')
+    filename = 'parareal-rhoeps-conv.pdf'
+    plt.gcf().savefig(filename, bbox_inches='tight')
+    plt.show() 
