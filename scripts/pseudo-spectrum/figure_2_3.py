@@ -50,7 +50,7 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
-problem      = 2
+problem      = 2 ### 1 generates figure_2.pdf, 2 generates figure_3.pdf
 
 if problem==1:
   A_f = get_upwind(ndof_f, dx_f)
@@ -102,12 +102,12 @@ for i in range(0,nreal):
       print("abs(z): %5.3e" % abs(z))
           
 rcParams['figure.figsize'] = 3.54, 3.54
-fs = 6
+fs = 8
 fig, ax  = plt.subplots()
 X, Y = np.meshgrid(lambda_real, lambda_imag)
-lvls = np.linspace(0.0, 1.0, 11)
+lvls = np.linspace(0.0, 1.0, 6)
 cset = ax.contour(X, Y, sigmin, levels=lvls, colors='k')
-ax.clabel(cset, fontsize=9, inline=True)
+ax.clabel(cset, lvls, fontsize=fs, inline=True)
 plt.xlabel(r'Real part', fontsize=fs)
 plt.ylabel(r'Imaginary part', fontsize=fs)
 plt.title(r'$1/|| (z - E)^{-1} \||_2$')
