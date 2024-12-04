@@ -11,10 +11,10 @@ import dedalus.public as d3
 
 import numpy as np
 
-class dedalus(integrator):
+class integrator_dedalus(integrator):
 
   def __init__(self, tstart, tend, nsteps):
-    super(dedalus, self).__init__(tstart, tend, nsteps)
+    super(integrator_dedalus, self).__init__(tstart, tend, nsteps)
     self.order = 1
     self.timestepper = d3.RK111
 
