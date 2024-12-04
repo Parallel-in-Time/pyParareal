@@ -28,7 +28,7 @@ def R(Uk):
     """
     gridG = G.grid
     gridF = F.grid
-    Uint = interpolate.CubicSpline(gridF, Uk, axis=0)
+    Uint  = interpolate.CubicSpline(gridF, Uk, axis=0)
 
     return Uint(gridG)
 
@@ -117,8 +117,8 @@ class solver():
 xmin = -2
 xmax = 2
 mu   = 1e-4
-M_G  = 50  # Number of grid points in space for the coarse propagator.
-M_F  = 100  # Number of grid points in space for the fine propagator.
+M_G  = 20  # Number of grid points in space for the coarse propagator.
+M_F  = 40  # Number of grid points in space for the fine propagator.
 N_G  = 10  # Number of time steps within one time slice for the coarse prop.
 N_F  = 10  # Number of time steps within one time slice for the fine prop.
 P    = 10  # Number of time slices.
@@ -192,4 +192,4 @@ A_G = findA(G, M_G, coarseGrids[0])  # For coarse propagator.
 A_F = findA(F, M_F, fineGrids[0])  # For fine propagator.
 
 print(np.shape(A_G))
-print(no.shape(A_F)
+print(np.shape(A_F))

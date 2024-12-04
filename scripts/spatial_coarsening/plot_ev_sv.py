@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from subprocess import call
 from pylab import rcParams
 
-nx = 20
+nx = 32
 h  = 1.0
 dt = 1.0
 A_upwind = get_upwind(nx, h)
