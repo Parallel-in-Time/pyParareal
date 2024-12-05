@@ -1,6 +1,6 @@
 from solution import solution
 import numpy as np
-from scipy.interpolate import interp1d
+from scipy import interpolate
 
 class meshtransfer(object):
 
@@ -22,23 +22,31 @@ class meshtransfer(object):
         # For the time being, assume we are operating on the unit interval
         self.xaxis_f = np.linspace(0.0, 1.0, self.ndof_fine, endpoint=True)
         self.xaxis_c = np.linspace(0.0, 1.0, self.ndof_coarse, endpoint=True)
-      
-        self.Imat = np.zeros((self.ndof_fine, self.ndof_coarse))
-        for n in range(self.ndof_coarse):
-          e = np.zeros(self.ndof_coarse)
-          e[n] = 1.0
-          f = interp1d(self.xaxis_c, e, kind='linear')
-          self.Imat[:,n] = f(self.xaxis_f)
+        mykind = 'linear'
         
-        self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
-        for n in range(self.ndof_fine):
-          e = np.zeros(self.ndof_fine)
-          e[n] = 1.0
-          f = interp1d(self.xaxis_f, e, kind='linear')
-          self.Rmat[:,n] = f(self.xaxis_c)
-      
       else:
-        raise NotImplementedError("Meshtransfer for Dedalus solution objects not yet implemented")
+      
+        # Because Dedalus uses spectral methods assuming periodic BC, the right endpoint is not included in the mesh
+        self.xaxis_f = np.linspace(0.0, 1.0, self.ndof_fine, endpoint=False)
+        self.xaxis_c = np.linspace(0.0, 1.0, self.ndof_coarse, endpoint=False)      
+        mykind = 'cubic'
+        
+      self.Imat = np.zeros((self.ndof_fine, self.ndof_coarse))
+      for n in range(self.ndof_coarse):
+        e = np.zeros(self.ndof_coarse)
+        e[n] = 1.0
+        # Because the last right meshpoint is missing, the last fine mesh point is outside of the coarse mesh 
+        # and we need to allow interp1d to extrapolate
+        f = interpolate.interp1d(self.xaxis_c, e, kind=mykind, fill_value="extrapolate")
+        self.Imat[:,n] = f(self.xaxis_f)
+        
+      self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
+      for n in range(self.ndof_fine):
+        e = np.zeros(self.ndof_fine)
+        e[n] = 1.0
+        f = interpolate.interp1d(self.xaxis_f, e, kind=mykind)
+        self.Rmat[:,n] = f(self.xaxis_c)
+      
 
     #self.Imat = np.eye(self.ndof_fine,self.ndof_coarse)
     #self.Rmat = np.eye(self.ndof_coarse,self.ndof_fine)

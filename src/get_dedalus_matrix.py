@@ -114,11 +114,11 @@ class solver():
 
 ################################################
 # ------------ SET PARAMETERS HERE -------------
-xmin = -2
-xmax = 2
+xmin = 0
+xmax = 1
 mu   = 1e-4
-M_G  = 20  # Number of grid points in space for the coarse propagator.
-M_F  = 40  # Number of grid points in space for the fine propagator.
+M_G  = 5  # Number of grid points in space for the coarse propagator.
+M_F  = 10  # Number of grid points in space for the fine propagator.
 N_G  = 10  # Number of time steps within one time slice for the coarse prop.
 N_F  = 10  # Number of time steps within one time slice for the fine prop.
 P    = 10  # Number of time slices.
@@ -192,6 +192,11 @@ for m in range(M_F):
 A_G = findA(G, M_G, coarseGrids[0])  # For coarse propagator.
 A_F = findA(F, M_F, fineGrids[0])  # For fine propagator.
 
-print(coarseGrids[0])
-print(np.shape(A_G))
-print(np.shape(A_F))
+print(G.grid)
+print(np.linspace(xmin, xmax, M_G, endpoint=False))
+print(F.grid)
+print(np.linspace(xmin, xmax, M_F, endpoint=False))
+
+#print(coarseGrids[0])
+#print(np.shape(A_G))
+#print(np.shape(A_F))
