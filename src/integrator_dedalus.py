@@ -65,7 +65,8 @@ class solver():
             if np.max(self.problem.namespace["u"]['g']) > 100:
                 warnings.warn("Solution instable")
                 break
-
+        
+        
         return np.copy(np.array(u_list)[-1])
 
 class integrator_dedalus(integrator):
@@ -92,11 +93,11 @@ class integrator_dedalus(integrator):
   def get_update_matrix(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
     mysolver = solver(self.nsteps, u0.problem, u0.n, u0.x)
-    E = np.identity(u0.n)
+    E    = np.identity(u0.n)
     Rmat = np.zeros((u0.n, u0.n))
     for m in range(u0.n):
        Rmat[m] = mysolver.solve(E[m], self.timegrid)
-    return Rmat
+    return Rmat.transpose()
 
   def convert_to_special_integrator(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"

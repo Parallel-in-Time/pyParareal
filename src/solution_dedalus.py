@@ -15,10 +15,11 @@ class solution_dedalus(solution_linear):
   # Attention: at the moment, the M=None default needs to match the default in te superclass and I don't have a mechanism to enforce this automatically
   def __init__(self, y, n):
     self.n = n
+    assert n % 2 == 0, "Number of degrees of freedom for Dedalus solution must be even."
     xcoord = d3.Coordinate('x')
-    dist = d3.Distributor(xcoord, dtype=np.complex128)
+    dist = d3.Distributor(xcoord, dtype=np.float64)
     # Warning: the code, also in the meshtransfer class, is hardcoded to operate on the unit interval [0,1]
-    xbasis = d3.ComplexFourier(xcoord, size=self.n, bounds=(0.0, 1.0), dealias=3/2)
+    xbasis = d3.RealFourier(xcoord, size=self.n, bounds=(0.0, 1.0), dealias=3/2)
     self.x = dist.local_grid(xbasis)
     u = dist.Field(name='u', bases=xbasis)
     dx = lambda A: d3.Differentiate(A, xcoord)
@@ -29,7 +30,7 @@ class solution_dedalus(solution_linear):
     # Note that since dx(u) appears on the left side of the equal sign, it will be integrated implicitly.
     self.problem.add_equation("dt(u) + dx(u) = 0")    
     
-    self.y = y.astype('complex128')
+    self.y = y
     ### To allow to run a solver on this solution, need to write y into a Dedalus solution object somehow
 
     # NOTE: this should pass the spectral differentiation matrix in space only to the superclass solution_linear! It does not because,
