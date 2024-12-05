@@ -1,14 +1,14 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 from meshtransfer import meshtransfer
 from solution import solution
 from solution_linear import solution_linear
-from nose.tools import *
-import unittest
+import pytest
+
 import numpy as np
 
-class TestMeshtransfer(unittest.TestCase):
+class TestClass:
 
   def setUp(self):
     ndofs = np.random.randint(5,64,size=2)
@@ -16,9 +16,11 @@ class TestMeshtransfer(unittest.TestCase):
     self.ndof_fine   = np.max(ndofs)
     
   def test_caninstantiate(self):
+    self.setUp()
     mt = meshtransfer(self.ndof_fine, self.ndof_coarse)
     
   def test_samendofdoesnothing(self):
+    self.setUp()
     self.ndof_fine = 5
     mt = meshtransfer(self.ndof_fine, self.ndof_fine)
     y = np.atleast_2d(np.random.rand(self.ndof_fine)).T

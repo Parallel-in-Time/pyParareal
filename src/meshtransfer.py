@@ -4,7 +4,7 @@ from scipy.interpolate import interp1d
 
 class meshtransfer(object):
 
-  def __init__(self, ndof_fine, ndof_coarse):
+  def __init__(self, ndof_fine, ndof_coarse, dedalus = False):
     assert ndof_fine >= ndof_coarse, "Numer of DoF for coarse level must be smaller or equal to number of DoF on fine level"
 
     self.ndof_fine   = ndof_fine
@@ -17,24 +17,29 @@ class meshtransfer(object):
     
     else:
       
-      # For the time being, assume we are operating on the unit interval
-      self.xaxis_f = np.linspace(0.0, 1.0, self.ndof_fine, endpoint=True)
-      self.xaxis_c = np.linspace(0.0, 1.0, self.ndof_coarse, endpoint=True)
-      
-      self.Imat = np.zeros((self.ndof_fine, self.ndof_coarse))
-      for n in range(self.ndof_coarse):
-        e = np.zeros(self.ndof_coarse)
-        e[n] = 1.0
-        f = interp1d(self.xaxis_c, e, kind='linear')
-        self.Imat[:,n] = f(self.xaxis_f)
+      if not dedalus:
         
-      self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
-      for n in range(self.ndof_fine):
-        e = np.zeros(self.ndof_fine)
-        e[n] = 1.0
-        f = interp1d(self.xaxis_f, e, kind='linear')
-        self.Rmat[:,n] = f(self.xaxis_c)
+        # For the time being, assume we are operating on the unit interval
+        self.xaxis_f = np.linspace(0.0, 1.0, self.ndof_fine, endpoint=True)
+        self.xaxis_c = np.linspace(0.0, 1.0, self.ndof_coarse, endpoint=True)
       
+        self.Imat = np.zeros((self.ndof_fine, self.ndof_coarse))
+        for n in range(self.ndof_coarse):
+          e = np.zeros(self.ndof_coarse)
+          e[n] = 1.0
+          f = interp1d(self.xaxis_c, e, kind='linear')
+          self.Imat[:,n] = f(self.xaxis_f)
+        
+        self.Rmat = np.zeros((self.ndof_coarse, self.ndof_fine))
+        for n in range(self.ndof_fine):
+          e = np.zeros(self.ndof_fine)
+          e[n] = 1.0
+          f = interp1d(self.xaxis_f, e, kind='linear')
+          self.Rmat[:,n] = f(self.xaxis_c)
+      
+      else:
+        raise NotImplementedError("Meshtransfer for Dedalus solution objects not yet implemented")
+
     #self.Imat = np.eye(self.ndof_fine,self.ndof_coarse)
     #self.Rmat = np.eye(self.ndof_coarse,self.ndof_fine)
 
