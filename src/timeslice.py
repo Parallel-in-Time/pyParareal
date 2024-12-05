@@ -22,19 +22,24 @@ class timeslice(object):
     self.tolerance   = tolerance
     self.iter_max    = iter_max
     self.iteration   = 0
-    # Note: self.coarse_temp is the only object that will have size ndof_c - all other solutions, even self.sol_coarse, have size ndof_f
-    # Note also: the problem definition is fixed by these arguments; when functions later accept solution objects, this is only for the values
-    self.coarse_temp = copy.deepcopy(u0coarse)
-    self.sol_start   = copy.deepcopy(u0fine)
-    self.sol_fine    = copy.deepcopy(u0fine)
-    self.sol_coarse  = copy.deepcopy(u0fine)
-    self.sol_end     = copy.deepcopy(u0fine)
+
     self.ndof_f      = u0fine.ndof
     self.ndof_c      = u0coarse.ndof
     if isinstance(u0fine, solution_dedalus):
       use_dedalus = True
+      # For Dedalus, we currently only support the get_matrix functions but cannot actually run the solvers. To avoid the problems from deepcopying Dedalus related objects, we do
+      # generate all the buffers required for running the solver.
+      # As a work-around, we could simply instantiate additional solution_dedalus objects here to be used as temp buffers
     else:
       use_dedalus = False
+      # Note: self.coarse_temp is the only object that will have size ndof_c - all other solutions, even self.sol_coarse, have size ndof_f
+      # Note also: the problem definition is fixed by these arguments; when functions later accept solution objects, this is only for the values
+      self.coarse_temp = copy.deepcopy(u0coarse)
+      self.sol_start   = copy.deepcopy(u0fine)
+      self.sol_fine    = copy.deepcopy(u0fine)
+      self.sol_coarse  = copy.deepcopy(u0fine)
+      self.sol_end     = copy.deepcopy(u0fine)      
+    
     self.meshtransfer = meshtransfer(self.ndof_f, self.ndof_c, dedalus = use_dedalus)
 
   def update_fine(self):

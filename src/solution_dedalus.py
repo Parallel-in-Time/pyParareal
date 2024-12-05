@@ -28,6 +28,8 @@ class solution_dedalus(solution_linear):
     self.problem = d3.IVP([u], time=t_field, namespace={"u": u, "dx": dx})
     # Note that since dx(u) appears on the left side of the equal sign, it will be integrated implicitly.
     self.problem.add_equation("dt(u) + dx(u) = 0")    
+    
+    ### To allow to run a solver on this solution, need to write y into a Dedalus solution object somehow
 
     # NOTE: this should pass the spectral differentiation matrix in space only to the superclass solution_linear! It does not because,
     # at the moment, the Dedalus spatial discretization is never mixed with a non-Dedalus timestepper. If this is required, this needs changing.
