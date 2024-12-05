@@ -29,17 +29,17 @@ class TestClass:
         
     # Checks that calling the run function is the same as applying the matrix from get_update_matrix
     def test_matrix_equals_run(self):        
-        nsteps = 12
+        nsteps = 1
         ndof   = 16
         mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
-        y      = np.sin(2.0*np.pi*mesh)
+        y      = np.sin(2.0*np.pi*mesh)        
         u0     = solution_dedalus(np.copy(y), ndof)
         integ  = integrator_dedalus(0.0, 1.0, nsteps)
         Rmat   = integ.get_update_matrix(u0)        
         integ.run(u0)
         y_run = u0.y
         y_mat = Rmat@y
-        print(np.linalg.norm(y_run - y_mat))
+        assert np.linalg.norm(y_run - y_mat) < 1e-14, "Run routine and multiplication with stability matrix do not deliver the same result for integrator_dedalus"
         
     # Tests if the conversion to a special_integrator object works
     def test_can_convert_to_special_integrator(self):

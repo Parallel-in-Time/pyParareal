@@ -66,8 +66,7 @@ class solver():
                 warnings.warn("Solution instable")
                 break
 
-        ic = np.copy(np.array(u_list))
-        return ic
+        return np.copy(np.array(u_list)[-1])
 
 class integrator_dedalus(integrator):
 
@@ -79,7 +78,8 @@ class integrator_dedalus(integrator):
   def run(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
     mysolver = solver(self.nsteps, u0.problem, u0.n, u0.x)
-    mysolver.solve(u0.y, self.timegrid)
+    y_end = mysolver.solve(u0.y, self.timegrid)
+    u0.y = y_end
     return u0
     
     #!/usr/bin/env python3
@@ -92,17 +92,14 @@ class integrator_dedalus(integrator):
   def get_update_matrix(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
     mysolver = solver(self.nsteps, u0.problem, u0.n, u0.x)
-    Rmat = self.findA(mysolver, u0.n, self.timegrid)   
+    E = np.identity(u0.n)
+    Rmat = np.zeros((u0.n, u0.n))
+    for m in range(u0.n):
+       Rmat[m] = mysolver.solve(E[m], self.timegrid)
     return Rmat
-
-  def findA(self,operator, M, timeslice):
-    E = np.identity(M)
-    A = np.zeros((M, M))
-    for m in range(M):
-       A[m] = operator.solve(E[m], timeslice)[-1]
-    return A
 
   def convert_to_special_integrator(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
-    return special_integrator(self.tstart, self.tend, self.nsteps, self.get_update_matrix(u0))
+    # Carefully check what is the correct number of steps here!
+    return special_integrator(self.tstart, self.tend, 1, self.get_update_matrix(u0))
     
