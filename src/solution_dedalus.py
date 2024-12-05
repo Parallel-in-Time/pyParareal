@@ -27,7 +27,7 @@ class solution_dedalus(solution_linear):
     # Define advection problem with constant advection speed equal to 1
     self.problem = d3.IVP([u], time=t_field, namespace={"u": u, "dx": dx})
     # Note that since dx(u) appears on the left side of the equal sign, it will be integrated implicitly.
-    self.problem.add_equation("dt(u) + 0.0*dx(u) = 0")    
+    self.problem.add_equation("dt(u) + dx(u) = 0")    
     
     self.y = y.astype('complex128')
     ### To allow to run a solver on this solution, need to write y into a Dedalus solution object somehow
