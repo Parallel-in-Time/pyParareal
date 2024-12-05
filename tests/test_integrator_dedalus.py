@@ -22,3 +22,5 @@ class TestClass:
         integ = integrator_dedalus(0.0, 1.0, nsteps)
         Rmat = integ.get_update_matrix(sol)
         assert isinstance(Rmat, np.ndarray), "The function get_update_matrix of integrator_dedalus returned an object that is not a numpy array"
+        assert np.shape(Rmat)[0] == ndof, "The numpy array object returned by get_update_matrix has the wrong shape"
+        assert np.shape(Rmat)[1] == ndof, "The numpy array object returned by get_update_matrix has the wrong shape"

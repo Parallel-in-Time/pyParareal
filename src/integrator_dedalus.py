@@ -88,11 +88,8 @@ class integrator_dedalus(integrator):
     """
   def get_update_matrix(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
-    Mat = solver(self.nsteps, self.timestepper, u0.problem, u0.n, u0.x)
-
-    Id = np.identity(u0.n)
-    Rmat = self.findA(Mat, u0.n, np.linspace(self.tstart, self.tend, self.nsteps+1))
-    
+    mysolver = solver(self.nsteps, self.timestepper, u0.problem, u0.n, u0.x)
+    Rmat = self.findA(mysolver, u0.n, np.linspace(self.tstart, self.tend, self.nsteps+1))   
     return Rmat
 
   def findA(self,operator, M, timeslice):
