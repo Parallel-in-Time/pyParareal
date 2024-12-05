@@ -1,16 +1,16 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 from parareal import parareal
 from timemesh import timemesh
 from impeuler import impeuler
 from solution_linear import solution_linear
-import unittest
+import pytest
 import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg
 
-class TestParareal(unittest.TestCase):
+class TestClass:
 
   def setUp(self):
     times        = np.sort( np.random.rand(2) )
@@ -34,24 +34,29 @@ class TestParareal(unittest.TestCase):
 
   # Can instantiate object of type parareal
   def test_caninstantiate(self):
+    self.setUp()        
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0)
 
   # Can instantiate object of type parareal
   def test_caninstantiateWithu0coarse(self):
+    self.setUp()        
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0, self.u0coarse)
     
   # Can execute run function
   def test_canrun(self):
+    self.setUp()        
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0)
     para.run()
     
   # Can execute run function
   def test_canrunwithu0coarse(self):
+    self.setUp()        
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0, self.u0coarse)
     para.run()
 
   # Test matrix Parareal
   def test_pararealmatrix(self):
+    self.setUp()        
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 1, self.u0)
     Pmat, Bmat = para.get_parareal_matrix()
     bvec = np.zeros((self.ndof_f*(self.nslices+1),1))
@@ -70,6 +75,7 @@ class TestParareal(unittest.TestCase):
 
   # Test matrix Parareal when u0coarse is provided
   def test_pararealmatrixwithu0coarse(self):
+    self.setUp()        
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 1, self.u0, self.u0coarse)
     Pmat, Bmat = para.get_parareal_matrix()
     bvec = np.zeros((self.ndof_f*(self.nslices+1),1))
@@ -88,6 +94,7 @@ class TestParareal(unittest.TestCase):
     
   # Test matrix Parareal
   def test_pararealmatrixmultiple(self):
+    self.setUp()        
     niter = np.random.randint(2,8) 
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0)
     Pmat, Bmat = para.get_parareal_matrix()
@@ -108,6 +115,7 @@ class TestParareal(unittest.TestCase):
 
   # Parareal reproduces fine solution after niter=nslice many iterations
   def test_reproducesfine(self):
+    self.setUp()        
     # Smaller number of slices to keep runtime short
     nslices = np.random.randint(2,12) 
     para = parareal(self.tstart, self.tend, nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, nslices, self.u0, self.u0coarse)
@@ -125,6 +133,7 @@ class TestParareal(unittest.TestCase):
 
   # Fine solution is fixed point of Parareal iteration
   def test_fineisfixedpoint(self):
+    self.setUp()        
     niter = np.random.randint(2,8) 
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0, self.u0coarse)
     Fmat = para.timemesh.get_fine_matrix(self.u0)
@@ -142,6 +151,7 @@ class TestParareal(unittest.TestCase):
 
   # Stability function is equivalent to full run of Parareal
   def test_stabfunction(self):
+    self.setUp()        
     niter = np.random.randint(2,8)
     para  = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0, self.u0coarse)
     Smat  = para.get_parareal_stab_function(niter)
@@ -153,6 +163,7 @@ class TestParareal(unittest.TestCase):
 
   # Fine solution is fixed point of Parareal iteration if Gmat is provided in call to get_parareal_matrix
   def test_fineisfixedpointGmatprovided(self):
+    self.setUp()        
     niter = np.random.randint(2,8) 
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0, self.u0coarse)
 
@@ -181,6 +192,7 @@ class TestParareal(unittest.TestCase):
 
   # Fine solution is fixed point of Parareal iteration if u0coarse is provided when creating Parareal object
   def test_fineisfixedpointUcoarseprovided(self):
+    self.setUp()        
     niter = np.random.randint(2,8)
     
     # Build coarse solution with matrix different from fine

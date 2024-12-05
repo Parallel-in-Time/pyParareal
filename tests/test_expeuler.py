@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 import numpy as np
 from scipy import sparse
@@ -7,10 +7,10 @@ from scipy import linalg
 from integrator import integrator
 from expeuler import expeuler
 from solution_linear import solution_linear
-from nose.tools import *
-import unittest
+import pytest
 
-class TestExpeuler(unittest.TestCase):
+
+class TestClass:
   
   def setUp(self):
     self.ndof = np.random.randint(255)
@@ -20,20 +20,24 @@ class TestExpeuler(unittest.TestCase):
 
   # Can instantiate object
   def test_caninstantiate(self):
+    self.setUp()        
     ee = expeuler(0.0, 1.0, 10)
 
   # Throws if tend < tstart
   def test_tendbeforetstartthrows(self):
-    with self.assertRaises(AssertionError):
+    self.setUp()        
+    with pytest.raises(AssertionError):
       ee = expeuler(1.0, 0.0, 10)
 
   # See if run function can be called
   def test_cancallrun(self):
+    self.setUp()            
     ee = expeuler(0.0, 1.0, 10)
     ee.run(self.sol)
 
   # See if run does the same as the update matrix for a scalar problem
   def test_callcorrectscalar(self):
+    self.setUp()           
     eig    = -1.0
     u0     = solution_linear(np.array([1.0]), np.array([[eig]]))
     nsteps = 50
@@ -47,6 +51,7 @@ class TestExpeuler(unittest.TestCase):
 
   # See if run does the same as the update matrix
   def test_callcorrect(self):
+    self.setUp()            
     u0 = solution_linear(np.ones(self.ndof), self.A, self.M)
     nsteps = 257
     ee = expeuler(0.0, 0.13, nsteps)
