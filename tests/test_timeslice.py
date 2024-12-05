@@ -33,7 +33,17 @@ class TestClass:
   def test_can_instantiate(self):
     self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
-  
+
+
+  # Timeslice can be instantiated with solution objects of type solution_dedalus
+  def test_can_instantiate_with_dedalus(self):
+    self.setUp()
+    u0fine = solution_dedalus(np.zeros(self.ndof_f), self.ndof_f)
+    u0coarse = solution_dedalus(np.zeros(self.ndof_c), self.ndof_c)
+    int_coarse = integrator_dedalus(self.t[0], self.t[1], self.nsteps_c)
+    int_fine   = integrator_dedalus(self.t[0], self.t[1], self.nsteps_f)  
+    ts = timeslice(int_fine, int_coarse, 1e-10, 5, u0fine, u0coarse)
+    
   # Negative tolerance throws exception
   def test_fails_negative_tol(self):
     self.setUp()
