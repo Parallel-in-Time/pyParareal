@@ -29,6 +29,7 @@ class solution_dedalus(solution_linear):
     # Note that since dx(u) appears on the left side of the equal sign, it will be integrated implicitly.
     self.problem.add_equation("dt(u) + dx(u) = 0")    
     
+    self.y = y.astype('complex128')
     ### To allow to run a solver on this solution, need to write y into a Dedalus solution object somehow
 
     # NOTE: this should pass the spectral differentiation matrix in space only to the superclass solution_linear! It does not because,

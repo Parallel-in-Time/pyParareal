@@ -12,12 +12,12 @@ import pytest
 class TestClass:
     
     # Can instantiate
-    def test_caninstantiate(self):     
+    def test_can_instantiate(self):     
         nsteps = 12
         integ = integrator_dedalus(0.0, 1.0, nsteps)
     
     # Returns a matrix
-    def test_returnsmatrix(self):
+    def test_returns_matrix(self):
         nsteps = 12
         ndof   = 16
         sol    = solution_dedalus(np.zeros(ndof), ndof)
@@ -26,6 +26,20 @@ class TestClass:
         assert isinstance(Rmat, np.ndarray), "The function get_update_matrix of integrator_dedalus returned an object that is not a numpy array"
         assert np.shape(Rmat)[0] == ndof, "The numpy array object returned by get_update_matrix has the wrong shape"
         assert np.shape(Rmat)[1] == ndof, "The numpy array object returned by get_update_matrix has the wrong shape"
+        
+    # Checks that calling the run function is the same as applying the matrix from get_update_matrix
+    def test_matrix_equals_run(self):        
+        nsteps = 12
+        ndof   = 16
+        mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
+        y      = np.sin(2.0*np.pi*mesh)
+        u0     = solution_dedalus(np.copy(y), ndof)
+        integ  = integrator_dedalus(0.0, 1.0, nsteps)
+        Rmat   = integ.get_update_matrix(u0)        
+        integ.run(u0)
+        y_run = u0.y
+        y_mat = Rmat@y
+        print(np.linalg.norm(y_run - y_mat))
         
     # Tests if the conversion to a special_integrator object works
     def test_can_convert_to_special_integrator(self):
@@ -36,10 +50,18 @@ class TestClass:
         obj    = integ.convert_to_special_integrator(sol)
         assert isinstance(obj, special_integrator), "Function convert_to_special_integrator of integrator_dedalus did return an object of the wrong type"
 
-    def test_can_convert_to_special_integrator_and_rune(self):
-        nsteps = 12
-        ndof   = 16
+    def test_can_convert_to_special_integrator_and_run(self):
+        nsteps = 128
+        ndof   = 32
         sol    = solution_dedalus(np.zeros(ndof), ndof)
         integ  = integrator_dedalus(0.0, 1.0, nsteps)        
         obj    = integ.convert_to_special_integrator(sol)
-        u0     = solution_linear(np.zeros((ndof,ndof),np.zeros(ndof))
+        # Because the A matrix of the linear solution does not matter for the special_integrator which only applies the provided stability matrix,
+        # we can set it to zero
+        mesh = np.linspace(0.0, 1.0, ndof, endpoint=False)
+        u0     = solution_linear(np.sin(2.0*np.pi*mesh),np.zeros((ndof,ndof)))
+        obj.run(u0)
+        #print(np.linalg.norm(u0.y))
+        #print(np.linalg.norm(np.sin(2.0*np.pi*mesh)))
+        #print(np.linalg.norm(u0.y - np.sin(2.0*np.pi*mesh)))
+        #assert np.linalg.norm(u0.y - np.sin(2.0*np.pi*mesh)) < 1e-8

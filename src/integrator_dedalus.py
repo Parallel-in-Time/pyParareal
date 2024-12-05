@@ -15,10 +15,10 @@ import numpy as np
 class solver():
     """Class for coarse/fine propagator for forward problem (SWE)."""
 
-    def __init__(self, N, timestepper, problem, M, grid):
+    def __init__(self, N, problem, M, grid):
 
         self.N = N  # Number of timesteps in one time slice.
-        self.timestepper = timestepper
+        self.timestepper = d3.RK111
         self.problem = problem
         self.M = M
         self.grid = grid
@@ -51,7 +51,7 @@ class solver():
 
         # Initial conditions
         self.problem.namespace["u"].change_scales(1)
-        self.problem.namespace["u"]["g"] = ic
+        self.problem.namespace["u"]["g"] = ic.flatten()
         self.problem.namespace["u"].change_scales(1)
         u_list = [np.copy(self.problem.namespace["u"]['g'])]
         t_list = [solver.sim_time]
@@ -66,20 +66,22 @@ class solver():
                 warnings.warn("Solution instable")
                 break
 
-        return np.array(u_list)
+        ic = np.copy(np.array(u_list))
+        return ic
 
 class integrator_dedalus(integrator):
 
   def __init__(self, tstart, tend, nsteps):
     super(integrator_dedalus, self).__init__(tstart, tend, nsteps)
-    self.order = 1
-    self.timestepper = d3.RK111
-    
+    self.timegrid = np.linspace(self.tstart, self.tend, self.nsteps+1)
+    self.order = 1    
     
   def run(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
-    raise NotImplementedError("The Dedalus time stepper can currently only return a matrix but cannot be run")
-
+    mysolver = solver(self.nsteps, u0.problem, u0.n, u0.x)
+    mysolver.solve(u0.y, self.timegrid)
+    return u0
+    
     #!/usr/bin/env python3
     # -*- coding: utf-8 -*-
     """
@@ -89,8 +91,8 @@ class integrator_dedalus(integrator):
     """
   def get_update_matrix(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
-    mysolver = solver(self.nsteps, self.timestepper, u0.problem, u0.n, u0.x)
-    Rmat = self.findA(mysolver, u0.n, np.linspace(self.tstart, self.tend, self.nsteps+1))   
+    mysolver = solver(self.nsteps, u0.problem, u0.n, u0.x)
+    Rmat = self.findA(mysolver, u0.n, self.timegrid)   
     return Rmat
 
   def findA(self,operator, M, timeslice):
