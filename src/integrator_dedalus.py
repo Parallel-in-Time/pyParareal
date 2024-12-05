@@ -1,6 +1,7 @@
 from integrator import integrator
 from solution import solution
 from solution_dedalus import solution_dedalus
+from special_integrator import special_integrator
 import copy
 
 # Used to compute update matrices
@@ -98,3 +99,8 @@ class integrator_dedalus(integrator):
     for m in range(M):
        A[m] = operator.solve(E[m], timeslice)[-1]
     return A
+
+  def convert_to_special_integrator(self, u0):
+    assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
+    return special_integrator(self.tstart, self.tend, self.nsteps, self.get_update_matrix(u0))
+    
