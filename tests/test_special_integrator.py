@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 import numpy as np
 from scipy import sparse
@@ -9,11 +9,10 @@ from impeuler import impeuler
 from trapezoidal import trapezoidal
 from special_integrator import special_integrator
 from solution_linear import solution_linear
-from nose.tools import *
-import unittest
 import copy
+import pytest
 
-class TestSpecialIntegrator(unittest.TestCase):
+class TestClass:
 
   def setUp(self):
     self.ndof = np.random.randint(255)
@@ -23,20 +22,24 @@ class TestSpecialIntegrator(unittest.TestCase):
 
   # Can instantiate object
   def test_caninstantiate(self):
+    self.setUp()            
     integ = special_integrator(0.0, 1.0, 10, sparse.eye(self.ndof))
 
   # Throws if tend < tstart
   def test_tendbeforetstartthrows(self):
-    with self.assertRaises(AssertionError):
+    self.setUp()            
+    with pytest.raises(AssertionError):
       integ = special_integrator(1.0, 0.0, 10, sparse.eye(self.ndof))
 
   # See if run function can be called
   def test_cancallrun(self):
+    self.setUp()            
     integ = special_integrator(0.0, 1.0, 10, sparse.eye(self.ndof))
     integ.run(self.sol)
 
   # Make sure it provides identical solution to other integrator when stability function is given
   def test_reproducesimpeuler(self):
+    self.setUp()            
     ie = impeuler(0.0, 1.0, 25)
     M = sparse.csc_matrix(self.sol.M)
     A = sparse.csc_matrix(self.sol.A)
@@ -50,6 +53,7 @@ class TestSpecialIntegrator(unittest.TestCase):
     assert (self.sol.norm()<1e-14), "special_integrator did produce output identical to backward Euler"
 
   def test_reproducetrapezoidal(self):
+    self.setUp()            
     trap = trapezoidal(0.0, 1.0, 25)
     M = sparse.csc_matrix(self.sol.M)
     A = sparse.csc_matrix(self.sol.A)
