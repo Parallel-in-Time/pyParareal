@@ -187,9 +187,11 @@ for m in range(M_F):
     if m < M_G:
         A_L[m] = L(id_G[m])
 
+
 # Compute matrix representations for fine and coarse propagator.
 A_G = findA(G, M_G, coarseGrids[0])  # For coarse propagator.
 A_F = findA(F, M_F, fineGrids[0])  # For fine propagator.
 
+print(coarseGrids[0])
 print(np.shape(A_G))
 print(np.shape(A_F))
