@@ -1,14 +1,14 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 from timeslice import timeslice
 from integrator import integrator
 from impeuler import impeuler
 from solution_linear import solution_linear
-import unittest
+import pytest
 import numpy as np
 
-class TestTimeslice(unittest.TestCase):
+class TestClass:
 
   def setUp(self):
     t = np.sort( np.random.rand(2) )
@@ -29,42 +29,50 @@ class TestTimeslice(unittest.TestCase):
 
   # Timeslice can be instantiated
   def test_caninstantiate(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
   
   # Negative tolerance throws exception
   def test_failsnegativetol(self):
-    with self.assertRaises(AssertionError):
+    self.setUp()
+    with pytest.raises(AssertionError):
       ts = timeslice(self.int_fine, self.int_coarse, -1e-5, 5, self.u0fine, self.u0coarse)
 
   # Non-float tolerance throws exception
   def test_failsintegertol(self):
-    with self.assertRaises(AssertionError):
+    self.setUp()
+    with pytest.raises(AssertionError):
       ts = timeslice(self.int_fine, self.int_coarse, 1, 5, self.u0fine, self.u0coarse)
 
   # Non-int iter_max raises exception
   def test_failsfloatitermax(self):
-    with self.assertRaises(AssertionError):
+    self.setUp()
+    with pytest.raises(AssertionError):
       ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 2.5, self.u0fine, self.u0coarse)
 
   # Negative iter_max raises exception
   def test_failsnegativeitermax(self):
-    with self.assertRaises(AssertionError):
+    self.setUp()
+    with pytest.raises(AssertionError):
       ts = timeslice(self.int_fine, self.int_coarse, 1e-10, -5, self.u0fine, self.u0coarse)
 
   # Different values for tstart in fine and coarse integrator raise exception
   def test_failsdifferenttstart(self):
+    self.setUp()
     int_c = integrator(1e-10+self.int_coarse.tstart, self.int_coarse.tend, self.int_coarse.nsteps)
-    with self.assertRaises(AssertionError):
+    with pytest.raises(AssertionError):
       ts = timeslice(self.int_fine, int_c, 1e-10, 5, self.u0fine, self.u0coarse)
 
   # Different values for tend in fine and coarse integrator raise exception
   def test_failsdifferenttend(self):
+    self.setUp()
     int_c = integrator(self.int_coarse.tstart, 1e-8+self.int_coarse.tend, self.int_coarse.nsteps)
-    with self.assertRaises(AssertionError):
+    with pytest.raises(AssertionError):
       ts = timeslice(self.int_fine, int_c, 1e-10, 5, self.u0fine, self.u0fine)
 
   # After running fine integrator and setting sol_end to the same value, is_converged returns True
   def test_isconverged(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-14, 1+np.random.randint(5), self.u0fine, self.u0coarse)
     assert not ts.is_converged(), "After initialisation, timeslice should not be converged without further actions"
     sol = solution_linear(np.random.rand(self.ndof_f), np.random.rand(self.ndof_f, self.ndof_f))
@@ -75,22 +83,26 @@ class TestTimeslice(unittest.TestCase):
 
   # get_tstart returns correct value
   def test_get_tstart(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
     assert abs(ts.get_tstart() - ts.int_fine.tstart)==0, "get_start returned wrong value"
 
   # get_tend returns correct value
   def test_get_tend(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
     assert abs(ts.get_tend() - ts.int_fine.tend)==0, "get_start returned wrong value"
 
   # set_sol_start with non-solution objects throws exception
   def test_solfinenosolutionthrows(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
-    with self.assertRaises(AssertionError):
+    with pytest.raises(AssertionError):
       ts.set_sol_start(-1)
 
   # update_fine runs and returns value equal to what matrix provides
   def test_fineequalsmatrix(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
     ts.update_fine()
     sol_ts = ts.get_sol_fine()
@@ -102,6 +114,7 @@ class TestTimeslice(unittest.TestCase):
 
   # update_coarse runs and returns value equal to what matrix provides
   def test_canruncoarse(self):
+    self.setUp()
     ts = timeslice(self.int_fine, self.int_coarse, 1e-10, 5, self.u0fine, self.u0coarse)
     ts.update_coarse()
     sol_ts = ts.get_sol_coarse()

@@ -1,5 +1,6 @@
 from integrator import integrator
 from solution import solution
+from solution_dedalus import solution_dedalus
 from meshtransfer import meshtransfer
 
 import numpy as np
@@ -30,7 +31,11 @@ class timeslice(object):
     self.sol_end     = copy.deepcopy(u0fine)
     self.ndof_f      = u0fine.ndof
     self.ndof_c      = u0coarse.ndof
-    self.meshtransfer = meshtransfer(self.ndof_f, self.ndof_c)
+    if isinstance(u0fine, solution_dedalus):
+      use_dedalus = True
+    else:
+      use_dedalus = False
+    self.meshtransfer = meshtransfer(self.ndof_f, self.ndof_c, dedalus = use_dedalus)
 
   def update_fine(self):
     # copy starting value to sol_fine and then overwrite sol_fine with result of fine integrator
