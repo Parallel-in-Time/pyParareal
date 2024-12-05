@@ -18,7 +18,7 @@ class solver():
     def __init__(self, N, problem, M, grid):
 
         self.N = N  # Number of timesteps in one time slice.
-        self.timestepper = d3.RK111
+        self.timestepper = d3.RK443
         self.problem = problem
         self.M = M
         self.grid = grid

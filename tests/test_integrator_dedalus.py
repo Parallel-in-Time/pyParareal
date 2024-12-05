@@ -29,11 +29,10 @@ class TestClass:
         
     # Checks that calling the run function is the same as applying the matrix from get_update_matrix
     def test_matrix_equals_run(self):        
-        nsteps = 2
+        nsteps = 7
         ndof   = 18
         mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
-        y      = 0.0*np.sin(2.0*np.pi*mesh)   
-        y[5]   = 1.0
+        y      = np.random.rand(ndof)   
         y      = np.reshape(y, (ndof,1))
         u0     = solution_dedalus(np.copy(y), ndof)
         integ  = integrator_dedalus(0.0, 1.0, nsteps)
@@ -55,10 +54,10 @@ class TestClass:
     # Checks that converting the dedalus integrator to special integrator and running that delivers the same answer as 
     # running the dedalus integrator
     def test_as_special_equals_run(self):
-        nsteps = 1
-        ndof   = 4
+        nsteps = 5
+        ndof   = 24
         mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
-        y      = np.sin(2.0*np.pi*mesh)        
+        y      = np.random.rand(ndof)        
         u0     = solution_dedalus(np.copy(y), ndof)
         u0_lin = solution_linear(np.copy(y), np.zeros((ndof,ndof)))
         integ  = integrator_dedalus(0.0, 1.0, nsteps)
@@ -66,7 +65,18 @@ class TestClass:
         integ.run(u0)
         integ_special.run(u0_lin)
         assert np.linalg.norm(u0.y - u0_lin.y.flatten()) < 1e-14, "Running integrator_dedalus does not deliver the same output as converting it to special_integrator and running that"
-
+        
+    # A function sin(2*pi*x) on [0,1] advected with speed 1 until time T=1 should be very close to the initial value again    
+    def test_periodic_sine(self):
+        nsteps = 1000
+        ndof   = 10
+        mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
+        y      = np.sin(2.0*np.pi*mesh)
+        u0     = solution_dedalus(np.copy(y), ndof)
+        integ  = integrator_dedalus(0.0, 1.0, nsteps)
+        integ.run(u0)
+        assert np.linalg.norm(u0.y - y) < 1e-7, "sin(2*pi*x) seems to not be correctly advected"
+        
     def test_can_convert_to_special_integrator_and_run(self):
         nsteps = 128
         ndof   = 32
