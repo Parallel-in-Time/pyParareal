@@ -100,6 +100,5 @@ class integrator_dedalus(integrator):
 
   def convert_to_special_integrator(self, u0):
     assert isinstance(u0, solution_dedalus), "Initial value u0 must be an object of type solution_dedalus"
-    # Carefully check what is the correct number of steps here!
     return special_integrator(self.tstart, self.tend, 1, self.get_update_matrix(u0))
     

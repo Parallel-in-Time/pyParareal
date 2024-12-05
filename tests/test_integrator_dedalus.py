@@ -29,8 +29,8 @@ class TestClass:
         
     # Checks that calling the run function is the same as applying the matrix from get_update_matrix
     def test_matrix_equals_run(self):        
-        nsteps = 1
-        ndof   = 16
+        nsteps = 7
+        ndof   = 19
         mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
         y      = np.sin(2.0*np.pi*mesh)        
         u0     = solution_dedalus(np.copy(y), ndof)
@@ -40,7 +40,7 @@ class TestClass:
         y_run = u0.y
         y_mat = Rmat@y
         assert np.linalg.norm(y_run - y_mat) < 1e-14, "Run routine and multiplication with stability matrix do not deliver the same result for integrator_dedalus"
-        
+               
     # Tests if the conversion to a special_integrator object works
     def test_can_convert_to_special_integrator(self):
         nsteps = 12
@@ -49,6 +49,21 @@ class TestClass:
         integ  = integrator_dedalus(0.0, 1.0, nsteps)        
         obj    = integ.convert_to_special_integrator(sol)
         assert isinstance(obj, special_integrator), "Function convert_to_special_integrator of integrator_dedalus did return an object of the wrong type"
+        
+    # Checks that converting the dedalus integrator to special integrator and running that delivers the same answer as 
+    # running the dedalus integrator
+    def test_as_special_equals_run(self):
+        nsteps = 1
+        ndof   = 4
+        mesh   = np.linspace(0.0, 1.0, ndof, endpoint=False)
+        y      = np.sin(2.0*np.pi*mesh)        
+        u0     = solution_dedalus(np.copy(y), ndof)
+        u0_lin = solution_linear(np.copy(y), np.zeros((ndof,ndof)))
+        integ  = integrator_dedalus(0.0, 1.0, nsteps)
+        integ_special = integ.convert_to_special_integrator(u0)
+        integ.run(u0)
+        integ_special.run(u0_lin)
+        assert np.linalg.norm(u0.y - u0_lin.y.flatten()) < 1e-14, "Running integrator_dedalus does not deliver the same output as converting it to special_integrator and running that"
 
     def test_can_convert_to_special_integrator_and_run(self):
         nsteps = 128
