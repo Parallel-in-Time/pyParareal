@@ -1,16 +1,16 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 from impeuler import impeuler
 from timemesh import timemesh
 from solution_linear import solution_linear
-import unittest
+import pytest
 import numpy as np
 from scipy.sparse import linalg
 from scipy import sparse
 
 
-class TestTimemesh(unittest.TestCase):
+class TestClass:
 
   def setUp(self):
     times        = np.sort( np.random.rand(2) )
@@ -31,37 +31,44 @@ class TestTimemesh(unittest.TestCase):
     self.u0coarse        = solution_linear(self.u0_c, self.A_c)
         
   # timemesh class can be instantiated
-  def test_caninstantiate(self):
+  def test_can_instantiate(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
 
   # timemesh class can be instantiated with matrix as argument for coarse
-  def test_caninstantiatewithmatrix(self):
+  def test_can_instantiate_with_matrix(self):
+    self.setUp()    
     mat = sparse.eye(1)
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, mat, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
      
   # initial value can be set for first time slice
-  def test_cansetinitial(self):
+  def test_can_set_initial(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     tm.set_initial_value(self.u0fine)
 
   # initial value can be set for first time slice
-  def test_cansetinitialtimeslice(self):
+  def test_can_set_initial_timeslice(self):
+    self.setUp()    
     u0 = solution_linear(np.array([1.0]), np.array([[-1.0]]))
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     tm.set_initial_value(self.u0fine, 3)
 
   # fails to set initial value for time slice with too large index
-  def test_toohightimesliceindexthrows(self):
+  def test_too_high_timeslice_index_throws(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
-    with self.assertRaises(AssertionError):
+    with pytest.raises(AssertionError):
       tm.set_initial_value(self.u0fine, self.nslices+1)
 
   # all_converged gives false if called directly after initialisation unless the maximum number of iterations is zero
-  def test_allconvergedthrows(self):
+  def test_allconverged_throws(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     assert not tm.all_converged(), "all_converged should not be true directly after initialisation"
 
-  def test_allconvergedzeromaxiter(self):
+  def test_allconverged_zeromaxiter(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 0, self.u0fine, self.u0coarse)
   
     # to allow computing residuals, set initial value, run fine and set end value
@@ -75,7 +82,8 @@ class TestTimemesh(unittest.TestCase):
     assert tm.all_converged, "For iter_max=0, all time slices should be considered converged"
 
   # raising iteration counter leads to convergence
-  def test_raiseiterconvergence(self):
+  def test_raise_iterconvergence(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 2, self.u0fine, self.u0coarse)
     sol_start   = solution_linear( np.zeros(self.ndof_f), np.eye(self.ndof_f) )
 
@@ -95,17 +103,20 @@ class TestTimemesh(unittest.TestCase):
     assert tm.all_converged(), "Raising iteration counter through increase_iter did not lead to convergence"
 
   # get_fine_matrix is callable
-  def test_finematrixcallable(self):
+  def test_fine_matrix_callable(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     Mat = tm.get_fine_matrix(self.u0fine)
 
   # get_coarse_matrix is callable
-  def test_coarsematrixcallable(self):
+  def test_coarse_matrix_callable(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     Mat = tm.get_coarse_matrix(self.u0coarse)
     
   # run_coarse is callable and provides expected output at very end
-  def test_runcoarse(self):
+  def test_run_coarse(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     
     # Run the coarse propagator but with the initial value given by u0fine
@@ -123,7 +134,8 @@ class TestTimemesh(unittest.TestCase):
 
     
   # with coarse method provided as matrix, run_coarse is callable and provides expected output at very end
-  def test_runcoarsewithmatrix(self):
+  def test_run_coarse_withmatrix(self):
+    self.setUp()    
     dt = (self.tend - self.tstart)/(float(self.nslices)*float(self.ncoarse))
     mat = 1.0/(1.0 - dt)*sparse.eye(self.ndof_c, format="csc")
     
@@ -141,6 +153,7 @@ class TestTimemesh(unittest.TestCase):
 
   # run_fine is callable and provides expected output at very end
   def test_runfine(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     
     tm.run_fine(self.u0fine)
@@ -154,7 +167,8 @@ class TestTimemesh(unittest.TestCase):
     assert err<1e-10, ("run_fine and successive application of update matrix does not give identical results - error: %5.3e" % err)
 
   # run_coarse provides expected intermediate values
-  def test_runcoarseintermediate(self):
+  def test_run_coarse_intermediate(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     tm.run_coarse(self.u0fine)
     
@@ -171,7 +185,8 @@ class TestTimemesh(unittest.TestCase):
       assert err<1e-10, ("Successive application of update matrix does not reproduce intermediata coarse values generated by run_coarse. Error: %5.3e in slice %2i" % (err, i))
     
   # with coarse provided as matrix, run_coarse provides expected intermediate values
-  def test_runcoarseintermediatewithmatrix(self):
+  def test_run_coarse_intermediate_with_matrix(self):
+    self.setUp()    
     # need at least three slices for this test
     self.nslices = min(self.nslices, 3)
     dt = (self.tend - self.tstart)/(float(self.nslices)*float(self.ncoarse))
@@ -194,7 +209,8 @@ class TestTimemesh(unittest.TestCase):
       assert err<2e-12, ("Successive application of update matrix does not reproduce intermediata coarse values generated by run_coarse. Error: %5.3e in slice %2i" % (err, i))
 
   # run_fine provides expected intermediate values
-  def test_runfineintermediate(self):
+  def test_run_fine_intermediate(self):
+    self.setUp()    
     tm = timemesh(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 1e-10, 5, self.u0fine, self.u0coarse)
     tm.run_fine(self.u0fine)
     Mat = tm.slices[0].int_fine.get_update_matrix(self.u0fine)
