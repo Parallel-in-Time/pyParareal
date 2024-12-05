@@ -4,6 +4,7 @@ sys.path.append('./src')
 from integrator import integrator
 from integrator_dedalus import integrator_dedalus
 from special_integrator import special_integrator
+from solution_linear import solution_linear
 from solution_dedalus import solution_dedalus
 import numpy as np
 import pytest
@@ -34,3 +35,11 @@ class TestClass:
         integ  = integrator_dedalus(0.0, 1.0, nsteps)        
         obj    = integ.convert_to_special_integrator(sol)
         assert isinstance(obj, special_integrator), "Function convert_to_special_integrator of integrator_dedalus did return an object of the wrong type"
+
+    def test_can_convert_to_special_integrator_and_rune(self):
+        nsteps = 12
+        ndof   = 16
+        sol    = solution_dedalus(np.zeros(ndof), ndof)
+        integ  = integrator_dedalus(0.0, 1.0, nsteps)        
+        obj    = integ.convert_to_special_integrator(sol)
+        u0     = solution_linear(np.zeros((ndof,ndof),np.zeros(ndof))
