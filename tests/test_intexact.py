@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../src')
+sys.path.append('./src')
 
 import numpy as np
 from scipy import sparse
@@ -7,11 +7,10 @@ from scipy import linalg
 from intexact import intexact
 from solution_linear import solution_linear
 import copy
-from nose.tools import *
+import pytest
 
-import unittest
 
-class TestIntexact(unittest.TestCase):
+class TestClass:
 
   def setUp(self):
     #self.ndof = np.random.randint(255)
@@ -21,9 +20,11 @@ class TestIntexact(unittest.TestCase):
     self.sol  = solution_linear(np.ones((self.ndof,1)), self.A, self.M)
 
   def test_caninstantiate(self):
+    self.setUp()            
     ex = intexact(0.0, 1.0, 10)
 
   def test_runs(self):
+    self.setUp()            
     tend = np.random.rand(1)*10.0
     tend = tend[0]
     ex   = intexact(0.0, tend, 10)
@@ -35,6 +36,7 @@ class TestIntexact(unittest.TestCase):
     assert diff<1e-14, ("intexact does not provide exact solution. Error: %5.3e" % diff)
 
   def test_runequalmatrix(self):
+    self.setUp()            
     tend   = np.random.rand(1)*10.0
     tend   = tend[0]
     nsteps = np.random.randint(2,30)
@@ -47,6 +49,7 @@ class TestIntexact(unittest.TestCase):
 
   # For the exact integrator the number of timesteps should not affect the result
   def test_invariantnsteps(self):
+    self.setUp()            
     tend   = np.random.rand(1)*10.0
     tend   = tend[0]
     nsteps = np.random.randint(2,30)
