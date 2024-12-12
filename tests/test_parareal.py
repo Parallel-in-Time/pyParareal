@@ -4,11 +4,14 @@ sys.path.append('./src')
 from parareal import parareal
 from timemesh import timemesh
 from impeuler import impeuler
+from integrator_dedalus import integrator_dedalus
 from solution_linear import solution_linear
+from solution_dedalus import solution_dedalus
 import pytest
 import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg
+import math
 
 class TestClass:
 
@@ -132,6 +135,29 @@ class TestClass:
     assert diff<1e-12, ("Parareal does not reproduce fine solution after nslice=niter many iterations. Error: %5.3e" % diff)
 
   # Fine solution is fixed point of Parareal iteration
+  def test_fine_is_fixed_point_with_dedalus(self):
+    self.setUp()      
+    # Make sure number of degrees of freedom is even
+    ndof_f = math.ceil(self.ndof_f/2)*2
+    ndof_c = math.ceil(self.ndof_c/2)*2       
+    u0       = solution_dedalus(np.random.rand(ndof_f), ndof_f)
+    u0coarse = solution_dedalus(np.random.rand(ndof_c), ndof_c)
+    niter = np.random.randint(2,8) 
+    para = parareal(self.tstart, self.tend, self.nslices, integrator_dedalus, integrator_dedalus, self.nfine, self.ncoarse, 0.0, niter, u0, u0coarse)
+    Fmat = para.timemesh.get_fine_matrix(u0)
+    b = np.zeros((ndof_f*(self.nslices+1),1))
+    b[0:ndof_f,:] = u0.y
+    # Solve system
+    u = linalg.spsolve(Fmat, b)
+    u = u.reshape((ndof_f*(self.nslices+1),1))
+    # Get Parareal iteration matrices
+    Pmat, Bmat = para.get_parareal_matrix()
+    # Apply matrix to fine solution
+    u_para = Pmat@u + Bmat@b
+    diff = np.linalg.norm( u_para - u, np.inf)
+    assert diff<1e-14, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)
+    
+  # Fine solution is fixed point of Parareal iteration
   def test_fineisfixedpoint(self):
     self.setUp()        
     niter = np.random.randint(2,8) 
@@ -147,7 +173,7 @@ class TestClass:
     # Apply matrix to fine solution
     u_para = Pmat@u + Bmat@b
     diff = np.linalg.norm( u_para - u, np.inf)
-    assert diff<1e-14, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)
+    assert diff<1e-14, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)    
 
   # Stability function is equivalent to full run of Parareal
   def test_stabfunction(self):
