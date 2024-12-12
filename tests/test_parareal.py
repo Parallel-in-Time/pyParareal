@@ -117,7 +117,7 @@ class TestClass:
     assert err<1e-12, ("Parareal run and matrix form do not yield identical results for multiple iterations. Error: %5.3e" % err)
 
   # Parareal reproduces fine solution after niter=nslice many iterations
-  def test_reproducesfine(self):
+  def test_reproduces_fine(self):
     self.setUp()        
     # Smaller number of slices to keep runtime short
     nslices = np.random.randint(2,12) 
@@ -133,7 +133,29 @@ class TestClass:
     u_para = para.get_parareal_vector()
     diff = np.linalg.norm(u_para - u, np.inf)
     assert diff<1e-12, ("Parareal does not reproduce fine solution after nslice=niter many iterations. Error: %5.3e" % diff)
-
+    
+  @pytest.mark.skip(reason="Parareal cannot be run with solution_dedalus because the deepcopy commands throw and error because of some MPI object")    
+  def test_reproduces_fine_with_dedalus(self):
+    self.setUp()      
+    # Make sure number of degrees of freedom is even
+    ndof_f = math.ceil(self.ndof_f/2)*2
+    ndof_c = math.ceil(self.ndof_c/2)*2       
+    u0       = solution_dedalus(np.random.rand(ndof_f), ndof_f)
+    u0coarse = solution_dedalus(np.random.rand(ndof_c), ndof_c)
+    niter = np.random.randint(2,12) 
+    para = parareal(self.tstart, self.tend, self.nslices, integrator_dedalus, integrator_dedalus, self.nfine, self.ncoarse, 0.0, niter, u0, u0coarse)    
+    Fmat = para.timemesh.get_fine_matrix(u0)
+    b = np.zeros((ndof_f*(self.nslices+1),1))
+    b[0:ndof_f,:] = u0.y
+    # Solve system
+    u = linalg.spsolve(Fmat, b)
+    u = u.reshape((ndof_f*(self.nslices+1),1))
+    # Run Parareal
+    para.run()
+    u_para = para.get_parareal_vector()
+    diff = np.linalg.norm(u_para - u, np.inf)
+    assert diff<1e-12, ("Parareal does not reproduce fine solution after nslice=niter many iterations. Error: %5.3e" % diff)      
+    
   # Fine solution is fixed point of Parareal iteration
   def test_fine_is_fixed_point_with_dedalus(self):
     self.setUp()      
@@ -158,7 +180,7 @@ class TestClass:
     assert diff<1e-14, ("Fine solution is not a fixed point of Parareal iteration - difference %5.3e" % diff)
     
   # Fine solution is fixed point of Parareal iteration
-  def test_fineisfixedpoint(self):
+  def test_fine_is_fixed_point(self):
     self.setUp()        
     niter = np.random.randint(2,8) 
     para = parareal(self.tstart, self.tend, self.nslices, impeuler, impeuler, self.nfine, self.ncoarse, 0.0, niter, self.u0, self.u0coarse)
