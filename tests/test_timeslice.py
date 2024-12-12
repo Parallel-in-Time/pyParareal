@@ -9,6 +9,7 @@ from solution_linear import solution_linear
 from solution_dedalus import solution_dedalus
 import pytest
 import numpy as np
+import math
 
 class TestClass:
 
@@ -38,8 +39,11 @@ class TestClass:
   # Timeslice can be instantiated with solution objects of type solution_dedalus
   def test_can_instantiate_with_dedalus(self):
     self.setUp()
-    u0fine = solution_dedalus(np.zeros(self.ndof_f), self.ndof_f)
-    u0coarse = solution_dedalus(np.zeros(self.ndof_c), self.ndof_c)
+    # Make sure number of degrees of freedom is even
+    ndof_f = math.ceil(self.ndof_f/2)*2
+    ndof_c = math.ceil(self.ndof_c/2)*2
+    u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
+    u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
     int_coarse = integrator_dedalus(self.t[0], self.t[1], self.nsteps_c)
     int_fine   = integrator_dedalus(self.t[0], self.t[1], self.nsteps_f)  
     ts = timeslice(int_fine, int_coarse, 1e-10, 5, u0fine, u0coarse)
