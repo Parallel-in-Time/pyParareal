@@ -156,6 +156,32 @@ class TestClass:
     diff = np.linalg.norm(u_para - u, np.inf)
     assert diff<1e-12, ("Parareal does not reproduce fine solution after nslice=niter many iterations. Error: %5.3e" % diff)      
     
+  def test_matrix_parareal_reproduces_fine_with_dedalus(self):
+    self.setUp()      
+    # Make sure number of degrees of freedom is even
+    ndof_f = math.ceil(self.ndof_f/2)*2
+    ndof_c = math.ceil(self.ndof_c/2)*2       
+    u0       = solution_dedalus(np.random.rand(ndof_f), ndof_f)
+    u0coarse = solution_dedalus(np.random.rand(ndof_c), ndof_c)
+    niter = np.random.randint(2,12) 
+    para = parareal(self.tstart, self.tend, self.nslices, integrator_dedalus, integrator_dedalus, self.nfine, self.ncoarse, 0.0, niter, u0, u0coarse)    
+    Fmat = para.timemesh.get_fine_matrix(u0)
+    Pmat, Bmat = para.get_parareal_matrix()  
+    b = np.zeros((ndof_f*(self.nslices+1),1))
+    b[0:ndof_f,:] = u0.y
+    # Solve system
+    u_fine = linalg.spsolve(Fmat, b)
+    u_fine = u_fine.reshape((ndof_f*(self.nslices+1),1))
+    # Solve Parareal matrix formulation
+    u_para = np.copy(b)
+    for n in range(self.nslices):
+      # Apply matrix to fine solution
+      u_para = Pmat@u_para + Bmat@b
+    print(np.shape(u_para))
+    print(np.shape(u_fine))
+    diff = np.linalg.norm(u_para - u_fine, np.inf)
+    assert diff<1e-13, ("Parareal does not reproduce fine solution after nslice=niter many iterations. Error: %5.3e" % diff)  
+    
   # Fine solution is fixed point of Parareal iteration
   def test_fine_is_fixed_point_with_dedalus(self):
     self.setUp()      

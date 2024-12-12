@@ -9,6 +9,7 @@ from solution_linear import solution_linear
 from scipy import sparse
 from scipy import linalg
 import dedalus.public as d3
+import logging
 
 import numpy as np
 
@@ -42,6 +43,9 @@ class solver():
         """
         # Time step
         dt = timegrid[1] - timegrid[0]
+        
+        for system in ['subsystems', 'solvers']:
+          logging.getLogger(system).setLevel(logging.WARNING)
 
         # Build solver.
         solver = self.problem.build_solver(self.timestepper)
