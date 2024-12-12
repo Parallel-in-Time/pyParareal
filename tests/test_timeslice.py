@@ -131,8 +131,11 @@ class TestClass:
   # update_fine runs and returns value equal to what matrix provides
   def test_fine_equals_matrix_with_dedalus_option(self):
     self.setUp()
-    u0fine = solution_dedalus(np.zeros(self.ndof_f), self.ndof_f)
-    u0coarse = solution_dedalus(np.zeros(self.ndof_c), self.ndof_c)
+    # Make sure number of degrees of freedom is even
+    ndof_f = math.ceil(self.ndof_f/2)*2
+    ndof_c = math.ceil(self.ndof_c/2)*2    
+    u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
+    u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
     int_coarse = integrator_dedalus(self.t[0], self.t[1], self.nsteps_c)
     int_fine   = integrator_dedalus(self.t[0], self.t[1], self.nsteps_f)  
     ts = timeslice(int_fine, int_coarse, 1e-10, 5, u0fine, u0coarse)

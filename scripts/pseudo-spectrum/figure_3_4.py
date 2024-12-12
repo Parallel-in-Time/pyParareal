@@ -40,7 +40,7 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
-problem      = 2 ### 1 generates figure_2.pdf, 2 generates figure_3.pdf
+problem      = 1 ### 1 generates figure_3.pdf, 2 generates figure_4.pdf
 
 if problem==1:
   A_f = get_upwind(ndof_f, dx_f)
@@ -103,9 +103,9 @@ plt.ylabel(r'Imaginary part', fontsize=fs)
 plt.title(r'$1/|| (z - E)^{-1} \||_2$')
 ax.plot(0.0, 0.0, 'k+', markersize=fs)
 if problem==1:
-  filename = 'figure_2.pdf'
-elif problem==2:
   filename = 'figure_3.pdf'
+elif problem==2:
+  filename = 'figure_4.pdf'
 else:
   quit()
 plt.gcf().savefig(filename, bbox_inches='tight')
