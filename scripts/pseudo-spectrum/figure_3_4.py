@@ -9,22 +9,12 @@ from special_integrator import special_integrator
 from solution_linear import solution_linear
 from get_matrix import get_upwind, get_centered, get_diffusion
 import numpy as np
-from numpy import linalg as LA
 import scipy.sparse as sparse
 from scipy.linalg import svdvals
 import math
 
-from pylab import rcParams
-from scipy.optimize import NonlinearConstraint
-from scipy.optimize import minimize
-
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-
-from matplotlib.patches import Polygon
 from subprocess import call
-import sympy
 from pylab import rcParams
 
 from pseudo_spectral_radius import pseudo_spectral_radius
