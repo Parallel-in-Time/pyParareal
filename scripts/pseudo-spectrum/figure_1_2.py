@@ -38,18 +38,22 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
-problem      = 1 # 1 generates figure_1, 2 generates figure_2
+try:
+  figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
+except:
+  print("No or wrong command line argument provided, creating figure 1. Use 1 or 2 as command line argument.")
+  figure = 1
 
-if problem==1:
+if figure==1:
   A_f = get_upwind(ndof_f, dx_f)
   A_c = get_upwind(ndof_c, dx_c)
   
-elif problem==2:
+elif figure==2:
   A_f = get_centered(ndof_f, dx_f)
   A_c = get_centered(ndof_c, dx_c)
  
 else:
-  quit()
+  sys.exit("Figure should be set to 1 or 2")
   
 D = A_f*A_f.H - A_f.H*A_f
 print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))
@@ -61,7 +65,7 @@ psr        = np.zeros(1)
   
 u0coarse = solution_linear(np.zeros(ndof_c), A_c)
 
-if problem==1:
+if figure==1:
   para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
 else:
   para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
@@ -96,17 +100,18 @@ fig = plt.figure(1)
 plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| e^k ||$')
 plt.semilogy(range(1,5), [E_norm**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b--', label=r'$|| E ||_2^k$')
 plt.semilogy(range(1,5), [psr**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'r-.', label=r'$\sigma_{\epsilon}(E)^k$')
-plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
-
+plt.legend(loc='upper right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+plt.xlim([1, maxiter+1])
+plt.ylim([1e-5, 1e3])
 
 plt.xlabel('Iteration $k$', fontsize=fs)
 
 #plt.ylim([1e-15, 1e1])
 plt.xlim([1, maxiter+1])
 plt.xticks(range(2,maxiter,2))
-if problem==1:
+if figure==1:
   filename = 'figure_1.pdf'
-elif problem==2:
+elif figure==2:
   filename = 'figure_2.pdf'
 else:
   quit()

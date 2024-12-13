@@ -24,10 +24,21 @@ nfine   = 10
 ncoarse = 10
 
 ndof_f   = 32
-# for 24 DoF, Parareal diverges, for 30 DoF, you get convergence. Of course, speedup would be impossible here.
-ndof_c   = 24
-ndof_c   = 30 
 
+# for 24 DoF, Parareal diverges, for 30 DoF, you get convergence. Of course, speedup would be impossible here.
+try:
+  figure      =  int(sys.argv[1]) # 3 generates figure_3, 4 generates figure_4
+except:
+  print("No or wrong command line argument provided, creating figure 3. Use 3 or 4 as command line argument.")
+  figure = 3
+
+if figure==3:
+  ndof_c   = 24
+elif figure==4:
+  ndof_c   = 30   
+else:
+  sys.exit("Set figure to 1 or 2")
+  
 epsilon = 0.1
 
 u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
@@ -69,17 +80,23 @@ fig = plt.figure(1)
 plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| e^k ||$')
 plt.semilogy(range(1,5), [E_norm**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b--', label=r'$|| E ||_2^k$')
 plt.semilogy(range(1,5), [psr**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'r-.', label=r'$\sigma_{\epsilon}(E)^k$')
-plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+if figure==3:
+    plt.legend(loc='lower right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+else:
+    plt.legend(loc='upper right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+    
+plt.xlim([1, maxiter+1])
+plt.ylim([1e-5, 1e3])
 
 plt.xlabel('Iteration $k$', fontsize=fs)
 
 #plt.ylim([1e-15, 1e1])
 plt.xlim([1, maxiter+1])
 plt.xticks(range(2,maxiter,2))
-if ndof_c==24:
-    filename = 'figure_7.pdf'
-elif ndof_c==30:
-    filename = 'figure_8.pdf'
+if figure==3:
+    filename = 'figure_3.pdf'
+elif figure==4:
+    filename = 'figure_4.pdf'
 else:
     quit()
 plt.gcf().savefig(filename, bbox_inches='tight')
