@@ -11,15 +11,23 @@ from pylab import rcParams
 nx = 32
 h  = 1.0
 dt = 1.0
-problem = 1
-if problem==1:
+
+try:
+  figure      =  int(sys.argv[1]) # 5 generates figure_5, 6 generates figure_6
+except:
+  print("No or wrong command line argument provided, creating figure 5. Use 5 or 6 as command line argument.")
+  figure = 5
+
+
+if figure==5:
     A    = get_upwind(nx, h)
-    filename='upwind-eig.pdf'
-elif problem==2:
+    filename='figure_5.pdf'
+elif figure==6:
     A    = get_centered(nx, h)
-    filename='centered-eig.pdf'
+    filename='figure_6.pdf'
 else:
-    sys.exit("Problem needs to be 1 or 2")
+    sys.exit("Figure needs to be 5 or 6")
+    
 eigs, dummy = LA.eig(A.todense())
 svds        = LA.svdvals(A.todense())
 
@@ -32,7 +40,7 @@ ms = 4
 fig = plt.figure(1)
 plt.plot(0*eigs.real, np.linspace(-2.1,2.1,nx), 'k', linewidth=2)
 plt.plot(eigs.real, eigs.imag, 'bo', markersize=ms, markerfacecolor='b', label='$\lambda(A)$')
-plt.plot(eigs_exp.real, eigs_exp.imag, 'r+', markersize=ms, markerfacecolor='r', label='$\exp(\lambda(A))$')
+plt.plot(eigs_exp.real, eigs_exp.imag, 'rs', markersize=ms, markerfacecolor='r', label='$\exp(\lambda(A))$')
 circle = plt.Circle((0.0,0.0), 1.0, color='k', fill=False)
 fig.gca().add_patch(circle)
 plt.xlim([-2.1, 2.1])

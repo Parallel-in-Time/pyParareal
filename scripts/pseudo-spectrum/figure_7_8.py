@@ -2,11 +2,16 @@ import sys
 sys.path.append('../../src')
 
 from parareal import parareal
-from integrator_dedalus import integrator_dedalus
-from solution_dedalus import solution_dedalus
+from impeuler import impeuler
+from intexact import intexact
+from trapezoidal import trapezoidal
+from special_integrator import special_integrator
+from solution_linear import solution_linear
+from get_matrix import get_upwind, get_centered, get_diffusion
 import numpy as np
 import scipy.sparse as sparse
 from scipy.linalg import svdvals
+import math
 
 import matplotlib.pyplot as plt
 from subprocess import call
@@ -20,18 +25,47 @@ nslices = 10
 tol     = 0.0
 maxiter = 9
 nfine   = 10
-ncoarse = 10
+ncoarse = 1
 
 ndof_f   = 32
-# for 24 DoF, Parareal diverges, for 30 DoF, you get convergence. Of course, speedup would be impossible here.
-#ndof_c   = 24
-ndof_c   = 30
+ndof_c   = 24
 
 epsilon = 0.1
 
-u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
-u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
-para     = parareal(0.0, Tend, nslices, integrator_dedalus, integrator_dedalus, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
+xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
+dx_f    = xaxis_f[1] - xaxis_f[0]
+
+xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
+dx_c = xaxis_c[1] - xaxis_c[0]
+
+# 1 = advection with implicit Euler / upwind FD
+# 2 = advection with trapezoidal rule / centered FD
+try:
+  figure      =  int(sys.argv[1]) # 7 generates figure_7, 8 generates figure_8
+except:
+  print("No or wrong command line argument provided, creating figure 7. Use 7 or 8 as command line argument.")
+  figure = 7
+  
+if figure==7:
+  A_f = get_upwind(ndof_f, dx_f)
+  A_c = get_upwind(ndof_c, dx_c)
+  
+elif figure==8:
+  A_f = get_centered(ndof_f, dx_f)
+  A_c = get_centered(ndof_c, dx_c)
+ 
+else:
+  quit()
+  
+D = A_f*A_f.H - A_f.H*A_f
+print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))
+u0fine   = solution_linear(np.zeros(ndof_f), A_f)
+u0coarse = solution_linear(np.zeros(ndof_c), A_c)
+
+if figure==7:
+  para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
+elif figure==8:
+  para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
 Pmat, Bmat = para.get_parareal_matrix()
 
 nreal = 20
@@ -40,6 +74,7 @@ lambda_real = np.linspace(-3.0, 3.0,  nreal)
 lambda_imag = np.linspace(-3.0, 3.0, nimag)
 sigmin = np.zeros((nimag,nreal))
 circs  = np.zeros((nimag,nreal))
+
    
 '''
 Diffusive problems have (i) very small normality number, (ii) a small pseudo spectral radius and (iii) a small norm
@@ -60,7 +95,7 @@ for i in range(0,nreal):
       print("sv-min: %5.3e" % np.min(sv))
       print("abs(z): %5.3e" % abs(z))
           
-rcParams['figure.figsize'] = 3.54, 3.54
+rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 fig, ax  = plt.subplots()
 X, Y = np.meshgrid(lambda_real, lambda_imag)
@@ -71,12 +106,12 @@ plt.xlabel(r'Real part', fontsize=fs)
 plt.ylabel(r'Imaginary part', fontsize=fs)
 plt.title(r'$1/|| (z - E)^{-1} \||_2$')
 ax.plot(0.0, 0.0, 'k+', markersize=fs)
-if ndof_c==24:
-    filename = 'figure_7.pdf'
-elif ndof_c==30:
-    filename = 'figure_6.pdf'
+if figure==7:
+  filename = 'figure_7.pdf'
+elif figure==8:
+  filename = 'figure_8.pdf'
 else:
-    quit()
+  quit()
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 plt.show()
