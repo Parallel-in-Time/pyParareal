@@ -1,113 +1,87 @@
 import sys
 sys.path.append('../../src')
+import numpy as np
+from numpy import linalg as LA
+import scipy.sparse as sp
+import scipy.linalg as spla
+import scipy.sparse.linalg as linalg
 
 from parareal import parareal
-from impeuler import impeuler
-from intexact import intexact
-from trapezoidal import trapezoidal
-from special_integrator import special_integrator
-from solution_linear import solution_linear
-from get_matrix import get_upwind, get_centered, get_diffusion
-import numpy as np
-import scipy.sparse as sparse
-from scipy.linalg import svdvals
-import math
-
-import matplotlib.pyplot as plt
-from subprocess import call
-from pylab import rcParams
+from integrator_dedalus import integrator_dedalus
+from solution_dedalus import solution_dedalus
 
 from pseudo_spectral_radius import pseudo_spectral_radius
 
-
+from pylab import rcParams
+import matplotlib.pyplot as plt
+from subprocess import call
+  
 Tend    = 1.0
 nslices = 10
 tol     = 0.0
 maxiter = 9
 nfine   = 10
-ncoarse = 1
+ncoarse = 10
 
 ndof_f   = 32
+# for 24 DoF, Parareal diverges, for 30 DoF, you get convergence. Of course, speedup would be impossible here.
 ndof_c   = 24
+ndof_c   = 30 
 
 epsilon = 0.1
 
-xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
-dx_f    = xaxis_f[1] - xaxis_f[0]
-
-xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
-dx_c = xaxis_c[1] - xaxis_c[0]
-
-# 1 = advection with implicit Euler / upwind FD
-# 2 = advection with trapezoidal rule / centered FD
-problem      = 1 ### 1 generates figure_3.pdf, 2 generates figure_4.pdf
-
-if problem==1:
-  A_f = get_upwind(ndof_f, dx_f)
-  A_c = get_upwind(ndof_c, dx_c)
-  
-elif problem==2:
-  A_f = get_centered(ndof_f, dx_f)
-  A_c = get_centered(ndof_c, dx_c)
- 
-else:
-  quit()
-  
-D = A_f*A_f.H - A_f.H*A_f
-print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))
-u0fine   = solution_linear(np.zeros(ndof_f), A_f)
-u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-
-if problem==1:
-  para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
-else:
-  para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
+u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
+u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
+para     = parareal(0.0, Tend, nslices, integrator_dedalus, integrator_dedalus, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
 Pmat, Bmat = para.get_parareal_matrix()
 
-nreal = 20
-nimag = 20
-lambda_real = np.linspace(-3.0, 3.0,  nreal)
-lambda_imag = np.linspace(-3.0, 3.0, nimag)
-sigmin = np.zeros((nimag,nreal))
-circs  = np.zeros((nimag,nreal))
+defect_inf = np.zeros((1,maxiter))
+defect_l2  = np.zeros((1,maxiter))
+slopes     = np.zeros(1)
+psr        = np.zeros(1)
+  
+### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
+E_norm = np.linalg.norm(Pmat.todense(),2)
+  
+Fmat = para.timemesh.get_fine_matrix(u0fine)
+  
+### Fine propagator: Fmat*y = b
+b = np.zeros((ndof_f*(nslices+1),1))
+b[0:ndof_f,:] = u0fine.y
+  
+# compute fine solution
+u = linalg.spsolve(Fmat, b)
+u = u.reshape((ndof_f*(nslices+1),1))
+  
+psr_pmat = pseudo_spectral_radius(Pmat, eps=epsilon)
+psr, a, b, c = psr_pmat.get_psr(verbose=True)
 
-   
-'''
-Diffusive problems have (i) very small normality number, (ii) a small pseudo spectral radius and (iii) a small norm
-Also, the eps-isolines are very much circles.
-QUESTION: can we work out the D matrix above and say something about how it looks like for diffusive/non-diffusive problems?
-'''
-print("Norm of E: %5.3f" % np.linalg.norm(Pmat.todense(),2))
-for i in range(0,nreal):
-  for j in range(0,nimag):
-    z = lambda_real[i] + 1j*lambda_imag[j]
-    # Use the algorithm on p. 371, Chapter 39 in the Trefethen book
-    M = z*sparse.identity(np.shape(Pmat)[0]) - Pmat
-    sv = svdvals(M.todense())
-    sigmin[j,i] = np.min(sv)
-    circs[j,i]  = np.sqrt(lambda_real[i]**2 + lambda_imag[j]**2)
-    if np.min(sv) > abs(z):
-      print("You were wrong!!!")
-      print("sv-min: %5.3e" % np.min(sv))
-      print("abs(z): %5.3e" % abs(z))
-          
-rcParams['figure.figsize'] = 3.54, 3.54
+# Now do Parareal iteration
+for k in range(maxiter):
+    P_power_k       = LA.matrix_power(Pmat.todense(), k+1)
+    defect_l2[0,k]  = np.linalg.norm(P_power_k , 2)
+  
+  
+rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
-fig, ax  = plt.subplots()
-X, Y = np.meshgrid(lambda_real, lambda_imag)
-lvls = np.linspace(0.0, 1.0, 6)
-cset = ax.contour(X, Y, sigmin, levels=lvls, colors='k')
-ax.clabel(cset, lvls, fontsize=fs, inline=True)
-plt.xlabel(r'Real part', fontsize=fs)
-plt.ylabel(r'Imaginary part', fontsize=fs)
-plt.title(r'$1/|| (z - E)^{-1} \||_2$')
-ax.plot(0.0, 0.0, 'k+', markersize=fs)
-if problem==1:
-  filename = 'figure_3.pdf'
-elif problem==2:
-  filename = 'figure_4.pdf'
+ms = 4
+fig = plt.figure(1)
+plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| e^k ||$')
+plt.semilogy(range(1,5), [E_norm**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b--', label=r'$|| E ||_2^k$')
+plt.semilogy(range(1,5), [psr**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'r-.', label=r'$\sigma_{\epsilon}(E)^k$')
+plt.legend(loc='lower left', fontsize=fs, prop={'size':fs-2}, handlelength=3)
+
+plt.xlabel('Iteration $k$', fontsize=fs)
+
+#plt.ylim([1e-15, 1e1])
+plt.xlim([1, maxiter+1])
+plt.xticks(range(2,maxiter,2))
+if ndof_c==24:
+    filename = 'figure_7.pdf'
+elif ndof_c==30:
+    filename = 'figure_8.pdf'
 else:
-  quit()
+    quit()
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 plt.show()
