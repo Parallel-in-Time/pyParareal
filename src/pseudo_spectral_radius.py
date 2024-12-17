@@ -18,7 +18,7 @@ class pseudo_spectral_radius(object):
     # Note that the simple way of computing the PSR used here only works for nil-potent matrices where epsilon isolines are around the origin. 
     # The matrix E is nil-potent if and only if its spectrum is {0}, so check that it is
     eigval, dummy = np.linalg.eig(E.todense())
-    assert min(eigval)==0 and max(eigval)==0, "Provided matrix is not nil-potent"
+    assert abs(min(eigval))<1e-15 and abs(max(eigval))<1e-15, ("Provided matrix is not nil-potent, min(eigval): %5.2e, max(eigval): %5.2e" % (min(eigval), max(eigval)))
     self.Id  = sparse.identity(self.n)
   
   '''

@@ -14,38 +14,46 @@ from trapezoidal import trapezoidal
 from solution_linear import solution_linear
 from solution_dedalus import solution_dedalus
 from get_matrix import get_upwind, get_centered, get_diffusion
+from parameter import parameter
 
 from pylab import rcParams
 import matplotlib.pyplot as plt
 from subprocess import call
 
-  
-Tend    = 1.0
-nslices = 10
-tol     = 0.0
-maxiter = 9
-nsteps  = [1, 2, 4, 8, 12, 16, 20]
-
-ndof_f   = 32
-ndof_c_v = [16, 24, 30]
-xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
-dx_f    = xaxis_f[1] - xaxis_f[0]
-
 # 1 = advection with implicit Euler / upwind FD
 # 2 = advection with trapezoidal rule / centered FD
 # 3 = Dedalus
-problem = 3
+try:
+  figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
+except:
+  print("No or wrong command line argument provided, creating figure 11. Use 11, 12, 13 or 14 as command line argument.")
+  figure = 11
+assert 11<= figure <= 14, "Figure should be 11, 12, 13 or 14"
+  
+if figure==11 or figure==12:
+  par = parameter(dedalus = False)
+elif figure==13 or figure==14:
+  par = parameter(dedalus = True)
+else:
+  sys.exit("Figure should be 11, 12, 13 or 14")
 
-if problem==1:
+Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
+
+nsteps   = [1, 2, 4, 8, 12, 16, 20]
+ndof_c_v = [16, 24, 30]
+xaxis_f  = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
+dx_f     = xaxis_f[1] - xaxis_f[0]
+
+if figure==11:
   A_f = get_upwind(ndof_f, dx_f)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
-elif problem==2:
+elif figure==12:
   A_f = get_centered(ndof_f, dx_f)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
-elif problem==3:
+elif figure==13:
   u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
 else:
-  sys.exit("Problem can only have values 1, 2 or 3")    
+  sys.exit("Figure can only have values 11, 12 or 13")    
 
 norm_l2  = np.zeros((3,np.size(nsteps)))
 norm_inf = np.zeros((3,np.size(nsteps)))
@@ -58,24 +66,27 @@ for nn in range(3):
   xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
   dx_c    = xaxis_c[1] - xaxis_c[0]
 
-  if problem==1:
+  if figure==11:
     A_c = get_upwind(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-  elif problem==2:
+    filename = 'figure_11.pdf'
+  elif figure==12:
     A_c = get_centered(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-  elif problem==3:
+    filename = 'figure_12.pdf'
+  elif figure==13:
     u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
+    filename = 'figure_13.pdf'
   else:
     sys.exit("Problem can only have values 1, 2 or 3")    
       
   for mm in range(np.size(nsteps)):
   
-    if problem==1:
+    if figure==11:
       para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)
-    elif problem==2:
+    elif figure==12:
       para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)
-    elif problem==3:
+    elif figure==13:
      para     = parareal(0.0, Tend, nslices, integrator_dedalus, integrator_dedalus, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)    
     else:
       quit()
@@ -99,12 +110,6 @@ plt.xlabel(r'$\delta t = \Delta t$', fontsize=fs)
 plt.ylabel(r'$|| \mathbf{E} ||_2$', fontsize=fs)
 plt.xlim([0.0, dt_f_v[0,0]])
 #plt.xlabel([0, maxiter])
-if problem==1:
-  filename='parareal-coarsening-advection-upwind-norm.pdf'
-elif problem==2:
-  filename='parareal-coarsening-advection-centered-norm.pdf'
-elif problem==3:
-  filename = 'parareal-coarsening-heat-norm.pdf'
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 plt.show()

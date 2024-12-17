@@ -41,7 +41,7 @@ else:
   
 epsilon = 0.1
 
-u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
+u0fine   = solution_dedalus(np.zeros(ndof_f), ndof_f)
 u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
 para     = parareal(0.0, Tend, nslices, integrator_dedalus, integrator_dedalus, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
 Pmat, Bmat = para.get_parareal_matrix()
@@ -72,6 +72,7 @@ for k in range(maxiter):
     P_power_k       = LA.matrix_power(Pmat.todense(), k+1)
     defect_l2[0,k]  = np.linalg.norm(P_power_k , 2)
   
+print("Defect after maxiter iterations: %5.3e" % defect_l2[0,-1])  
   
 rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
