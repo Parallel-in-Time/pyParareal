@@ -12,7 +12,6 @@ If you use it (or parts of it) for a publication, please cite
   author = {Ruprecht, Daniel},  
   doi = {10.1007/s00791-018-0296-z},  
   journal = {Computing and Visualization in Science},  
-  number = {1},  
   pages = {1--17},  
   title = {Wave propagation characteristics of Parareal},  
   url = {https://doi.org/10.1007/s00791-018-0296-z},  
