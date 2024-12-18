@@ -52,7 +52,7 @@ specifies the used [Anaconda](https://www.anaconda.com/) environment. If Anacond
 
 However, to use all functionality, you will also need a working installation of the [Dedalus software](https://dedalus-project.readthedocs.io/en/latest/pages/installation.html).
 
-How can I reproduce Figures from the above publication?
+How can I reproduce Figures from the paper "Wave propagation characteristics of Parareal"?
 -----------------
 
  - Fig. 1 and Fig. 2 --> scripts/plot_svd_vs_dt.py
@@ -74,6 +74,11 @@ How can I reproduce Figures from the above publication?
 Pseudo-spectrum of the Parareal iteration matrix
 -----------------
 The code now also offers the possibility to compute the [pseudo-spectrum and pseudo-spectral radius](https://doi.org/10.1007/978-3-662-03972-4_6) of the Parareal iteration matrix.
+
+
+How can I reproduce Figures from the paper "Impact of spatial coarsening on Parareal convergence"?
+-----------------
+tba
 
 ## Acknowledgements
 
