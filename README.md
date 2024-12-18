@@ -38,8 +38,19 @@ How can I reproduce Figures from the publication?
  - Fig. 15 -> scripts/plot_conv_vs_waveno.py
  - Fig. 16 -> scripts/plot_svd_vs_waveno.py 
 
+## Acknowledgements
+
+This project has received funding from the [European High-Performance
+Computing Joint Undertaking](https://eurohpc-ju.europa.eu/) (JU) under
+grant agreement No 955701 ([TIME-X](https://www.time-x-eurohpc.eu/)).
+The JU receives support from the European Union's Horizon 2020 research
+and innovation programme and Belgium, France, Germany, and Switzerland.
+This project also received funding from the [German Federal Ministry of
+Education and Research](https://www.bmbf.de/bmbf/en/home/home_node.html)
+(BMBF) grants  16HPC048.
+
 
 Who do I talk to?
 -----------------
 
-This code is written by [Daniel Ruprecht](http://parallel-in-time.org/groups/tuhh.html).
+This code is written by [Daniel Ruprecht](https://www.mat.tuhh.de/home/druprecht/?homepage_id=druprecht).
