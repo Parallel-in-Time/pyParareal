@@ -5,7 +5,7 @@ Python Parareal is a simple code that is mostly useful to produce matrix formula
 
 Attribution
 -----------
-You can freely use and reuse this code in line with the BSD license. 
+You can freely use and reuse this code in line with its [license](https://github.com/Parallel-in-Time/pyParareal/blob/4d4e59aa1efcf62b0eca206e20517ebd67b5afc9/LICENSE).
 If you use it (or parts of it) for a publication, please cite
 
 @Article{Ruprecht2018,  
@@ -74,7 +74,10 @@ How can I reproduce Figures from the paper "Wave propagation characteristics of 
 Pseudo-spectrum of the Parareal iteration matrix
 -----------------
 The code now also offers the possibility to compute the [pseudo-spectrum and pseudo-spectral radius](https://doi.org/10.1007/978-3-662-03972-4_6) of the Parareal iteration matrix.
+You can also uses these parts in line with the in line with its [license](https://github.com/Parallel-in-Time/pyParareal/blob/4d4e59aa1efcf62b0eca206e20517ebd67b5afc9/LICENSE).
+If you do, please also cite the following paper in addition to the one stated above:
 
+tba
 
 How can I reproduce Figures from the paper "Impact of spatial coarsening on Parareal convergence"?
 -----------------
