@@ -1,7 +1,7 @@
 pyParareal
 ============
 
-Python Parareal code to analyse Parareal's wave propagation characteristics.
+Python Parareal is a simple code that is mostly useful to produce matrix formulations of Parareal for linear initial value problems that can then be used for theoretical analysis. The code is not parallelized, it is a tool for theory, not performance measurements. 
 
 Attribution
 -----------
@@ -19,7 +19,40 @@ url="https://doi.org/10.1007/s00791-018-0296-z"
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1012274.svg)](https://doi.org/10.5281/zenodo.1012274)
 
-How can I reproduce Figures from the publication?
+Structure of the code
+-----------------
+The main functionality is found in the classes located in the 
+
+> ./src
+
+folder. Scripts to produce various figures can be found in the
+
+> ./scripts
+
+folder and its subfolders. Tests are located in
+
+> ./tests
+
+and can be run by typing
+
+> pytest ./tests/
+
+while in the base folder of the code.
+
+Dependencies
+-----------------
+
+The file 
+
+> environment.yml
+
+specifies the used [Anaconda](https://www.anaconda.com/) environment. If Anaconda is installed, the [environment can be created](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) by typing
+
+> conda env create -f environment.yml
+
+However, to use all functionality, you will also need a working installation of the [Dedalus software](https://dedalus-project.readthedocs.io/en/latest/pages/installation.html).
+
+How can I reproduce Figures from the above publication?
 -----------------
 
  - Fig. 1 and Fig. 2 --> scripts/plot_svd_vs_dt.py
@@ -36,7 +69,11 @@ How can I reproduce Figures from the publication?
  - Fig. 13 -> scripts/plot_dispersion.py with Tend=64 and Nsamples=120
  - Fig. 14 -> scripts/plot_svd_vs_P.py
  - Fig. 15 -> scripts/plot_conv_vs_waveno.py
- - Fig. 16 -> scripts/plot_svd_vs_waveno.py 
+ - Fig. 16 -> scripts/plot_svd_vs_waveno.py
+
+Pseudo-spectrum of the Parareal iteration matrix
+-----------------
+The code now also offers the possibility to compute the [pseudo-spectrum and pseudo-spectral radius](https://doi.org/10.1007/978-3-662-03972-4_6) of the Parareal iteration matrix.
 
 ## Acknowledgements
 
