@@ -9,13 +9,14 @@ url: https://doi.org/10.1007/s00791-018-0296-z
 doi: 10.1007/s00791-018-0296-z
 date-released: '2018-12-18'
 preferred-citation:
+  type: article
   authors:
     - family-names: Ruprecht
       given-names: Daniel
   title: Wave propagation characteristics of Parareal
   doi: 10.1007/s00791-018-0296-z
   url: https://doi.org/10.1007/s00791-018-0296-z
-  type: article-journal
+  journal: "Computing and Visualization in Science"
   year: '2018'
   conference: {}
   publisher: {}
