@@ -8,16 +8,16 @@ Attribution
 You can freely use and reuse this code in line with its [license](https://github.com/Parallel-in-Time/pyParareal/blob/4d4e59aa1efcf62b0eca206e20517ebd67b5afc9/LICENSE).
 If you use it (or parts of it) for a publication, please cite
 
-@article{Ruprecht2018,
-  author = {Ruprecht, Daniel},
-  doi = {10.1007/s00791-018-0296-z},
-  journal = {Computing and Visualization in Science},
-  number = {1},
-  pages = {1--17},
-  title = {Wave propagation characteristics of Parareal},
-  url = {https://doi.org/10.1007/s00791-018-0296-z},
-  volume = {19},
-  year = {2018}
+@article{Ruprecht2018,  
+  author = {Ruprecht, Daniel},  
+  doi = {10.1007/s00791-018-0296-z},  
+  journal = {Computing and Visualization in Science},  
+  number = {1},  
+  pages = {1--17},  
+  title = {Wave propagation characteristics of Parareal},  
+  url = {https://doi.org/10.1007/s00791-018-0296-z},  
+  volume = {19},  
+  year = {2018}  
 }
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1012274.svg)](https://doi.org/10.5281/zenodo.1012274)
