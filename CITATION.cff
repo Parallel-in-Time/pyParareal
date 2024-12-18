@@ -17,6 +17,8 @@ preferred-citation:
   doi: 10.1007/s00791-018-0296-z
   url: https://doi.org/10.1007/s00791-018-0296-z
   journal: "Computing and Visualization in Science"
+  volume: 19
+  pages: 1--17
   year: '2018'
   conference: {}
   publisher: {}
