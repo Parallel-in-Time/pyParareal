@@ -94,6 +94,8 @@ The scripts to reproduce the figures from this paper can be found [here](scripts
  - figure_11-12.py with command line parameter 11 or 12 produces files figure_11.pdf and figure_12.pdf
  - figure_13-14.py with command line parameter 13 or 14 produces files figure_13.pdf and figure_14.pdf
  - figure_15-16.py with command line parameter 15 or 16 produces files figure_15.pdf and figure_16.pdf
+
+![image](https://github.com/user-attachments/assets/9a0c18d7-1238-4e05-9d50-5640a61a9fd5)
    
 ## Acknowledgements
 
