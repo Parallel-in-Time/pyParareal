@@ -57,6 +57,8 @@ However, to use all functionality, you will also need a working installation of 
 How can I reproduce Figures from the paper "Wave propagation characteristics of Parareal"?
 -----------------
 
+The scripts to reproduce the figures from this paper can be found [here](scripts/computing_and_visualization_in_science_2018).
+
  - Fig. 1 and Fig. 2 --> scripts/plot_svd_vs_dt.py
  - Fig. 3 --> scripts/plot_dispersion.py with parameter nu=0.0 and nu=0.1
  - Fig. 4 --> example/run.py
