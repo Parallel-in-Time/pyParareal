@@ -13,22 +13,15 @@ from trapezoidal import trapezoidal
 from solution_linear import solution_linear
 from get_matrix import get_upwind, get_centered
 from pseudo_spectral_radius import pseudo_spectral_radius
+from parameter import parameter
 
 from pylab import rcParams
 import matplotlib.pyplot as plt
 from subprocess import call
   
-Tend    = 1.0
-nslices = 10
-tol     = 0.0
-maxiter = 9
-nfine   = 10
-ncoarse = 1
-
-ndof_f   = 32
+par = parameter(dedalus = False)
+Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 ndof_c   = 24
-
-epsilon = 0.1
 
 xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
 dx_f    = xaxis_f[1] - xaxis_f[0]
@@ -41,19 +34,19 @@ dx_c = xaxis_c[1] - xaxis_c[0]
 try:
   figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
 except:
-  print("No or wrong command line argument provided, creating figure 1. Use 1 or 2 as command line argument.")
-  figure = 1
+  print("No or wrong command line argument provided, creating figure 13. Use 13 or 14 as command line argument.")
+  figure = 13
 
-if figure==1:
+if figure==13:
   A_f = get_upwind(ndof_f, dx_f)
   A_c = get_upwind(ndof_c, dx_c)
-  
-elif figure==2:
+  filename = 'figure_13.pdf'
+elif figure==14:
   A_f = get_centered(ndof_f, dx_f)
   A_c = get_centered(ndof_c, dx_c)
- 
+  filename = 'figure_14.pdf'
 else:
-  sys.exit("Figure should be set to 1 or 2")
+  sys.exit("Figure should be set to 13 or 14")
   
 D = A_f*A_f.H - A_f.H*A_f
 print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))
@@ -65,7 +58,7 @@ psr        = np.zeros(1)
   
 u0coarse = solution_linear(np.zeros(ndof_c), A_c)
 
-if figure==1:
+if figure==13:
   para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
 else:
   para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)
@@ -99,8 +92,8 @@ fs = 8
 ms = 4
 fig = plt.figure(1)
 plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| e^k ||$')
-plt.semilogy(range(1,5), [E_norm**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'b--', label=r'$|| E ||_2^k$')
-plt.semilogy(range(1,5), [psr**(val-1)*1.1*defect_l2[0,0] for val in range(1,5)], 'r-.', label=r'$\sigma_{\epsilon}(E)^k$')
+plt.semilogy(range(1,5), [E_norm**(val-1)*2.0*defect_l2[0,0] for val in range(1,5)], 'b-.', label=r'$|| E ||_2^k$', linewidth=2)
+plt.semilogy(range(1,5), [psr**(val-1)*2.0*defect_l2[0,0] for val in range(1,5)], 'r--', label=r'$\sigma_{\epsilon}(E)^k$', linewidth=2)
 plt.legend(loc='upper right', fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlim([1, maxiter+1])
 plt.ylim([1e-5, 1e3])
@@ -110,12 +103,6 @@ plt.xlabel('Iteration $k$', fontsize=fs)
 #plt.ylim([1e-15, 1e1])
 plt.xlim([1, maxiter+1])
 plt.xticks(range(2,maxiter,2))
-if figure==1:
-  filename = 'figure_1.pdf'
-elif figure==2:
-  filename = 'figure_2.pdf'
-else:
-  quit()
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 plt.show()

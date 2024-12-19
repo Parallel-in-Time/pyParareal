@@ -11,35 +11,29 @@ from scipy.linalg import svdvals
 import matplotlib.pyplot as plt
 from subprocess import call
 from pylab import rcParams
+from parameter import parameter
 
 from pseudo_spectral_radius import pseudo_spectral_radius
 
 
-Tend    = 1.0
-nslices = 10
-tol     = 0.0
-maxiter = 9
-nfine   = 10
-ncoarse = 10
+par = parameter(dedalus = True)
+Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 
-ndof_f   = 32
 # for 24 DoF, Parareal diverges, for 30 DoF, you get convergence. Of course, speedup would be impossible here.
 try:
-  figure      =  int(sys.argv[1]) # 9 generates figure_9, 10 generates figure_10
+  figure      =  int(sys.argv[1]) 
 except:
-  print("No or wrong command line argument provided, creating figure 9. Use 9 or 10 as command line argument.")
-  figure = 9
+  print("No or wrong command line argument provided, creating figure 11. Use 11 or 12 as command line argument.")
+  figure = 11
 
-if figure==9:
+if figure==11:
   ndof_c   = 24
-  filename = 'figure_9.pdf'
-elif figure==10:
+  filename = 'figure_11.pdf'
+elif figure==12:
   ndof_c   = 30
-  filename = 'figure_10.pdf'
+  filename = 'figure_12.pdf'
 else:
-  sys.exit("Figure needs to be 9 or 10")
-
-epsilon = 0.1
+  sys.exit("Figure needs to be 11 or 12")
 
 u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
 u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
