@@ -85,8 +85,16 @@ tba
 
 How can I reproduce Figures from the paper "Impact of spatial coarsening on Parareal convergence"?
 -----------------
-tba
 
+The scripts to reproduce the figures from this paper can be found [here](scripts/pseudo-spectrum).
+
+ - figure_1-4.py with command line parameter 1, 2, 3 or 4 produces files figure_1.pdf to figure_4.pdf
+ - figure_5-8.py with command line parameter 5, 6, 7 or 8 produces files figure_5.pdf to figure_8.pdf
+ - figure_9-10.py with command line parameter 9 or 10 produces files figure_9.pdf and figure_10.pdf
+ - figure_11-12.py with command line parameter 11 or 12 produces files figure_11.pdf and figure_12.pdf
+ - figure_13-14.py with command line parameter 13 or 14 produces files figure_13.pdf and figure_14.pdf
+ - figure_15-16.py with command line parameter 15 or 16 produces files figure_15.pdf and figure_16.pdf
+   
 ## Acknowledgements
 
 This project has received funding from the [European High-Performance
