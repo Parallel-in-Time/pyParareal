@@ -98,6 +98,11 @@ This project also received funding from the [German Federal Ministry of
 Education and Research](https://www.bmbf.de/bmbf/en/home/home_node.html)
 (BMBF) grants  16HPC048.
 
+<p align="center">
+  <img src="./img/EuroHPC.jpg" height="105"/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="./img/LogoTime-X.png" height="105" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="./img/BMBF_gefoerdert_2017_en.jpg" height="105" />
+</p>
 
 Who do I talk to?
 -----------------
