@@ -15,32 +15,44 @@ dt = 1.0
 try:
   figure      =  int(sys.argv[1]) # 5 generates figure_5, 6 generates figure_6
 except:
-  print("No or wrong command line argument provided, creating figure 5. Use 5 or 6 as command line argument.")
-  figure = 5
+  print("No or wrong command line argument provided, creating figure 1. Use 1, 2, 3 or 4 as command line argument.")
+  figure = 1
 
 
-if figure==5:
+if figure==1:
     A    = get_upwind(nx, h)
-    filename='figure_5.pdf'
-elif figure==6:
+    filename='figure_1.pdf'
+elif figure==2:
     A    = get_centered(nx, h)
-    filename='figure_6.pdf'
+    filename='figure_2.pdf'
+elif figure==3:
+    A    = get_upwind(nx, h)
+    filename='figure_3.pdf'
+elif figure==4:
+    A   = get_centered(nx, h)
+    filename='figure_4.pdf'    
 else:
-    sys.exit("Figure needs to be 5 or 6")
+    sys.exit("Figure needs to be 1, 2, 3 or 4")
     
-eigs, dummy = LA.eig(A.todense())
+eigs_space, dummy = LA.eig(A.todense())
 svds        = LA.svdvals(A.todense())
 
-A_exp                = LA.expm(A*dt)
-eigs_exp, dummy      = LA.eig(A_exp.todense())
+if figure==1 or figure==2:
+  A_exp                = LA.expm(A*dt)
+  eigs_time, dummy      = LA.eig(A_exp.todense())
+  mylabel = '$\exp(\Delta t A)$'
+else:
+  A_ie = LA.inv(np.eye(nx) - dt*A)
+  eigs_time, dummy = LA.eig(A_ie)
+  mylabel = '$(I - \Delta t A)^{-1}$'
 
 rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 ms = 4
 fig = plt.figure(1)
-plt.plot(0*eigs.real, np.linspace(-2.1,2.1,nx), 'k', linewidth=2)
-plt.plot(eigs.real, eigs.imag, 'bo', markersize=ms, markerfacecolor='b', label='$\lambda(A)$')
-plt.plot(eigs_exp.real, eigs_exp.imag, 'rs', markersize=ms, markerfacecolor='r', label='$\exp(\lambda(A))$')
+plt.plot(0*eigs_space.real, np.linspace(-2.1,2.1,nx), 'k', linewidth=2)
+plt.plot(eigs_space.real, eigs_space.imag, 'bo', markersize=ms, markerfacecolor='b', label='$A$')
+plt.plot(eigs_time.real, eigs_time.imag, 'rs', markersize=ms, markerfacecolor='r', label=mylabel)
 circle = plt.Circle((0.0,0.0), 1.0, color='k', fill=False)
 fig.gca().add_patch(circle)
 plt.xlim([-2.1, 2.1])

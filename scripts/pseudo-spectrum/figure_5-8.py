@@ -26,16 +26,16 @@ from subprocess import call
 try:
   figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
 except:
-  print("No or wrong command line argument provided, creating figure 11. Use 11, 12, 13 or 14 as command line argument.")
-  figure = 11
-assert 11<= figure <= 14, "Figure should be 11, 12, 13 or 14"
+  print("No or wrong command line argument provided, creating figure 5. Use 5, 6, 7 or 8 as command line argument.")
+  figure = 5
+assert 5<= figure <= 8, "Figure should be 5, 6, 7 or 8"
   
-if figure==11 or figure==12:
+if figure==5 or figure==6:
   par = parameter(dedalus = False)
-elif figure==13 or figure==14:
+elif figure==7 or figure==8:
   par = parameter(dedalus = True)
 else:
-  sys.exit("Figure should be 11, 12, 13 or 14")
+  sys.exit("This should have been caught above")
 
 Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 
@@ -44,16 +44,16 @@ ndof_c_v = [16, 24, 30]
 xaxis_f  = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
 dx_f     = xaxis_f[1] - xaxis_f[0]
 
-if figure==11:
+if figure==5:
   A_f = get_upwind(ndof_f, dx_f)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
-elif figure==12:
+elif figure==6 or figure==7:
   A_f = get_centered(ndof_f, dx_f)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
-elif figure==13:
+elif figure==8:
   u0fine = solution_dedalus(np.zeros(ndof_f), ndof_f)
 else:
-  sys.exit("Figure can only have values 11, 12 or 13")    
+  sys.exit("This should have been caught above")
 
 norm_l2  = np.zeros((3,np.size(nsteps)))
 norm_inf = np.zeros((3,np.size(nsteps)))
@@ -66,30 +66,34 @@ for nn in range(3):
   xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
   dx_c    = xaxis_c[1] - xaxis_c[0]
 
-  if figure==11:
+  if figure==5:
     A_c = get_upwind(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-    filename = 'figure_11.pdf'
-  elif figure==12:
+    filename = 'figure_5.pdf'
+  elif figure==6:
     A_c = get_centered(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-    filename = 'figure_12.pdf'
-  elif figure==13:
+    filename = 'figure_6.pdf'
+  elif figure==7:
+    A_c = get_centered(ndof_c, dx_c)
+    u0coarse = solution_linear(np.zeros(ndof_c), A_c)
+    filename = 'figure_7.pdf'    
+  elif figure==8:
     u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
-    filename = 'figure_13.pdf'
+    filename = 'figure_8.pdf'
   else:
-    sys.exit("Problem can only have values 1, 2 or 3")    
+    sys.exit("Value of figure should be")    
       
   for mm in range(np.size(nsteps)):
   
-    if figure==11:
+    if figure==5 or figure==7:
       para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)
-    elif figure==12:
-      para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)
-    elif figure==13:
+    elif figure==6:
+      para     = parareal(0.0, Tend, nslices, trapezoidal, trapezoidal, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)    
+    elif figure==8:
      para     = parareal(0.0, Tend, nslices, integrator_dedalus, integrator_dedalus, nsteps[mm], nsteps[mm], tol, maxiter, u0fine, u0coarse)    
     else:
-      quit()
+      sys.exit("Value of figure should be")    
     Pmat, Bmat = para.get_parareal_matrix()
     dt_f_v[0,mm] = para.timemesh.slices[0].int_fine.dt
     dt_c_v[0,mm] = para.timemesh.slices[0].int_coarse.dt
