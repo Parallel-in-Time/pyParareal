@@ -82,7 +82,7 @@ else:
   
 
 Pmat, Bmat = para.get_parareal_matrix()
-
+print("|| E ||_2 = %5.2f" % np.linalg.norm(Pmat.todense(), 2))
 nreal = 20
 nimag = 20
 lambda_real = np.linspace(-3.0, 3.0,  nreal)
@@ -96,7 +96,6 @@ Diffusive problems have (i) very small normality number, (ii) a small pseudo spe
 Also, the eps-isolines are very much circles.
 QUESTION: can we work out the D matrix above and say something about how it looks like for diffusive/non-diffusive problems?
 '''
-print("2-Norm of E: %5.3f" % np.linalg.norm(Pmat.todense(),2))
 for i in range(0,nreal):
   for j in range(0,nimag):
     z = lambda_real[i] + 1j*lambda_imag[j]

@@ -84,6 +84,7 @@ else:
   
 
 Pmat, Bmat = para.get_parareal_matrix()
+print("|| E ||_2 = %5.2f" % np.linalg.norm(Pmat.todense(),2))
 
 defect_inf = np.zeros((1,maxiter))
 defect_l2  = np.zeros((1,maxiter))
