@@ -20,9 +20,6 @@ from pylab import rcParams
 import matplotlib.pyplot as plt
 from subprocess import call
 
-# 1 = advection with implicit Euler / upwind FD
-# 2 = advection with trapezoidal rule / centered FD
-# 3 = Dedalus
 try:
   figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
 except:
@@ -100,7 +97,7 @@ for nn in range(3):
         
     ### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
     norm_l2[nn,mm] = np.linalg.norm(Pmat.todense(), 2)
-
+  
 rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 ms = 4
