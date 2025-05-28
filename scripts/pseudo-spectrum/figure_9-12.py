@@ -27,9 +27,9 @@ try:
 except:
   print("No or wrong command line argument provided, creating figure 9. Use 9, 10, 11 or 12 as command line argument.")
   figure = 5
-assert 9<= figure <= 12, "Figure should be 9, 10, 11 or 12"
+assert (9<= figure <= 12) or figure==0, "Figure should be 9, 10, 11 or 12"
   
-if figure==9 or figure==10:
+if figure==9 or figure==10 or figure==0:
   par = parameter(dedalus = False)
   ndof_c   = 24
 elif figure==11: 
@@ -44,9 +44,9 @@ else:
 Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 
 if figure==9:
-  xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
   dx_f    = xaxis_f[1] - xaxis_f[0]
-  xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
   dx_c = xaxis_c[1] - xaxis_c[0]  
   A_f = get_upwind(ndof_f, dx_f)
   A_c = get_upwind(ndof_c, dx_c)
@@ -57,9 +57,9 @@ if figure==9:
   D = A_f*A_f.H - A_f.H*A_f
   print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))  
 elif figure==10:
-  xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
   dx_f    = xaxis_f[1] - xaxis_f[0]
-  xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
   dx_c = xaxis_c[1] - xaxis_c[0]  
   A_f = get_centered(ndof_f, dx_f)
   A_c = get_centered(ndof_c, dx_c)
@@ -76,7 +76,18 @@ elif figure==11 or figure==12:
   if figure==11:
    filename = 'figure_11.pdf'
   elif figure==12:
-   filename = 'figure_12.pdf'        
+   filename = 'figure_12.pdf'   
+elif figure==0:
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
+  dx_f    = xaxis_f[1] - xaxis_f[0]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
+  dx_c = xaxis_c[1] - xaxis_c[0]  
+  A_f = get_diffusion(ndof_f, dx_f)
+  A_c = get_diffusion(ndof_c, dx_c)
+  u0fine   = solution_linear(np.zeros(ndof_f), A_f)
+  u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
+  para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)  
+  filename = 'figure_00.pdf'
 else:
   sys.exit("Wrong value for figure")
   

@@ -12,7 +12,7 @@ from integrator_dedalus import integrator_dedalus
 from solution_dedalus import solution_dedalus
 from solution_linear import solution_linear
 
-from get_matrix import get_upwind, get_centered
+from get_matrix import get_upwind, get_centered, get_diffusion
 from impeuler import impeuler
 from intexact import intexact
 from trapezoidal import trapezoidal
@@ -29,9 +29,9 @@ try:
 except:
   print("No or wrong command line argument provided, creating figure 13. Use 13, 14, 15 or 16 as command line argument.")
   figure = 5
-assert 13<= figure <= 16, "Figure should be 13, 14, 15 or 16"
+assert 13<= figure <= 16 or figure==0, "Figure should be 13, 14, 15 or 16"
   
-if figure==13 or figure==14:
+if figure==13 or figure==14 or figure==0:
   par = parameter(dedalus = False)
   ndof_c   = 24
 elif figure==15: 
@@ -46,9 +46,9 @@ else:
 Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 
 if figure==13:
-  xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
   dx_f    = xaxis_f[1] - xaxis_f[0]
-  xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
   dx_c = xaxis_c[1] - xaxis_c[0]  
   A_f = get_upwind(ndof_f, dx_f)
   A_c = get_upwind(ndof_c, dx_c)
@@ -59,9 +59,9 @@ if figure==13:
   D = A_f*A_f.H - A_f.H*A_f
   print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))  
 elif figure==14:
-  xaxis_f = np.linspace(0.0, 2.0, ndof_f+1)[0:ndof_f]
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
   dx_f    = xaxis_f[1] - xaxis_f[0]
-  xaxis_c = np.linspace(0.0, 2.0, ndof_c+1)[0:ndof_c]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
   dx_c = xaxis_c[1] - xaxis_c[0]  
   A_f = get_centered(ndof_f, dx_f)
   A_c = get_centered(ndof_c, dx_c)
@@ -78,7 +78,20 @@ elif figure==15 or figure==16:
   if figure==15:
    filename = 'figure_15.pdf'
   elif figure==16:
-   filename = 'figure_16.pdf'        
+   filename = 'figure_16.pdf'    
+elif figure==0:
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
+  dx_f    = xaxis_f[1] - xaxis_f[0]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
+  dx_c = xaxis_c[1] - xaxis_c[0]  
+  A_f = get_diffusion(ndof_f, dx_f)
+  A_c = get_diffusion(ndof_c, dx_c)
+  u0fine   = solution_linear(np.zeros(ndof_f), A_f)
+  u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
+  para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)  
+  filename = 'figure_00.pdf'    
+  D = A_f*A_f.H - A_f.H*A_f
+  print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))   
 else:
   sys.exit("Wrong value for figure")
   
