@@ -43,7 +43,7 @@ else:
 Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 
 nsteps   = [1, 2, 4, 8, 12, 16, 20]
-nsteps   = [1, 10, 50, 100, 1000, 10000]
+nsteps   = [1, 10, 25, 50, 75, 100]
 
 ndof_c_v = [16, 24, 30]
 xaxis_f  = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
@@ -90,6 +90,7 @@ for nn in range(3):
   elif figure==8:
     u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
     filename = 'figure_8.pdf'
+    sys.exit("Cannot compute exp(lambda*dt) for Dedalus, because the matrix A_f is not accessible.")    
   else:
     sys.exit("Value of figure should be")    
       
@@ -123,27 +124,15 @@ rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 ms = 4
 fig = plt.figure(1)
-#plt.plot(dt_f_v[0,:], norm_l2[0,:], 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
-#plt.plot(dt_f_v[0,:], norm_l2[1,:], 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
-#plt.plot(dt_f_v[0,:], norm_l2[2,:], 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
-#plt.loglog(dt_f_v[0,:], norm_l2[0,:]-np.abs(np.exp(np.multiply(A_f_eig[0,:],dt_f_v[0,:]))), 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
-#plt.loglog(dt_f_v[0,:], norm_l2[1,:]-np.abs(np.exp(np.multiply(A_f_eig[1,:],dt_f_v[0,:]))), 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
-print(norm_l2[1,:])
-print(A_f_eig[1,:])
-print("\n")
-print(norm_l2[2,:])
-print(A_f_eig[2,:])
-
-plt.loglog(dt_f_v[0,:], norm_l2[2,:]-0.0*np.abs(np.exp(np.multiply(A_f_eig[2,:],dt_f_v[0,:]))), 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
-#plt.plot(dt_f_v[0,:], 1.0 + 0.0*dt_f_v[0,:], 'k:')
+plt.loglog(dt_f_v[0,:], norm_l2[0,:]-np.abs(np.exp(np.multiply(A_f_eig[0,:],dt_f_v[0,:]))), 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
+plt.loglog(dt_f_v[0,:], norm_l2[1,:]-np.abs(np.exp(np.multiply(A_f_eig[1,:],dt_f_v[0,:]))), 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
+plt.loglog(dt_f_v[0,:], norm_l2[2,:]-np.abs(np.exp(np.multiply(A_f_eig[2,:],dt_f_v[0,:]))), 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlabel(r'$\delta t = \Delta t$', fontsize=fs)
-#plt.ylabel(r'$|| \mathbf{E} ||_2$', fontsize=fs)
 plt.ylabel(r'$|| \mathbf{E} ||_2 - | \exp(\lambda_{m+1} \delta t) |$', fontsize=fs)
 
 plt.xlim([0.0, dt_f_v[0,0]])
-plt.ylim([1e-2, 1e1])
-#plt.xlabel([0, maxiter])
+plt.ylim([1e-3, 1e1])
 plt.gcf().savefig(filename, bbox_inches='tight')
 call(["pdfcrop", filename, filename])
 plt.show()
