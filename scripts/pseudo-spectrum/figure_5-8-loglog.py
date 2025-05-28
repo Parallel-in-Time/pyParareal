@@ -43,7 +43,7 @@ else:
 Tend, nslices, maxiter, nfine, ncoarse, tol, epsilon, ndof_f = par.getpar()
 
 nsteps   = [1, 2, 4, 8, 12, 16, 20]
-nsteps   = [1, 10, 25, 50, 75, 100]
+#nsteps   = [10, 100, 1000, 10000, 100000]
 
 ndof_c_v = [16, 24, 30]
 xaxis_f  = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
@@ -52,6 +52,8 @@ dx_f     = xaxis_f[1] - xaxis_f[0]
 if figure==5:
   A_f = get_upwind(ndof_f, dx_f)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
+  D = A_f*A_f.H - A_f.H*A_f
+  print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))    
 elif figure==6 or figure==7:
   A_f = get_centered(ndof_f, dx_f)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
@@ -78,15 +80,15 @@ for nn in range(3):
   if figure==5:
     A_c = get_upwind(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-    filename = 'figure_5.pdf'
+    filename = 'figure_5_mod.pdf'
   elif figure==6:
     A_c = get_centered(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-    filename = 'figure_6.pdf'
+    filename = 'figure_6_mod.pdf'
   elif figure==7:
     A_c = get_centered(ndof_c, dx_c)
     u0coarse = solution_linear(np.zeros(ndof_c), A_c)
-    filename = 'figure_7.pdf'    
+    filename = 'figure_7_mod.pdf'    
   elif figure==8:
     u0coarse = solution_dedalus(np.zeros(ndof_c), ndof_c)
     filename = 'figure_8.pdf'
@@ -109,24 +111,21 @@ for nn in range(3):
     Pmat, Bmat = para.get_parareal_matrix()
     dt_f_v[0,mm] = para.timemesh.slices[0].int_fine.dt
     dt_c_v[0,mm] = para.timemesh.slices[0].int_coarse.dt
-    
     # Sort according to absolute values of R(z) with z = lambda*dt_f
     sort_index = np.argsort(np.abs(Rz(eig_val*dt_f_v[0,mm])))
      
     # Store eigenvalue ndof_c+1. first "truncated" EV
-    A_f_eig[nn,mm] = np.flip((eig_val[sort_index]))[ndof_c+1]
-  
+    A_f_eig[nn,mm] = np.flip((eig_val[sort_index]))[ndof_c]
     ### Parareal iteration: y^k+1 = Pmat*y^k + Bmat*b
     norm_l2[nn,mm] = np.linalg.norm(Pmat.todense(), 2)
-    
 
 rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 ms = 4
 fig = plt.figure(1)
-plt.loglog(dt_f_v[0,:], norm_l2[0,:]-np.abs(np.exp(np.multiply(A_f_eig[0,:],dt_f_v[0,:]))), 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
-plt.loglog(dt_f_v[0,:], norm_l2[1,:]-np.abs(np.exp(np.multiply(A_f_eig[1,:],dt_f_v[0,:]))), 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
-plt.loglog(dt_f_v[0,:], norm_l2[2,:]-np.abs(np.exp(np.multiply(A_f_eig[2,:],dt_f_v[0,:]))), 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
+plt.loglog(dt_f_v[0,:], norm_l2[0,:]-np.abs(np.exp(np.multiply(A_f_eig[0,:],np.multiply(dt_f_v[0,:],nsteps[:])))), 'bo-', label='m='+str(ndof_c_v[0]), markersize=ms)
+plt.loglog(dt_f_v[0,:], norm_l2[1,:]-np.abs(np.exp(np.multiply(A_f_eig[1,:],np.multiply(dt_f_v[0,:],nsteps[:])))), 'rx-', label='m='+str(ndof_c_v[1]), markersize=ms)
+plt.loglog(dt_f_v[0,:], norm_l2[2,:]-np.abs(np.exp(np.multiply(A_f_eig[2,:],np.multiply(dt_f_v[0,:],nsteps[:])))), 'cd-', label='m='+str(ndof_c_v[2]), markersize=ms)
 plt.legend(loc='best', bbox_to_anchor=(0.5, 0.5), fontsize=fs, prop={'size':fs-2}, handlelength=3)
 plt.xlabel(r'$\delta t = \Delta t$', fontsize=fs)
 plt.ylabel(r'$|| \mathbf{E} ||_2 - | \exp(\lambda_{m+1} \delta t) |$', fontsize=fs)
