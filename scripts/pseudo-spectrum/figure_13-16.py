@@ -143,7 +143,7 @@ rcParams['figure.figsize'] = 2.5, 2.5
 fs = 8
 ms = 4
 fig = plt.figure(1)
-plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| e^k ||$')
+plt.semilogy(range(1,maxiter+1), defect_l2[0,:], 'bo-', markersize=ms, label=r'$|| E^k ||_2$')
 plt.semilogy(range(1,5), [E_norm**(val-1)*2.0*defect_l2[0,0] for val in range(1,5)], 'b-.', label=r'$|| E ||_2^k$', linewidth=2)
 plt.semilogy(range(1,5), [psr**(val-1)*2.0*defect_l2[0,0] for val in range(1,5)], 'r--', label=r'$\rho_{\epsilon}(E)^k$', linewidth=2)
 if figure==14 or figure==15:

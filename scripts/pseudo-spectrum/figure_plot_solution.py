@@ -23,6 +23,10 @@ from parameter import parameter
 from pylab import rcParams
 import matplotlib.pyplot as plt
 from subprocess import call
+
+def u0(x):
+  return np.heaviside(x - 0.5, 1.0)
+  #return np.sin(2.0*np.pi*x) + np.sin(8.0*np.pi*x)
   
 try:
   figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
@@ -91,7 +95,7 @@ else:
 Pmat, Bmat = para.get_parareal_matrix()
 Fmat = para.timemesh.get_fine_matrix(u0fine)
 bvec = np.zeros((ndof_f*(nslices+1),1))
-bvec[0:ndof_f,:] = np.reshape(np.sin(2.0*np.pi*xaxis_f), (ndof_f, 1))
+bvec[0:ndof_f,:] = np.reshape(u0(xaxis_f), (ndof_f, 1))
 u_fine = linalg.spsolve(Fmat, bvec)
 y = Bmat@bvec
 for k in range(maxiter):
@@ -104,7 +108,7 @@ fs = 8
 ms = 4
 fig = plt.figure(1)
 plt.plot(xaxis_f, yend, 'b', label=mylabel)
-plt.plot(xaxis_f,  np.sin(2.0*np.pi*(xaxis_f-Tend)), 'r--', label='Exact')
+plt.plot(xaxis_f,  u0(xaxis_f), 'r--', label='Exact')
 plt.legend()
 plt.xlabel('x')
 plt.ylabel('u')
