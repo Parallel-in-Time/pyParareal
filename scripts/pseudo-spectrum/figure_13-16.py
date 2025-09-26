@@ -14,6 +14,7 @@ from solution_linear import solution_linear
 
 from get_matrix import get_upwind, get_centered, get_diffusion, get_desterck
 from impeuler import impeuler
+from expeuler import expeuler
 from intexact import intexact
 from trapezoidal import trapezoidal
 
@@ -29,9 +30,9 @@ try:
 except:
   print("No or wrong command line argument provided, creating figure 13. Use 13, 14, 15 or 16 as command line argument.")
   figure = 5
-assert 13<= figure <= 16 or figure==0 or figure==-1, "Figure should be 13, 14, 15 or 16"
+assert 13<= figure <= 16 or figure==0 or figure==-1 or figure==-2, "Figure should be 13, 14, 15 or 16"
   
-if figure==13 or figure==14 or figure==0 or figure==-1:
+if figure==13 or figure==14 or figure==0 or figure==-1 or figure==-2:
   par = parameter(dedalus = False)
   ndof_c   = 24
 elif figure==15: 
@@ -104,6 +105,18 @@ elif figure==-1:
   u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
   para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)  
   filename = ('figure_conv_desterck_%i.pdf' % p)  
+elif figure==-2:
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
+  dx_f    = xaxis_f[1] - xaxis_f[0]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
+  dx_c = xaxis_c[1] - xaxis_c[0]  
+  A_f = get_upwind(ndof_f, dx_f)
+  A_c = get_upwind(ndof_c, dx_c)
+  u0fine   = solution_linear(np.zeros(ndof_f), A_f)
+  u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
+  para     = parareal(0.0, Tend, nslices, expeuler, expeuler, nfine, 10, tol, maxiter, u0fine, u0coarse)  
+  filename = 'figure_13_expeuler.pdf'
+  D = A_f*A_f.H - A_f.H*A_f
 else:
   sys.exit("Wrong value for figure")
   

@@ -3,6 +3,7 @@ sys.path.append('../../src')
 
 from parareal import parareal
 from impeuler import impeuler
+from expeuler import expeuler
 from intexact import intexact
 from trapezoidal import trapezoidal
 from special_integrator import special_integrator
@@ -26,10 +27,10 @@ try:
   figure      =  int(sys.argv[1]) # 1 generates figure_1, 2 generates figure_2
 except:
   print("No or wrong command line argument provided, creating figure 9. Use 9, 10, 11 or 12 as command line argument.")
-  figure = 5
-assert (9<= figure <= 12) or figure==0 or figure==-1, "Figure should be 9, 10, 11 or 12"
+  figure = 9
+assert (9<= figure <= 12) or figure==0 or figure==-1 or figure==-2, "Figure should be 9, 10, 11 or 12 or -1 or -2"
   
-if figure==9 or figure==10 or figure==0 or figure==-1:
+if figure==9 or figure==10 or figure==0 or figure==-1 or figure==-2:
   par = parameter(dedalus = False)
   ndof_c   = 24
 elif figure==11: 
@@ -52,7 +53,8 @@ if figure==9:
   A_c = get_upwind(ndof_c, dx_c)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
   u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
-  para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)  
+#  para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)  
+  para     = parareal(0.0, Tend, nslices, expeuler, expeuler, nfine, 10, tol, maxiter, u0fine, u0coarse)  
   filename = 'figure_9.pdf'
   D = A_f*A_f.H - A_f.H*A_f
   print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))  
@@ -100,6 +102,19 @@ elif figure==-1:
   u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
   para     = parareal(0.0, Tend, nslices, impeuler, impeuler, nfine, ncoarse, tol, maxiter, u0fine, u0coarse)  
   filename = ('figure_desterck_%i.pdf' % p)
+elif figure==-2:
+  xaxis_f = np.linspace(0.0, 1.0, ndof_f+1)[0:ndof_f]
+  dx_f    = xaxis_f[1] - xaxis_f[0]
+  xaxis_c = np.linspace(0.0, 1.0, ndof_c+1)[0:ndof_c]
+  dx_c = xaxis_c[1] - xaxis_c[0]  
+  A_f = get_upwind(ndof_f, dx_f)
+  A_c = get_upwind(ndof_c, dx_c)
+  u0fine   = solution_linear(np.zeros(ndof_f), A_f)
+  u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
+  para     = parareal(0.0, Tend, nslices, expeuler, expeuler, nfine, 10, tol, maxiter, u0fine, u0coarse)  
+  filename = 'figure_9_expeuler.pdf'
+  D = A_f*A_f.H - A_f.H*A_f
+  print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))    
 else:
   sys.exit("Wrong value for figure")
   
