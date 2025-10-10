@@ -111,7 +111,11 @@ elif figure==-2:
   A_c = get_upwind(ndof_c, dx_c)
   u0fine   = solution_linear(np.zeros(ndof_f), A_f)
   u0coarse = solution_linear(np.zeros(ndof_c), A_c)  
-  para     = parareal(0.0, Tend, nslices, expeuler, expeuler, nfine, 10, tol, maxiter, u0fine, u0coarse)  
+  para     = parareal(0.0, 10, 10, expeuler, expeuler, ndof_f, ndof_c, tol, maxiter, u0fine, u0coarse)
+  dt_f = para.timemesh.slices[0].int_fine.dt
+  dt_c = para.timemesh.slices[0].int_coarse.dt
+  print("CFL-fine:   %5.3f \n" % (dt_f/dx_f))
+  print("CFL-coarse: %5.3f \n" % (dt_c/dx_c))
   filename = 'figure_9_expeuler.pdf'
   D = A_f*A_f.H - A_f.H*A_f
   print("Normality number of the system matrix (this should be zero): %5.3f" % np.linalg.norm(D.todense()))    
